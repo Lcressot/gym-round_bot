@@ -1,4 +1,4 @@
-##gym-round_bot
+## gym-round_bot
 
 This repository gives a robotic simulation environnement compatible with OpenAI gym. The simulation is a simple round bot driving in a simple maze-type world with walls. It is desgined as follows :
 
@@ -18,7 +18,7 @@ This script shows how to run a simple simulation (without Open AI Gym) simply by
 This module defines the AI gym compatible environment using a model and a window (in this case the window is only used for rendering and is non interactive nor visible, and has not its main thread)
 
 
-##Installation
+## Installation
 
 ```bash
 cd gym-round_bot
