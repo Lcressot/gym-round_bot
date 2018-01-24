@@ -10,7 +10,7 @@ import thread
 
 if __name__ == '__main__':
 
-	world = 'tb1'
+	world = 'rb1'
 	winsize=[800,600]
 	model = tb_model.Model(world)
 	window = pygletWindow.PygletWindow(model, interactive=True, width=winsize[0], height=winsize[1], caption='Round bot in '+world+' world', resizable=True, visible=True)

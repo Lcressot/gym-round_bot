@@ -25,6 +25,9 @@ class PygletWindow(pyglet.window.Window):
         # Whether or not the window exclusively captures the mouse.
         self.exclusive = False
 
+        # Wether or not the window has its own thread
+        self.threaded = False
+
         # Wheter or not the user can interact with the window
         self.interactive = interactive        
 
@@ -128,8 +131,8 @@ class PygletWindow(pyglet.window.Window):
     #         mouse button was clicked.
 
     #     """
-        if self.exclusive:
-            None
+        if not self.interactive or not self.threaded:
+            return
         else:
             self.set_exclusive_mouse(True)
 
@@ -165,7 +168,7 @@ class PygletWindow(pyglet.window.Window):
 
         """
         # return if window is not interactive
-        if not self.interactive:
+        if not self.interactive or not self.threaded:
             return
         # allow to control robot for debug mode
         if self.model.flying:
@@ -206,7 +209,7 @@ class PygletWindow(pyglet.window.Window):
 
         """
         # return if window is not interactive
-        if not self.interactive:
+        if not self.interactive or not self.threaded:
             return
         # allow to control robot for debug mode
         if self.model.flying:
@@ -348,6 +351,7 @@ class PygletWindow(pyglet.window.Window):
         # schedule calls on 
         # if callback:
         #     pyglet.clock.schedule_interval(callback, 1.0 / ticks_per_sec, 1)
+        self.threaded = True
         pyglet.app.run()
 
     def step(self, dt):

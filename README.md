@@ -14,7 +14,7 @@ This module defines functions for loading/building simulated worlds : each funct
 ### Main.py
 This script shows how to run a simple simulation (without Open AI Gym) simply by constructing a model and a visible interactive window.
 
-### Open AI gym environment : round_bot_env (IN CONSTRUCTION)
+### Open AI gym environment : round_bot_env.py (IN CONSTRUCTION)
 This module defines the OpenAI gym compatible environment using a model and a window (in this case the window is only used for rendering and is non interactive nor visible, and has not its main thread)
 
 

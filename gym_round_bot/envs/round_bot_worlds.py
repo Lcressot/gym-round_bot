@@ -5,13 +5,13 @@ import round_bot_model as tb_model
     This file allows to build worlds
 """
 
-def build_tb1_world(model):
+def build_rb1_world(model):
 	"""
 	Builds a simple rectangle planar world with walls around
 	Return : texture path, world information
 	"""
 
-	texture_path = 'texture.png'
+	texture_path = '/Users/lcressot/Library/Mobile Documents/com~apple~CloudDocs/Stage/travail/gym-round_bot/gym_round_bot/envs/texture.png'
 
 	GRASS = tb_model.tex_coords((1, 0), (0, 1), (0, 0))
 	MUD = tb_model.tex_coords((0, 1), (0, 1), (0, 1))

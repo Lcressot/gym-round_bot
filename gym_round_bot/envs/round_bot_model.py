@@ -114,7 +114,7 @@ class Model(object):
         self.robot_diameter = 0.5
 
         self.texture_path = None # used for rendering with window
-        # load world
+        # load world        
         self.load_world(world)
         
     def reset(self):
@@ -381,8 +381,8 @@ class Model(object):
         """ Loads the world passed as string parameter
 
         """
-        if world == 'tb1':
-            self.texture_path, self.world_info = round_bot_worlds.build_tb1_world(self)
+        if world == 'rb1':
+            self.texture_path, self.world_info = round_bot_worlds.build_rb1_world(self)
         else:
             raise(Exception('Error: unknown world : ' + world))
 
