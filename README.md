@@ -26,7 +26,7 @@ cd gym-round_bot
 pip install -e .
 ```
 
-For now you also need to copy the above text in gym/gym/envs/\_\_init\_\_.py :
+For now, you also need to copy the above text in gym/gym/envs/\_\_init\_\_.py :
 ```Python
 register(
     id='RoundBot-v0',
