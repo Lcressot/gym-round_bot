@@ -26,7 +26,7 @@ cd gym-round_bot
 pip install -e .
 ```
 
-For now you also need to copy the above text in gym/gym/envs/__init__.py :
+For now you also need to copy the above text in gym/gym/envs/\_\_init\_\_.py :
 ```Python
 register(
     id='RoundBot-v0',
@@ -36,3 +36,22 @@ register(
 )
 ```
 You can set your own values for max_episode_steps and reward_treshold.
+
+# Use
+
+Here is a simple code for using the environment :
+```Python
+# create environment
+env = gym.make('RoundBot-v0')
+world = "rb1" # the world to load
+winsize=[100,80] # the size of window for rendering
+
+# load the environment (if not called, default is 'rb1',[80,60])
+env.unwrapped.load(world,winsize)
+
+# perform a step
+ob, reward, done, _ = env.step(action)
+
+# render to screen if needed
+env.render()
+```

@@ -94,7 +94,7 @@ class RoundBotEnv(gym.Env):
 
         if mode == 'rgb_array':
             return self.current_observation
-        elif mode == 'human':
+        if mode == 'human':
             # this slows down rendering with a factor 10 !
             if not self.window.visible:
                 self.window.set_visible(True)

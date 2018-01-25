@@ -53,7 +53,6 @@ if __name__ == '__main__':
             env.render()
             t=t+1
             if done:
-                print(env.unwrapped.window.get_image())      
                 t2= time.clock()
                 if verbose:
                     print( "mean step time execution for current trajectory : " + str((t2-t1)/t) )
