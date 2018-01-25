@@ -96,14 +96,6 @@ class PygletWindow(pyglet.window.Window):
         """
         #self.model.process_queue()
 
-        # model.sector = sectorize(self.model.robot_position)
-        # if sector != self.sector:
-        #     self.model.change_sectors(self.sector, sector)
-        #     if self.sector is None:
-        #         self.model.process_entire_queue()
-        #     self.sector = sector        
-        #dt = min(dt, 0.2)
-
         for _ in xrange(m):
             self.model.update(dt / m)
 
@@ -341,6 +333,7 @@ class PygletWindow(pyglet.window.Window):
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
         #setup_fog()
+        self.switch_to() # set opengl context to this window
 
     def start(self):#, callback=None, ticks_per_sec=20):
         """
@@ -359,11 +352,10 @@ class PygletWindow(pyglet.window.Window):
         Perform manually a drawing step
         """
         self.update(dt)
-        for window in pyglet.app.windows:
-            window.switch_to()
-            window.dispatch_events()
-            window.dispatch_event('on_draw')
-            window.flip()
+        if self.visible: # slows down rendering with a factor 10 !
+            self.dispatch_events()
+        self.dispatch_event('on_draw')
+        self.flip()
 
 
     

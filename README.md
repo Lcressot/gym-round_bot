@@ -7,6 +7,7 @@ The 3D model of the simulation (no OpenGl) which loads the world's points and mo
 
 ### Window : pygletWindow.py
 A class inherited from python Pyglet library for rendering 3D scenes (given by the model) with OpenGL. Interaction with user is possible (to control the model's robot) if the window is set to visible and interactive. If the window is visible and interactive, control the robot for debugging your world or have fun with tab (to enter control mode), and ZSQD AE and mouse for direction and rotation.
+Note that if you set the window to be visible, the computation time is multiplied by 10.
 
 ### Worlds : round_bot_worlds.py
 This module defines functions for loading/building simulated worlds : each function loads/builds a different world. Later, this module could be replaced by a function for writting/reading worlds information in files.
@@ -24,3 +25,14 @@ This module defines the OpenAI gym compatible environment using a model and a wi
 cd gym-round_bot
 pip install -e .
 ```
+
+For now you also need to copy the above text in gym/gym/envs/__init__.py :
+```Python
+register(
+    id='RoundBot-v0',
+    entry_point='gym_round_bot.envs:RoundBotEnv',
+    max_episode_steps=200,
+    reward_threshold=25.0,
+)
+```
+You can set your own values for max_episode_steps and reward_treshold.

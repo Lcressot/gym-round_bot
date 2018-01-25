@@ -1,2 +1,2 @@
-import round_bot_model as tb_model
+import round_bot_model
 import pygletWindow

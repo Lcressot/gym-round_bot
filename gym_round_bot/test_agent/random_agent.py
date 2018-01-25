@@ -5,6 +5,7 @@ import sys
 import gym
 from gym import wrappers
 
+import time
 
 class RandomAgent(object):
     """The world's simplest agent!"""
@@ -34,19 +35,28 @@ if __name__ == '__main__':
     logger.setLevel(logging.INFO)
 
     env = gym.make(args.env_id)    
+    env.unwrapped.load('rb1',[800,600])
     agent = RandomAgent(env.action_space)
 
-    episode_count = 10
+    episode_count = 1000
     reward = 0
     done = False
+    verbose = False
 
     for i in range(episode_count):
         ob = env.reset()
+        t1= time.clock()
+        t=0
         while True:
             action = agent.act(ob, reward, done)
             ob, reward, done, _ = env.step(action)
             env.render()
+            t=t+1
             if done:
+                print(env.unwrapped.window.get_image())      
+                t2= time.clock()
+                if verbose:
+                    print( "mean step time execution for current trajectory : " + str((t2-t1)/t) )
                 break
             # Note there's no env.render() here. But the environment still can open window and
             # render if asked by env.monitor: it calls env.render('rgb_array') to record video.

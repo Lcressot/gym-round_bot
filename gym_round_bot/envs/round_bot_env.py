@@ -14,7 +14,8 @@ except ImportError as e:
 import logging
 logger = logging.getLogger(__name__)
 
-COMPATIBLE_WORLDS={"rb1", # rectangle set, first person view, reward in top left corner
+COMPATIBLE_WORLDS={ "null_world", # void world used for fast initialisation
+                    "rb1", # rectangle set, first person view, reward in top left corner
 }
 
 class RoundBotEnv(gym.Env):
@@ -22,6 +23,10 @@ class RoundBotEnv(gym.Env):
     metadata = {'render.modes': ['human', 'rgb_array']}
 
     def __init__(self):
+        """
+        Inits the attributes to None.
+        Default world is loaded. Can be changed with call to env.unwrapped.load(newworld,newWinSize)
+        """
 
         self.viewer = None
         self.world = None        
@@ -31,27 +36,26 @@ class RoundBotEnv(gym.Env):
         self.observation_space = None
         self.action_space = None        
         self.current_observation = None
-        self._loaded = False
-        self.load_env()
+        self.action_meaning = None        
+        self.load() #default world loaded
                 
 
-    def _step(self, a):
+    def _step(self, action):
         """
         Perform one step
         """
         reward = 0.0
-        action = self.action_meaning[a]
 
         if self.world == "rb1":
             # perform action
-            if action == "MOVEFORWARD":
+            if action == 0: #MOVE FORFORWARD
                 self.model.strafe[0] = 1
-            elif action == "STOP":
+            elif action == 1: # STOP
                 self.model.strafe[0] = 0
-            elif action == "ROTATERIGHT":
-                self.model.change_robot_rotation(10,0)
-            else: # action = "ROTATELEFT"
-                self.model.change_robot_rotation(-10,0)
+            elif action == 2: # "ROTATERIGHT"
+                self.model.change_robot_rotation(20,0)
+            else: # action = 3 for "ROTATELEFT"
+                self.model.change_robot_rotation(-20,0)
 
             # update
             self.window.step(0.1) # update with 1 second intervall
@@ -86,35 +90,22 @@ class RoundBotEnv(gym.Env):
         return self.window.get_image()
         
 
-    # @property
-    # def action_space(self):
-    #   """
-    #   Returns a Space object
-    #   """
-    #   return self.action_space
-
-    # @property
-    # def observation_space(self):
-    #   """
-    #   Returns a Space object
-    #   """
-    #   return self.observation_space
-
     def _render(self, mode='human', close=False):
-        
+
         if mode == 'rgb_array':
             return self.current_observation
         elif mode == 'human':
-            self.window.set_visible(True)
+            # this slows down rendering with a factor 10 !
+            if not self.window.visible:
+                self.window.set_visible(True)
 
-    def load_env(self, world='rb1', winsize=[800,600]):
+    def load(self, world='rb1', winsize=[80,60]):
         """
         Loads a world into environnement
         """
         if not world in COMPATIBLE_WORLDS:
             raise(Exception('Error: unknown or uncompatible world \"' + world + '\" for environnement round_bot'))
-
-        # unic world settings
+        
         if world == 'rb1':
 
             self.action_meaning = {
@@ -126,27 +117,17 @@ class RoundBotEnv(gym.Env):
         else:
             raise(Exception('Error: world '+ world +' should figure in code enumeration if elif..'))
             
-        # shared settings
+        ## shared settings
         self.world = world
-        
-        # try:
-        #     self.model = round_bot_model.Model(world)
-        # except Exception, e:
-        #     print("Error : Could not create model for world : "+world)
         self.model = round_bot_model.Model(world)
         self.winSize= list(winsize)
-
-        #try:
-        self.window = pygletWindow.PygletWindow(self.model, width=winsize[0], height=winsize[1], caption='Round bot in '+world+' world', resizable=False, visible=False)
-        # except Exception, e:
-        #   print("Error : Could not create window for world : "+world)
-        
-            # observation are RGB images of rendered world      
+        try:
+            self.window = pygletWindow.PygletWindow(self.model, width=winsize[0]/2, height=winsize[1]/2, caption='Round bot in '+world+' world', resizable=False, visible=False)
+        except Exception as e:
+            raise Exception("Error : could not load window for world : " + world)
+        # observation are RGB images of rendered world      
         self.observation_space = spaces.Box(low=0, high=255, shape=[winsize[0], winsize[1], 3])
         self.action_space = spaces.Discrete(len(self.action_meaning))
-        # first observation
-        self.current_observation = self.window.get_image()
-        self._loaded = True
 
     def get_action_meanings(self):
         return [self.action_meaning[i] for i in self.action_space]
