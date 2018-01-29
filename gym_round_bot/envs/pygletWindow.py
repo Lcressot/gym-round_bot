@@ -1,4 +1,6 @@
 import math
+import numpy as np
+from sys import platform
 
 from collections import deque
 from pyglet import image
@@ -10,6 +12,11 @@ from pyglet.window import key, mouse
 """
     This file defines the environnement's window and renderer
 """
+
+# check if plateform is mac os
+if platform == "darwin":
+    OSX = True
+
 
 class PygletWindow(pyglet.window.Window):
 
@@ -37,12 +44,6 @@ class PygletWindow(pyglet.window.Window):
         # The crosshairs at the center of the screen.
         #self.reticle = None
 
-
-        # Convenience list of num keys.
-        self.num_keys = [
-            key._1, key._2, key._3, key._4, key._5,
-            key._6, key._7, key._8, key._9, key._0]
-
         # Instance of the model that handles the world.
         self.model = model
 
@@ -50,9 +51,9 @@ class PygletWindow(pyglet.window.Window):
         self.model.window = self
 
         # The label that is displayed in the top left of the canvas.
-        self.label = pyglet.text.Label('', font_name='Arial', font_size=18,
-            x=10, y=self.height - 10, anchor_x='left', anchor_y='top',
-            color=(0, 0, 0, 255))       
+        # self.label = pyglet.text.Label('', font_name='Arial', font_size=18,
+        #     x=10, y=self.height - 10, anchor_x='left', anchor_y='top',
+        #     color=(0, 0, 0, 255))       
 
         # show all blocks
         self.model.show_all_blocks()
@@ -99,11 +100,21 @@ class PygletWindow(pyglet.window.Window):
         for _ in xrange(m):
             self.model.update(dt / m)
 
-    def get_image(self):
+    def get_image(self,reshape=True):
         """
         Return a screenshot of the window
         """
-        return pyglet.image.get_buffer_manager().get_color_buffer()
+        #return pyglet.image.get_buffer_manager().get_color_buffer()
+        # read pixel data from opengl buffer
+        data = ( GLubyte * (3*self.width*self.height) )(0)
+        glReadPixels(0, 0, self.width, self.height, gl.GL_RGB, gl.GL_UNSIGNED_BYTE, data)
+        # convert to numpy array
+        nparr = np.fromstring(data,dtype=np.uint8)
+        if reshape:
+            nparr=nparr.reshape(self.width,self.height,3)
+            nparr=np.flipud(nparr)
+        # flip upside down
+        return nparr    
 
    
     def on_mouse_press(self, x, y, button, modifiers):
@@ -164,14 +175,18 @@ class PygletWindow(pyglet.window.Window):
             return
         # allow to control robot for debug mode
         if self.model.flying:
-            if symbol == key.W:
+            if (symbol == key.W and OSX) or (symbol == key.Z and not OSX):
                 self.model.strafe[0] -= 1
-            elif symbol == key.S:
+            elif symbol == key.S: # same for qwerty  and azerty
                 self.model.strafe[0] += 1
-            elif symbol == key.A:
+            elif (symbol == key.A and OSX) or (symbol == key.Q and not OSX):
                 self.model.strafe[1] -= 1
-            elif symbol == key.D:
+            elif symbol == key.D: # same for qwerty and azerty
                 self.model.strafe[1] += 1
+            elif (symbol == key.E and OSX) or (symbol == key.Z and not OSX):
+                self.model.change_robot_rotation(10,0)
+            elif (symbol == key.Q and OSX) or (symbol == key.A and not OSX):
+                self.model.change_robot_rotation(-10,0)            
 
         if symbol == key.ESCAPE:
             self.set_exclusive_mouse(False)
@@ -205,27 +220,21 @@ class PygletWindow(pyglet.window.Window):
             return
         # allow to control robot for debug mode
         if self.model.flying:
-            if symbol == key.W:
+            if (symbol == key.W and OSX) or (symbol == key.Z and not OSX):
                 self.model.strafe[0] += 1
-            elif symbol == key.S:
+            elif symbol == key.S: # same for qwerty  and azerty
                 self.model.strafe[0] -= 1
-            elif symbol == key.A:
+            elif (symbol == key.A and OSX) or (symbol == key.Q and not OSX):
                 self.model.strafe[1] += 1
-            elif symbol == key.D:
-                self.model.strafe[1] -= 1
-            elif symbol == key.E:
-                self.model.change_robot_rotation(10,0)
-            elif symbol == key.Q:
-                self.model.change_robot_rotation(-10,0)
-            elif symbol == key.I:
-                print(self.get_image())
+            elif symbol == key.D: # same for qwerty and azerty
+                self.model.strafe[1] -= 1        
 
     def on_resize(self, width, height):
         """ Called when the window is resized to a new `width` and `height`.
 
         """
         # label
-        self.label.y = height - 10
+        #self.label.y = height - 10
         # reticle
         # if self.reticle:
         #     self.reticle.delete()
@@ -254,7 +263,7 @@ class PygletWindow(pyglet.window.Window):
         """
         width, height = self.get_size()
         glEnable(GL_DEPTH_TEST)
-        glViewport(0, 0, 2*width, 2*height)
+        glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         gluPerspective(65.0, width / float(height), 0.1, 60.0)
@@ -354,8 +363,25 @@ class PygletWindow(pyglet.window.Window):
         self.update(dt)
         if self.visible: # slows down rendering with a factor 10 !
             self.dispatch_events()
-        self.dispatch_event('on_draw')
+        self.on_draw()
         self.flip()
+        
+    def debug_render(self):
+        """
+        debug render
+        """
+        import matplotlib.pyplot as plt
+        import numpy as np
+        # data = pyglet.image.get_buffer_manager().get_color_buffer().get_image_data().get_data('RGB',100)
+        # a = np.fromstring(data,dtype=np.uint8)
+        # print(len(a))
+        # read pixel data from opengl buffer
+        data = ( GLubyte * (3*self.width*self.height) )(0)
+        glReadPixels(0, 0, self.width, self.height, gl.GL_RGB, gl.GL_UNSIGNED_BYTE, data)
+        # convert to numpy array
+        nparr = np.fromstring(data,dtype=np.uint8).reshape(100,100,3)
+        plt.imshow(np.flipud(nparr), interpolation='nearest')
+        plt.pause(1)
+        #print(data)
 
 
-    

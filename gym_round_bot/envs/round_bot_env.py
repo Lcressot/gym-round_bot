@@ -7,6 +7,7 @@ from gym.utils import seeding
 try:
     import round_bot_model
     import pygletWindow
+    import round_bot_controller
 except ImportError as e:
     # TODO : set dependencies for round_bot (pyglet)
     raise error.DependencyNotInstalled("{}. (HINT: you can install round_bot dependencies by running 'pip install gym[round_bot]'.)".format(e))
@@ -14,8 +15,10 @@ except ImportError as e:
 import logging
 logger = logging.getLogger(__name__)
 
-COMPATIBLE_WORLDS={ "null_world", # void world used for fast initialisation
-                    "rb1", # rectangle set, first person view, reward in top left corner
+COMPATIBLE_WORLDS={ "rb1", # rectangle set, first person view, reward in top left corner
+}
+
+COMPATIBLE_CONTROLLERS ={ "Simple_TetaSpeed",
 }
 
 class RoundBotEnv(gym.Env):
@@ -36,7 +39,7 @@ class RoundBotEnv(gym.Env):
         self.observation_space = None
         self.action_space = None        
         self.current_observation = None
-        self.action_meaning = None        
+        self.controller = None        
         self.load() #default world loaded
                 
 
@@ -46,20 +49,13 @@ class RoundBotEnv(gym.Env):
         """
         reward = 0.0
 
-        if self.world == "rb1":
-            # perform action
-            if action == 0: #MOVE FORFORWARD
-                self.model.strafe[0] = 1
-            elif action == 1: # STOP
-                self.model.strafe[0] = 0
-            elif action == 2: # "ROTATERIGHT"
-                self.model.change_robot_rotation(20,0)
-            else: # action = 3 for "ROTATELEFT"
-                self.model.change_robot_rotation(-20,0)
+        # perform action
+        self.controller.step(action)
+        # update
+        self.window.step(0.1) # update with 1 second intervall
 
-            # update
-            self.window.step(0.1) # update with 1 second intervall
-            
+        # compute reward depending on the world
+        if self.world == "rb1":                            
             # reward -1 if agent bumps into a wall
             if self.model.collided:
                 reward = reward - 1.0
@@ -72,7 +68,8 @@ class RoundBotEnv(gym.Env):
                 reward = reward + 1.0
             # reward 0 else                 
 
-        self.current_observation = self.window.get_image()
+        # get observation
+        self.current_observation = self.window.get_image(reshape=False)
         info = {}
 
         # this environment has no terminal state
@@ -87,7 +84,7 @@ class RoundBotEnv(gym.Env):
         observation : the initial observation of the space. (Initial reward is assumed to be 0.)
         """
         self.model.reset()
-        return self.window.get_image()
+        return self.window.get_image(reshape=False)#get image as a numpy line
         
 
     def _render(self, mode='human', close=False):
@@ -99,38 +96,38 @@ class RoundBotEnv(gym.Env):
             if not self.window.visible:
                 self.window.set_visible(True)
 
-    def load(self, world='rb1', winsize=[80,60]):
+    def load(self, world='rb1', controller={"name":'Simple_TetaSpeed',"dteta":20,"speed":10}, winsize=[80,60]):
         """
         Loads a world into environnement
         """
         if not world in COMPATIBLE_WORLDS:
             raise(Exception('Error: unknown or uncompatible world \"' + world + '\" for environnement round_bot'))
         
-        if world == 'rb1':
-
-            self.action_meaning = {
-            0 : "MOVEFORWARD",
-            1 : "STOP",
-            2 : "ROTATERIGHT",
-            3 : "ROTATELEFT",    
-            }
-        else:
-            raise(Exception('Error: world '+ world +' should figure in code enumeration if elif..'))
-            
+        if not "name" in controller or not controller["name"] in COMPATIBLE_CONTROLLERS:
+            raise(Exception('Error: unknown or uncompatible controller \"' + str(controller) + '\" for environnement round_bot'))
+                    
         ## shared settings
         self.world = world
         self.model = round_bot_model.Model(world)
+
+        if controller["name"]=="Simple_TetaSpeed":
+            try:
+                self.controller = round_bot_controller.Simple_TetaSpeed_Controller(model=self.model, dteta=controller["dteta"],speed=controller["speed"])
+            except Exception as e:
+                raise Exception("Error : unable to create controller with args : " + str(controller) )
+        
         self.winSize= list(winsize)
         try:
-            self.window = pygletWindow.PygletWindow(self.model, width=winsize[0]/2, height=winsize[1]/2, caption='Round bot in '+world+' world', resizable=False, visible=False)
+            self.window = pygletWindow.PygletWindow(self.model, interactive=False, width=winsize[0], height=winsize[1], caption='Round bot in '+world+' world', resizable=False, visible=True)
+            #self.window = pygletWindow.PygletWindow(self.model, width=winsize[0]/2, height=winsize[1]/2, caption='Round bot in '+world+' world', resizable=False, visible=False)
         except Exception as e:
             raise Exception("Error : could not load window for world : " + world)
         # observation are RGB images of rendered world      
         self.observation_space = spaces.Box(low=0, high=255, shape=[winsize[0], winsize[1], 3])
-        self.action_space = spaces.Discrete(len(self.action_meaning))
+        self.action_space = spaces.Discrete(len(self.controller.action_meaning))
 
     def get_action_meanings(self):
-        return [self.action_meaning[i] for i in self.action_space]
+        return [self.controller.action_meaning[i] for i in self.action_space]
 
 
     

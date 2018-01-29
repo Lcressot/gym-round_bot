@@ -113,6 +113,9 @@ class Model(object):
         self.robot_height = 1
         self.robot_diameter = 0.5
 
+        self.walking_speed = 10
+        self.flying_speed = 15
+
         self.texture_path = None # used for rendering with window
         # load world        
         self.load_world(world)
@@ -139,8 +142,6 @@ class Model(object):
         # right, and 0 otherwise.
         self.strafe = [0, 0]
 
-        self.walking_speed = 10
-        self.flying_speed = 15
         self.flying = False   
         self.collided = False     
 
