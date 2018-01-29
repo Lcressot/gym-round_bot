@@ -15,6 +15,9 @@ This module defines functions for loading/building simulated worlds : each funct
 ### Main.py
 This script shows how to run a simple simulation (without Open AI Gym) simply by constructing a model and a visible interactive window.
 
+### Controller : round_bot_controller.py
+This module defines a class for controlling the robot of a model. Given an action number, it can return its string meaning or perform the corresponding action in the model. For the Simple_TetaSpeed controller, you can set the speed and teta rotation of the robot, but do no set a to high speed because you could go through walls !
+
 ### Open AI gym environment : round_bot_env.py (IN CONSTRUCTION)
 This module defines the OpenAI gym compatible environment using a model and a window (in this case the window is only used for rendering and is non interactive nor visible, and has not its main thread)
 
@@ -31,8 +34,8 @@ For now, you also need to copy the above text in gym/gym/envs/\_\_init\_\_.py :
 register(
     id='RoundBot-v0',
     entry_point='gym_round_bot.envs:RoundBotEnv',
-    max_episode_steps=200,
-    reward_threshold=25.0,
+    #max_episode_steps=?,
+    #reward_threshold=?,
 )
 ```
 You can set your own values for max_episode_steps and reward_treshold.
@@ -45,9 +48,10 @@ Here is a simple code for using the environment :
 env = gym.make('RoundBot-v0')
 world = "rb1" # the world to load
 winsize=[100,80] # the size of window for rendering
+controller={"name":'Simple_TetaSpeed',"dteta":45,"speed":5}
 
-# load the environment (if not called, default is 'rb1',[80,60])
-env.unwrapped.load(world,winsize)
+# load the environment (if not called, default is world='rb1',winsize=[80,60], controller={"name":'Simple_TetaSpeed',"dteta":20,"speed":10})
+env.unwrapped.load(world='rb1',winsize=winsize, controller=controller)
 
 # perform a step
 ob, reward, done, _ = env.step(action)
