@@ -16,6 +16,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 COMPATIBLE_WORLDS={ "rb1", # rectangle set, first person view, reward in top left corner
+                    "rb1_blocks", # rectangle set, first person view, reward in top left corner, middle blocks
 }
 
 COMPATIBLE_CONTROLLERS ={ "Simple_TetaSpeed",

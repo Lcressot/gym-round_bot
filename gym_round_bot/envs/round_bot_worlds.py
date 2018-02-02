@@ -5,11 +5,20 @@ import os
     This file allows to build worlds
 """
 
-def build_rb1_world(model):
+def build_rb1_world(model,width=20, hwalls=2, wwalls=40, dwalls=1):
     """
     Builds a simple rectangle planar world with walls around
     Return : texture path, world information
+
+    # width : width of the world
+    # hwalls is heigh of walls
+    wwalls = 2*n # width of walls
+    dwalls is depth of walls
+
     """
+    n = width/2.0  # 1/2 width and depth of world
+    wwalls = 2*n # width of walls    
+
     # load texture in current directory
     block_texture_path = os.path.dirname(__file__) + '/texture.png'
     robot_texture_path = os.path.dirname(__file__) + '/robot.png'
@@ -21,11 +30,6 @@ def build_rb1_world(model):
     BRICK = round_bot_model.Block.tex_coords((2, 0), (2, 0), (2, 0))
     STONE = round_bot_model.Block.tex_coords((2, 1), (2, 1), (2, 1))
     BOT = round_bot_model.Block.tex_coords((0, 0), (0, 1), (0, 1))
-
-    n = 20  # 1/2 width and depth of world
-    hwalls = 4.5 # heigh of walls
-    wwalls = 2*n # width of walls
-    dwalls = 2 # # depth of walls
 
     bot_diameter = 1
     bot_height = 1
@@ -49,3 +53,22 @@ def build_rb1_world(model):
     }
 
     return texture_paths, world_info
+
+
+
+def build_rb1_blocks_world(model, width=20, hwalls=2, wwalls=40, dwalls=2):
+    """
+    Builds a simple rectangle planar world with walls around, and two blocks in the middle
+    Return : texture path, world information
+    """
+    n = width/2.0  # 1/2 width and depth of world
+    wwalls = 2*n # width of walls    
+    texture_paths, world_info = build_rb1_world(model,width=width, hwalls=hwalls, wwalls=wwalls, dwalls=dwalls)
+    
+    STONE = round_bot_model.Block.tex_coords((2, 1), (2, 1), (2, 1))
+    # first middle wall
+    model.add_block( (-n/2, hwalls/2, -n/3, wwalls/2, hwalls, dwalls, 0.0, 0.0, 0.0), STONE)
+    #model.add_block( (0, hwalls/2, -n/2, wwalls, hwalls, dwalls/2.0, 0.0, 0.0, 0.0), STONE)
+
+    return texture_paths, world_info
+

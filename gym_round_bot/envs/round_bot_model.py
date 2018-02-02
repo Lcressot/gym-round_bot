@@ -85,7 +85,6 @@ class Block(object):
     @staticmethod
     def tex_coord(x, y, n=4):
         """ Return the bounding vertices of the texture square.
-
         """
         m = 1.0 / n
         dx = x * m
@@ -146,18 +145,16 @@ class Block(object):
 
 class Cube(Block):
 
-    def __init__(components,texture):
+    def __init__(self,components,texture,block_type):
 
-        self.x,self.y,self.z,self.w, self.rx, self.ry, self.rz = components
-        self.vertices = self.cube_vertices(*components)
-        self.texture = texture 
+        x,y,z,w,rx,ry,rz = components
+        super(Cube,self).__init__( (x,y,z,w,w,w,rx,ry,rz),texture,block_type)
 
     def cube_vertices(x_off, y_off, z_off, w, rx=0, ry=0, rz=0):
         """ Return the vertices of the cube at position x, y, z with size w.
             y is up
         """        
         return self.block_vertices(x_off, y_off, z_off, w, w, w, rx, ry, rz) 
-
 
 
 
@@ -314,7 +311,10 @@ class Model(object):
                 if self.strafe[1]:
                     # Moving left or right.
                     dy = 0.0
-                    m = 1               
+                    m = 1  
+                if self.strafe[0] > 0:
+                    # Moving backwards.
+                    dy *= -1            
                 # When you are flying up or down, you have less left and right
                 # motion.
                 dx = math.cos(x_angle) * m
@@ -413,7 +413,9 @@ class Model(object):
 
         """
         if world == 'rb1':
-            texture_paths, world_info = round_bot_worlds.build_rb1_world(self)            
+            texture_paths, world_info = round_bot_worlds.build_rb1_world(self)
+        elif world == 'rb1_blocks':
+            texture_paths, world_info = round_bot_worlds.build_rb1_blocks_world(self)
         else:
             raise(Exception('Error: unknown world : ' + world))
 

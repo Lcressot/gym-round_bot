@@ -20,7 +20,7 @@ if platform == "darwin":
 
 class PygletWindow(pyglet.window.Window):
 
-    def __init__(self, model, global_pov=None, perspective=True, interactive=False, *args, **kwargs):
+    def __init__(self, model, global_pov=None, perspective=True, interactive=False, focal=65.0, *args, **kwargs):
         super(PygletWindow, self).__init__(*args, **kwargs)
 
         # A Batch is a collection of vertex lists for batched rendering.
@@ -40,8 +40,11 @@ class PygletWindow(pyglet.window.Window):
             if not perspective:
                 print('Warning : no global_pov provided, setting perspective to True')
                 perspective = True
+        else:
+            self.ortho_width = self.global_pov[1]*np.tan(np.radians(focal/2.0)) 
         # perspective or orthogonal projection
         self.perspective = perspective
+        self.focal = focal        
 
         # Wether or not the window has its own thread
         self.threaded = False
@@ -173,13 +176,13 @@ class PygletWindow(pyglet.window.Window):
         # allow to control robot for debug mode
         if self.model.flying:
             if (symbol == key.W and OSX) or (symbol == key.Z and not OSX):
-                self.model.strafe[0] += 1
-            elif symbol == key.S: # same for qwerty  and azerty
                 self.model.strafe[0] -= 1
+            elif symbol == key.S: # same for qwerty  and azerty
+                self.model.strafe[0] += 1
             elif (symbol == key.A and OSX) or (symbol == key.Q and not OSX):
-                self.model.strafe[1] += 1
-            elif symbol == key.D: # same for qwerty and azerty
                 self.model.strafe[1] -= 1
+            elif symbol == key.D: # same for qwerty and azerty
+                self.model.strafe[1] += 1
             elif (symbol == key.E and OSX) or (symbol == key.Z and not OSX):
                 self.model.change_robot_rotation(10,0)
             elif (symbol == key.Q and OSX) or (symbol == key.A and not OSX):
@@ -218,28 +221,14 @@ class PygletWindow(pyglet.window.Window):
         # allow to control robot for debug mode
         if self.model.flying:
             if (symbol == key.W and OSX) or (symbol == key.Z and not OSX):
-                self.model.strafe[0] -= 1
-            elif symbol == key.S: # same for qwerty  and azerty
                 self.model.strafe[0] += 1
+            elif symbol == key.S: # same for qwerty  and azerty
+                self.model.strafe[0] -= 1
             elif (symbol == key.A and OSX) or (symbol == key.Q and not OSX):
-                self.model.strafe[1] -= 1
+                self.model.strafe[1] += 1
             elif symbol == key.D: # same for qwerty and azerty
-                self.model.strafe[1] += 1        
+                self.model.strafe[1] -= 1        
 
-    def on_resize(self, width, height):
-        """ Called when the window is resized to a new `width` and `height`.
-
-        """
-        # label
-        #self.label.y = height - 10
-        # reticle
-        # if self.reticle:
-        #     self.reticle.delete()
-        x, y = self.width // 2, self.height // 2
-        n = 10
-        self.reticle = pyglet.graphics.vertex_list(4,
-            ('v2i', (x - n, y, x + n, y, x, y - n, x, y + n))
-        )
 
     def set_2d(self):
         """ Configure OpenGL to draw in 2d.
@@ -264,15 +253,14 @@ class PygletWindow(pyglet.window.Window):
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         if self.perspective:
-            gluPerspective(65.0, width / float(height), 0.1, 60.0)
+            gluPerspective(self.focal, width / float(height), 0.1, 60.0)
         else :
-            # if not perspective, make orthogonal projection given the global_pov
-            w = self.global_pov[1]*np.tan(np.radians(32.5)) #32.5 = 65/2
-            glOrtho(w, -w, w, -w ,0.1, 60.0)
+            # if not perspective, make orthogonal projection given the global_pov            
+            glOrtho(self.ortho_width, -self.ortho_width, self.ortho_width, -self.ortho_width ,0.1, 60.0)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         if self.global_pov:
-            glRotatef(90, 0, 0, 0) # look down           
+            glRotatef(90, 45, 0, 0) # look down           
             x,y, z = self.global_pov
             glTranslatef(-x, -y, -z)
         else:
