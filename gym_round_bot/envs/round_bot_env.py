@@ -96,7 +96,7 @@ class RoundBotEnv(gym.Env):
             if not self.window.visible:
                 self.window.set_visible(True)
 
-    def load(self, world='rb1', controller={"name":'Simple_TetaSpeed',"dteta":20,"speed":10}, winsize=[80,60]):
+    def load(self, world='rb1', controller={"name":'Simple_TetaSpeed',"dteta":20,"speed":10}, winsize=[80,60], global_pov=None, perspective=True):
         """
         Loads a world into environnement
         """
@@ -118,7 +118,7 @@ class RoundBotEnv(gym.Env):
         
         self.winSize= list(winsize)
         try:
-            self.window = pygletWindow.PygletWindow(self.model, interactive=False, width=winsize[0], height=winsize[1], caption='Round bot in '+world+' world', resizable=False, visible=True)
+            self.window = pygletWindow.PygletWindow(self.model, global_pov=global_pov, perspective = perspective, interactive=False, width=winsize[0], height=winsize[1], caption='Round bot in '+world+' world', resizable=False, visible=True)
             #self.window = pygletWindow.PygletWindow(self.model, width=winsize[0]/2, height=winsize[1]/2, caption='Round bot in '+world+' world', resizable=False, visible=False)
         except Exception as e:
             raise Exception("Error : could not load window for world : " + world)

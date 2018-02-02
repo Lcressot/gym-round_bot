@@ -3,127 +3,203 @@ import random
 import time
 import math
 import round_bot_worlds
-
+import numpy as np
 
 """
     This file defines the environnement's Model
 """
 
-def cube_vertices(x, y, z, n):
-    """ Return the vertices of the cube at position x, y, z with size 2*n.
-        y is up
+def rotation_matrices(rx,ry,rz):
     """
-    return [
-        x-n,y+n,z-n, x-n,y+n,z+n, x+n,y+n,z+n, x+n,y+n,z-n,  # top
-        x-n,y-n,z-n, x+n,y-n,z-n, x+n,y-n,z+n, x-n,y-n,z+n,  # bottom
-        x-n,y-n,z-n, x-n,y-n,z+n, x-n,y+n,z+n, x-n,y+n,z-n,  # left
-        x+n,y-n,z+n, x+n,y-n,z-n, x+n,y+n,z-n, x+n,y+n,z+n,  # right
-        x-n,y-n,z+n, x+n,y-n,z+n, x+n,y+n,z+n, x-n,y+n,z+n,  # front
-        x+n,y-n,z-n, x-n,y-n,z-n, x-n,y+n,z-n, x+n,y+n,z-n,  # back
-    ]
-
-
-def block_vertices(x, y, z, w, h, d):
-    """ Return the vertices of the cube at position x, y, z with size w d h.
-        y is up
+    Return numpy rotation matrices along x,y,z    
     """
-    w2=w/2.0; h2=h/2.0; d2=d/2.0
-    return [
-        x-w2,y+h2,z-d2, x-w2,y+h2,z+d2, x+w2,y+h2,z+d2, x+w2,y+h2,z-d2,  # top
-        x-w2,y-h2,z-d2, x+w2,y-h2,z-d2, x+w2,y-h2,z+d2, x-w2,y-h2,z+d2,  # bottom
-        x-w2,y-h2,z-d2, x-w2,y-h2,z+d2, x-w2,y+h2,z+d2, x-w2,y+h2,z-d2,  # left
-        x+w2,y-h2,z+d2, x+w2,y-h2,z-d2, x+w2,y+h2,z-d2, x+w2,y+h2,z+d2,  # right
-        x-w2,y-h2,z+d2, x+w2,y-h2,z+d2, x+w2,y+h2,z+d2, x-w2,y+h2,z+d2,  # front
-        x+w2,y-h2,z-d2, x-w2,y-h2,z-d2, x-w2,y+h2,z-d2, x+w2,y+h2,z-d2,  # back
-    ]
+    rx,ry,rz = np.radians(rx), np.radians(ry), np.radians(rz)
+    c, s = np.cos(rx), np.sin(rx)
+    Rx=np.matrix([[1.0,0.0,0.0],[0.0, c, -s],[0.0, s, c  ]])
+    c, s = np.cos(ry), np.sin(ry)
+    Ry=np.matrix([[c,0.0,s],[0.0, 1, 0.0],[-s, 0.0, c ]])
+    c, s = np.cos(rz), np.sin(rz)
+    Rz=np.matrix([[c, -s, 0.0],[s, c, 0.0 ],[0.0, 0.0, 1.0 ]])
+    return Rx, Ry, Rz
 
-def center_block(vertices):
-    """ Returns the center of the block. Compute the middle of a diagonal
+
+class Block(object):
+
+    def __init__(self,components,texture,block_type):
+
+        self.x, self.y, self.z, self.w, self.h, self.d, self.rx, self.ry, self.rz = components
+        self._make_block(*components)
+        self.texture = texture
+        self._compatible_types = ('robot', 'brick')
+        if not block_type in self._compatible_types:
+            raise Exception("Uncompatible block type : "+block_type)
+        self.block_type = block_type
+
+    @property
+    def components(self):
+        return self.x, self.y, self.z, self.w, self.h, self.d, self.rx, self.ry, self.rz
+
+    @property
+    def position(self):
+        return (self.x, self.y, self.z)
+
+    @position.setter
+    def position(self,position):
+        self.x, self.y, self.z = position
+
+    @property
+    def vertices(self):
+        """ Return vertices as python list of coordinates
+        """
+        return self._vertices.flatten().tolist()[0]
+    
+    def _make_block(self, x_off, y_off, z_off, w, h, d, rx=0, ry=0, rz=0):
+        """ Return a np array of the vertices of the cube at position x_off, y_off, z_off
+            with size w d h and rotation rx ry rz around x y z axis.
+            Note : y axis is up-down, (x,z) is the ground plane
+        """
+        self.x, self.y, self.z = 0.0, 0.0, 0.0
+        # first create a block centered around (0,0,0)
+        self._vertices = self.block_vertices(w,h,d)
+        # then rotate it along x, y, z axis
+        self.rotate(rx,ry,rz)
+        # finally translate it of x_off, y_off, z_off
+        self.translateTo(x_off,y_off,z_off)
+
+    @staticmethod
+    def block_vertices(w, h, d):
+        """ Return a np array of the vertices of the block centered on origin with no rotation,
+            and with size w d h
+            Note : y axis is up-down, (x,z) is the ground plane
+        """
+        w2=w/2.0; h2=h/2.0; d2=d/2.0
+        return np.array([
+            [0.0-w2,0.0+h2,0.0-d2],[0.0-w2,0.0+h2,0.0+d2],[0.0+w2,0.0+h2,0.0+d2],[0.0+w2,0.0+h2,0.0-d2],  # top
+            [0.0-w2,0.0-h2,0.0-d2],[0.0+w2,0.0-h2,0.0-d2],[0.0+w2,0.0-h2,0.0+d2],[0.0-w2,0.0-h2,0.0+d2],  # bottom
+            [0.0-w2,0.0-h2,0.0-d2],[0.0-w2,0.0-h2,0.0+d2],[0.0-w2,0.0+h2,0.0+d2],[0.0-w2,0.0+h2,0.0-d2],  # left
+            [0.0+w2,0.0-h2,0.0+d2],[0.0+w2,0.0-h2,0.0-d2],[0.0+w2,0.0+h2,0.0-d2],[0.0+w2,0.0+h2,0.0+d2],  # right
+            [0.0-w2,0.0-h2,0.0+d2],[0.0+w2,0.0-h2,0.0+d2],[0.0+w2,0.0+h2,0.0+d2],[0.0-w2,0.0+h2,0.0+d2],  # front
+            [0.0+w2,0.0-h2,0.0-d2],[0.0-w2,0.0-h2,0.0-d2],[0.0-w2,0.0+h2,0.0-d2],[0.0+w2,0.0+h2,0.0-d2]   # back
+            ])
+
+    @staticmethod
+    def tex_coord(x, y, n=4):
+        """ Return the bounding vertices of the texture square.
+
+        """
+        m = 1.0 / n
+        dx = x * m
+        dy = y * m
+        return dx, dy, dx + m, dy, dx + m, dy + m, dx, dy + m
+
+    @staticmethod
+    def tex_coords(top, bottom, side):
+        """ Return a list of the texture squares for the top, bottom and side.
+
+        """
+        top = Block.tex_coord(*top)
+        bottom = Block.tex_coord(*bottom)
+        side = Block.tex_coord(*side)
+        result = []
+        result.extend(top)
+        result.extend(bottom)
+        result.extend(side * 4)
+        return result
+    
+    def translate(self,dx,dy,dz):
+        """Translates vertices of offset vector
+        """
+        self._vertices += np.array([dx,dy,dz])
+        self.x += dx
+        self.y += dy
+        self.z += dz
+
+    def translateTo(self,x,y,z):
+        """Translates all vertices to center them on x,y,z
+        """
+        self.translate(x-self.x,y-self.y,z-self.z)
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def rotate(self,rx,ry,rz):
+        """Rotate vertices around x, y, z axis
+            WARNING : block must be centered around origin, if not rx,ry and rz will become wrong values
+        """
+        Rx,Ry,Rz = rotation_matrices(rx,ry,rz)        
+        R = np.matmul( Rx, np.matmul(Ry,Rz) )
+        self._vertices = np.transpose(  np.dot(R, np.transpose(self._vertices))  )
+        self.rx += rx
+        self.ry += ry
+        self.rz += rz    
+
+    def translate_and_rotate_to(self,x_off, y_off, z_off, rx, ry, rz):
+        """
+        Translate and rotate to given values (absolute and not relative transforms)
+        """
+        self._make_block(x_off, y_off, z_off, self.w, self.h, self.d, rx, ry, rz)
+        self.x, self.y, self.z = x_off, y_off, z_off
         
-    """
-    # offset of diagonal point of first point
-    ofs = 36
-    return [ (vertices[0]+vertices[0+ofs])/2.0, (vertices[1]+vertices[1+ofs])/2.0, (vertices[2]+vertices[2+ofs])/2.0 ]
 
 
-def tex_coord(x, y, n=4):
-    """ Return the bounding vertices of the texture square.
-
-    """
-    m = 1.0 / n
-    dx = x * m
-    dy = y * m
-    return dx, dy, dx + m, dy, dx + m, dy + m, dx, dy + m
 
 
-def tex_coords(top, bottom, side):
-    """ Return a list of the texture squares for the top, bottom and side.
+class Cube(Block):
 
-    """
-    top = tex_coord(*top)
-    bottom = tex_coord(*bottom)
-    side = tex_coord(*side)
-    result = []
-    result.extend(top)
-    result.extend(bottom)
-    result.extend(side * 4)
-    return result
+    def __init__(components,texture):
+
+        self.x,self.y,self.z,self.w, self.rx, self.ry, self.rz = components
+        self.vertices = self.cube_vertices(*components)
+        self.texture = texture 
+
+    def cube_vertices(x_off, y_off, z_off, w, rx=0, ry=0, rz=0):
+        """ Return the vertices of the cube at position x, y, z with size w.
+            y is up
+        """        
+        return self.block_vertices(x_off, y_off, z_off, w, w, w, rx, ry, rz) 
+
+
+
 
 
 class Model(object):
 
-    def __init__(self, world="tc1"):
+    def __init__(self, world="rb1", show_robot = False):
 
         # reference to window
         self.window = None
+        
+        # A set of all blocks
+        self.bricks = set()
+        
+        # Mapping from shown blocks to their texture
+        self.shown = dict()
 
-        # A number to keep trace of te number of created blocks
-        self.num_blocks_added = 0
-
-        # A set of the current block ids
-        self.block_ids = set()
-
-        # A mapping from blocks id to the block components x,y,z,w,h,d
-        self.blocks = {}
-
-        # A mapping from blocks id to the blocks vertices
-        self.block_vertices = {}
-
-        # A mapping from block id to the texture of the block at that block id.
-        # This defines all the blocks that are currently in the world.
-        self.textures = {}
-
-        # Same mapping as `textures` but only contains blocks that are shown.
-        self.shown = {}
-
-        # Mapping from block id to a pyglet `VertextList` for all shown blocks.
-        self._shown = {}
-
-        # Mapping from sector to a list of block ids inside that sector.
-        #self.sectors = {}
-
-        # Simple function queue implementation. The queue is populated with
-        # _show_block() and _hide_block() calls
-        #self.queue = deque()
-
-        self.reset()
+        # wether to show robot or not
+        self.show_robot = show_robot       
 
         self.ticks_per_sec = 60
 
-        self.robot_height = 1
-        self.robot_diameter = 0.5
-
         self.walking_speed = 10
         self.flying_speed = 15
+        
+        self.world_info = None
+        self.texture_paths = None # used for rendering with window
+        self.start_position, self.start_rotation, self.start_strafe = None,None,None
+        self.robot_height, self.robot_diameter = None,None
 
-        self.texture_path = None # used for rendering with window
         # load world        
         self.load_world(world)
+
+        self.flying, self.collided = None, None
+
+        # reset first time
+        self.reset()
         
     def reset(self):
         # Current x, y, z position in the world, specified with floats. Note
         # that, perhaps unlike in math class, the y-axis is the vertical axis.
-        self.robot_position = [0, 1.2, 0]
+        self.robot_position = self.start_position
 
         # First element is rotation of the player in the x-z plane (ground
         # plane) measured from the z-axis down. The second is the rotation
@@ -131,8 +207,7 @@ class Model(object):
         #
         # The vertical plane rotation ranges from -90 (looking straight down) to
         # 90 (looking straight up). The horizontal rotation range is unbounded.
-        self.robot_rotation = [0, 0]
-
+        self.robot_rotation = self.start_rotation
 
         # Strafing is moving lateral to the direction you are facing,
         # e.g. moving to the left or right while continuing to face forward.
@@ -140,126 +215,83 @@ class Model(object):
         # First element is -1 when moving forward, 1 when moving back, and 0
         # otherwise. The second element is -1 when moving left, 1 when moving
         # right, and 0 otherwise.
-        self.strafe = [0, 0]
+        self.strafe = self.start_strafe
 
         self.flying = False   
         self.collided = False     
 
-    def add_block(self, components, texture, immediate=True):
+    def add_block(self, components, texture, block_type='brick'):
         """ Add a block with the given `texture` and `position` to the world.
 
         Parameters
         ----------
-        components : list of x,y,z,w,h,d block components
+        components : tuple of x,y,z,w,h,d block components
         texture : list of len 3
             The coordinates of the texture squares. Use `tex_coords()` to
-            generate.
-        immediate : bool
-            Whether or not to draw the block immediately.
-
+            generate.       
         """
-        self.num_blocks_added = self.num_blocks_added+1
-        new_block_id = self.num_blocks_added
-        self.block_ids.add(new_block_id)
-        self.blocks[new_block_id] =  components
-        self.block_vertices[new_block_id] = block_vertices(*components)
-        self.textures[new_block_id] = texture
-        #self.sectors.setdefault(sectorize(center_position), []).append(center_position)
-        if immediate:
-            #if self.exposed(position):
-            self.show_block(new_block_id)
-            #self.check_neighbors(position)
+        block = Block( components, texture, block_type )
+        if block_type=='brick':
+            self.bricks.add( block )
+        else:
+            self.robot_block = block 
 
-    def remove_block(self, block_id, immediate=True):
-        """ Remove the block at the given `position`.
 
-        Parameters
-        ----------
-        position : tuple of len 3
-            The (x, y, z) position of the block to remove.
-        immediate : bool
-            Whether or not to immediately remove block from canvas.
-
-        """
-        vertices = self.textures[block_id]
-        center_position = center_block(vertices)
-        #self.sectors[sectorize(center_position)].remove(center_position)
-        if immediate:
-            if block_id in self.shown:
-                self.hide_block(block_id)
-            #self.check_neighbors(position)
-        del self.textures[block_id]
-        del self.blocks[block_id]
-        del self.block_vertices[block_id]
-        del self.block_ids[block_id]
-
+    def remove_block(self, block):
+        """ Remove the block
+        """        
+        if block in self.shown:
+            self.hide_block(block)
+            
+        if not block==self.robot_block:
+            self.bricks.remove(block)
+        else:
+            del self.robot_block
+        
    
-    def show_block(self, block_id, immediate=True):
+    def show_block(self, block):
         """ Show the block at the given `position`. This method assumes the
         block has already been added with add_block()
 
         Parameters
         ----------
         block id
-            The (x, y, z) position of the block to show.
-        immediate : bool
-            Whether or not to show the block immediately.
-
+            The (x, y, z) position of the block to show.        
         """
-        texture = self.textures[block_id]
-        self.shown[block_id] = texture
-        if immediate:
-            self.window.show_block(block_id, texture)
-        else:
-            self._enqueue(self._show_block, block_id, texture)
+        #self.shown[block] = block.texture        
+        self.window.show_block(block)
 
-    def show_all_blocks(self):
+    def show_all_bricks(self):
         """ Show all blocks at once
         """
-        for block_id in self.block_ids:
-            self.show_block(block_id)
+        for block in self.bricks:
+            if block.block_type=='brick':
+                self.show_block(block)
     
 
-    def hide_block(self, block_id, immediate=True):
-        """ Hide the block at the given `position`. Hiding does not remove the
+    def hide_block(self, block):
+        """ Hide the block . Hiding does not remove the
         block from the world.
-
-        Parameters
-        ----------
-        block_id : id of the block
-            The (x, y, z) position of the block to hide.
-        immediate : bool
-            Whether or not to immediately remove the block from the canvas.
-
         """
-        self.shown.pop(block_id)
-        if immediate:
-            self._hide_block(block_id)
-        else:
-            self._enqueue(self._hide_block, block_id)
+        self.shown.pop(block)
+        
 
-    def _hide_block(self, block_id):
-        """ Private implementation of the 'hide_block()` method.
-
-        """
-        self._shown.pop(block_id).delete()
-
-    def get_sight_vector(self):
-        """ Returns the current line of sight vector indicating the direction
-        the player is looking.
-
-        """
-        x, y = self.robot_rotation
-        # y ranges from -90 to 90, or -pi/2 to pi/2, so m ranges from 0 to 1 and
-        # is 1 when looking ahead parallel to the ground and 0 when looking
-        # straight up or down.
-        m = math.cos(math.radians(y))
-        # dy ranges from -1 to 1 and is -1 when looking straight down and 1 when
-        # looking straight up.
-        dy = math.sin(math.radians(y))
-        dx = math.cos(math.radians(x - 90)) * m
-        dz = math.sin(math.radians(x - 90)) * m
-        return (dx, dy, dz)
+    # def get_sight_vector(self):
+    #     """ Returns the current line of sight vector indicating the direction
+    #     the player is looking.
+    #     """
+    
+    #     x, y = self.robot_rotation
+    #     # y ranges from -90 to 90, or -pi/2 to pi/2, so m ranges from 0 to 1 and
+    #     # is 1 when looking ahead parallel to the ground and 0 when looking
+    #     # straight up or down.
+    #     m = math.cos(math.radians(y))
+    #     # dy ranges from -1 to 1 and is -1 when looking straight down and 1 when
+    #     # looking straight up.
+    #     dy = math.sin(math.radians(y))
+    #     dx = math.cos(math.radians(x - 90)) * m
+    #     dz = math.sin(math.radians(x - 90)) * m
+    #     return (dx, dy, dz)
 
     def get_motion_vector(self):
         """ Returns the current motion vector indicating the velocity of the
@@ -282,10 +314,7 @@ class Model(object):
                 if self.strafe[1]:
                     # Moving left or right.
                     dy = 0.0
-                    m = 1
-                if self.strafe[0] > 0:
-                    # Moving backwards.
-                    dy *= -1
+                    m = 1               
                 # When you are flying up or down, you have less left and right
                 # motion.
                 dx = math.cos(x_angle) * m
@@ -309,51 +338,52 @@ class Model(object):
         self.robot_rotation = [ x, y ]
 
     def update(self, dt):
-        """ This is where most
-        of the motion logic lives, along with gravity and collision detection.
+        """ This is where mostof the motion logic lives
 
         Parameters
         ----------
         dt : float
             The change in time since the last call.
-
         """
         # walking
-        speed = self.flying_speed if self.flying else self.walking_speed
+        speed = self.walking_speed if not self.flying else self.flying_speed
         
         d = dt * speed # distance covered this tick.
         dx, dy, dz = self.get_motion_vector()
         # New position in space, before accounting for gravity.
         dx, dy, dz = dx * d, dy * d, dz * d
-        # gravity
-        # if not self.flying:
-        #     # Update your vertical speed: if you are falling, speed up until you
-        #     # hit terminal velocity; if you are jumping, slow down until you
-        #     # start falling.
-        #     self.dy -= dt * GRAVITY
-        #     self.dy = max(self.dy, -TERMINAL_VELOCITY)
-        # dy += self.dy * dt
 
         # collisions
         x, y, z = self.robot_position
-        self.robot_position = self.collide((x,y,z),(x + dx, y + dy, z + dz))
-        self.collided = (self.robot_position == (x,y,z))
+        new_position = (x + dx, y + dy, z + dz)
 
-    def collide(self, cur_position, new_position):
-        """ Checks to see if the cylindric robot at the given x,y,z
+        self.collided = self.collide(new_position)
+        if not self.collided:
+            self.robot_position = new_position
+
+        if self.show_robot:
+            # update robot's block            
+            rx,ry = self.robot_rotation
+            x, y, z = self.robot_position
+            self.robot_block.translate_and_rotate_to(x,y,z,-ry,-rx,0.0)
+            # try: # if robot is shown, update the shown vertices
+            self.shown[self.robot_block].vertices = self.robot_block.vertices
+            # except:
+            #     None
+
+
+    def collide(self, new_position):
+        """ Checks to see if the cylindric robot at the given new x,y,z
         position with given diamter and height
         is colliding with any blocks in the world.
 
         Parameter
         --------
-        cur_position : current position of the robot
         new_position : new position of robot to check
 
         Returns
         -------
-        position : tuple of len 3
-            The new position of the robot taking into account collisions.
-
+        Bool : collided
         """
         
         # iterate over blocks and check for collision :
@@ -361,21 +391,21 @@ class Model(object):
         # TODO : improve to integer diagonal walls
         # TODO : optimize with walls and floors (x2) or with quadtree
         x,y,z = new_position
-        robot_diameter = self.robot_diameter
-        robot_height = self.robot_height
-        for block_id, block in self.blocks.iteritems():
+        robot_width = self.robot_block.w
+        robot_height = self.robot_block.h
+        for brick in self.bricks:
             xcol,ycol,zcol = False,False,False
-            xb,yb,zb,w,h,d = block
-            if abs(x-xb) <  w/2.0 + robot_diameter:
+            xb,yb,zb,w,h,d,_,_,_ = brick.components
+            if abs(x-xb) <  (w+robot_width)/2.0:
                 xcol = True
-            if abs(z-zb) <  d/2.0 + robot_diameter:
+            if abs(z-zb) <  (d+robot_width)/2.0:
                 zcol = True
-            if abs(y-robot_height/2.0-yb) <  h/2.0 :
+            if abs(y-yb) <  (h+robot_height)/2.0 :
                 ycol = True
             if xcol and zcol and ycol:
-                return cur_position            
+                return True           
 
-        return list(new_position)
+        return False
 
 
     def load_world(self, world):
@@ -383,38 +413,16 @@ class Model(object):
 
         """
         if world == 'rb1':
-            self.texture_path, self.world_info = round_bot_worlds.build_rb1_world(self)
+            texture_paths, world_info = round_bot_worlds.build_rb1_world(self)            
         else:
             raise(Exception('Error: unknown world : ' + world))
 
-    def _enqueue(self, func, *args):
-        """ Add `func` to the internal queue.
+        self.world_info = world_info
+        self.texture_paths = texture_paths
+        self.start_position = self.robot_block.position
+        # Note: ry,rx -> x,y cause x is (Oxz) wheras rx is rotation around x, same for y and ry
+        self.start_rotation = (self.robot_block.ry, self.robot_block.rx)
+        self.start_strafe = [0.0,0.0] # start with a null strafe
+            
 
-        """
-        self.queue.append((func, args))
-
-    def _dequeue(self):
-        """ Pop the top function from the internal queue and call it.
-
-        """
-        func, args = self.queue.popleft()
-        func(*args)
-
-    def process_queue(self):
-        """ Process the entire queue while taking periodic breaks. This allows
-        the game loop to run smoothly. The queue contains calls to
-        _show_block() and _hide_block() so this method should be called if
-        add_block() or remove_block() was called with immediate=False
-
-        """
-        start = time.clock()
-        while self.queue and time.clock() - start < 1.0 / self.ticks_per_sec:
-            self._dequeue()
-
-    def process_entire_queue(self):
-        """ Process the entire queue with no breaks.
-
-        """
-        while self.queue:
-            self._dequeue()
 

@@ -20,17 +20,28 @@ if platform == "darwin":
 
 class PygletWindow(pyglet.window.Window):
 
-    def __init__(self, model, interactive=False, *args, **kwargs):
+    def __init__(self, model, global_pov=None, perspective=True, interactive=False, *args, **kwargs):
         super(PygletWindow, self).__init__(*args, **kwargs)
 
         # A Batch is a collection of vertex lists for batched rendering.
         self.batch = pyglet.graphics.Batch()
 
         # A TextureGroup manages an OpenGL texture.
-        self.group = TextureGroup(image.load(model.texture_path).get_texture())
+        self.texture_groups = {'brick':None, 'robot':None}
+        self.texture_groups['brick'] = TextureGroup(image.load(model.texture_paths['brick']).get_texture())
+        self.texture_groups['robot'] = TextureGroup(image.load(model.texture_paths['robot']).get_texture())
 
         # Whether or not the window exclusively captures the mouse.
         self.exclusive = False
+
+        # Global point of view : if None, view is subjective
+        self.global_pov = global_pov
+        if not global_pov:
+            if not perspective:
+                print('Warning : no global_pov provided, setting perspective to True')
+                perspective = True
+        # perspective or orthogonal projection
+        self.perspective = perspective
 
         # Wether or not the window has its own thread
         self.threaded = False
@@ -50,31 +61,19 @@ class PygletWindow(pyglet.window.Window):
         # set window pointer of model
         self.model.window = self
 
-        # The label that is displayed in the top left of the canvas.
-        # self.label = pyglet.text.Label('', font_name='Arial', font_size=18,
-        #     x=10, y=self.height - 10, anchor_x='left', anchor_y='top',
-        #     color=(0, 0, 0, 255))       
-
         # show all blocks
-        self.model.show_all_blocks()
+        self.model.show_all_bricks()
+        if self.global_pov: # if global_pov, show robot's block
+            self.model.show_robot=True
+            self.show_block(self.model.robot_block)
 
-    def show_block(self, block_id, texture):
+    def show_block(self, block):
         """ Private implementation of the `show_block()` method.
-
-        Parameters
-        ----------
-        block_id : id of the block
-        texture : list of len 3
-            The coordinates of the texture squares. Use `tex_coords()` to
-            generate.
-
         """
-        texture_data = list(texture)
-        # create vertex list
         # FIXME Maybe `add_indexed()` should be used instead
-        self.model._shown[block_id] = self.batch.add(24, GL_QUADS, self.group,
-            ('v3f/static', self.model.block_vertices[block_id]),
-            ('t2f/static', texture_data))    
+        self.model.shown[block] = self.batch.add(24, GL_QUADS, self.texture_groups[block.block_type],
+            ('v3f/static', block.vertices),
+            ('t2f/static', list(block.texture)))    
 
     def set_exclusive_mouse(self, exclusive):
         """ If `exclusive` is True, the game will capture the mouse, if False
@@ -82,9 +81,7 @@ class PygletWindow(pyglet.window.Window):
 
         """
         super(PygletWindow, self).set_exclusive_mouse(exclusive)
-        self.exclusive = exclusive
-
-   
+        self.exclusive = exclusive   
 
     def update(self, dt, m=1):
         """ 
@@ -155,7 +152,7 @@ class PygletWindow(pyglet.window.Window):
             m = 0.15
             x, y = self.model.robot_rotation
             x, y = x + dx * m, y + dy * m
-            y = max(-90, min(90, y))
+            y = max(-90, min(90, y)) if not self.global_pov else 0.0
             self.model.robot_rotation = (x, y)
 
     def on_key_press(self, symbol, modifiers):
@@ -176,13 +173,13 @@ class PygletWindow(pyglet.window.Window):
         # allow to control robot for debug mode
         if self.model.flying:
             if (symbol == key.W and OSX) or (symbol == key.Z and not OSX):
-                self.model.strafe[0] -= 1
-            elif symbol == key.S: # same for qwerty  and azerty
                 self.model.strafe[0] += 1
+            elif symbol == key.S: # same for qwerty  and azerty
+                self.model.strafe[0] -= 1
             elif (symbol == key.A and OSX) or (symbol == key.Q and not OSX):
-                self.model.strafe[1] -= 1
-            elif symbol == key.D: # same for qwerty and azerty
                 self.model.strafe[1] += 1
+            elif symbol == key.D: # same for qwerty and azerty
+                self.model.strafe[1] -= 1
             elif (symbol == key.E and OSX) or (symbol == key.Z and not OSX):
                 self.model.change_robot_rotation(10,0)
             elif (symbol == key.Q and OSX) or (symbol == key.A and not OSX):
@@ -221,13 +218,13 @@ class PygletWindow(pyglet.window.Window):
         # allow to control robot for debug mode
         if self.model.flying:
             if (symbol == key.W and OSX) or (symbol == key.Z and not OSX):
-                self.model.strafe[0] += 1
-            elif symbol == key.S: # same for qwerty  and azerty
                 self.model.strafe[0] -= 1
+            elif symbol == key.S: # same for qwerty  and azerty
+                self.model.strafe[0] += 1
             elif (symbol == key.A and OSX) or (symbol == key.Q and not OSX):
-                self.model.strafe[1] += 1
+                self.model.strafe[1] -= 1
             elif symbol == key.D: # same for qwerty and azerty
-                self.model.strafe[1] -= 1        
+                self.model.strafe[1] += 1        
 
     def on_resize(self, width, height):
         """ Called when the window is resized to a new `width` and `height`.
@@ -266,14 +263,24 @@ class PygletWindow(pyglet.window.Window):
         glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        gluPerspective(65.0, width / float(height), 0.1, 60.0)
+        if self.perspective:
+            gluPerspective(65.0, width / float(height), 0.1, 60.0)
+        else :
+            # if not perspective, make orthogonal projection given the global_pov
+            w = self.global_pov[1]*np.tan(np.radians(32.5)) #32.5 = 65/2
+            glOrtho(w, -w, w, -w ,0.1, 60.0)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-        x, y = self.model.robot_rotation
-        glRotatef(x, 0, 1, 0)
-        glRotatef(-y, math.cos(math.radians(x)), 0, math.sin(math.radians(x)))
-        x,y, z = self.model.robot_position
-        glTranslatef(-x, -y, -z)
+        if self.global_pov:
+            glRotatef(90, 0, 0, 0) # look down           
+            x,y, z = self.global_pov
+            glTranslatef(-x, -y, -z)
+        else:
+            x, y = self.model.robot_rotation
+            glRotatef(x, 0, 1, 0)
+            glRotatef(-y, math.cos(math.radians(x)), 0, math.sin(math.radians(x)))
+            x,y, z = self.model.robot_position
+            glTranslatef(-x, -y, -z)        
 
     def on_draw(self):
         """ Called by pyglet to draw the canvas.
@@ -296,7 +303,7 @@ class PygletWindow(pyglet.window.Window):
         x,y, z = self.model.robot_position
         self.label.text = '%02d (%.2f, %.2f, %.2f) %d / %d' % (
             pyglet.clock.get_fps(), x, y, z,
-            len(self.model._shown), len(self.model.textures))
+            len(self.model.shown), len(self.model.textures))
         self.label.draw()
 
     def draw_reticle(self):
