@@ -36,7 +36,7 @@ class Simple_TetaSpeed_Controller(Controller):
         3 : "ROTATELEFT", 
 		}
 		self.actions = {
-		0 : "self.model.strafe[0]=1",
+		0 : "self.model.strafe[0]=-1", #-1 is forward
         1 : "self.model.strafe[0]=0",
         2 : "self.model.change_robot_rotation(self.dteta,0)",
         3 : "self.model.change_robot_rotation(-self.dteta,0)",
