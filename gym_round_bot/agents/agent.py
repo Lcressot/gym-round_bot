@@ -89,6 +89,8 @@ class Agent(object):
             old_action=None
             while not done:
                 action = self.policy(ob)
+                if type(action)==type([]):
+                    action=tuple(action) # convert lists to tuple for controller                    
                 new_ob, reward, done, _ = env.step(action)
                 if self.transformation:
                     new_ob=self.tranformation(new_ob)

@@ -19,7 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('-r','--recordto', default='./datarb1.npz', help='npz record file')
     parser.add_argument('-v','--verbose', action="store_true", default=False, help='verbose')
     parser.add_argument('--speed', type=float, default=10.0, help='agent\'s speed')
-    parser.add_argument('--dteta', type=float, default=20.0, help='rotation angle')
+    parser.add_argument('--dtheta', type=float, default=20.0, help='rotation angle')
     args = parser.parse_args()
 
     if not '.npz' in args.recordto:
@@ -32,7 +32,8 @@ if __name__ == '__main__':
     
     env = gym.make(args.env_id)
     if args.env_id=='RoundBot-v0':
-       env.unwrapped.load(world='rb1',winsize=winsize, controller={"name":'Simple_XZ',"speed":args.speed},global_pov=(0,20,0),perspective=False)
+       env.unwrapped.load(world='rb1',winsize=winsize, controller={"name":'Simple_XZ',"speed":args.speed,"xzrange":2},global_pov=(0,20,0),perspective=False)
+       env.action_space = env.unwrapped.action_space
     #policy=args.policy_id
     #myagent = myagent.make(env.action_space,policy)
     

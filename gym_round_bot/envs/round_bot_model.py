@@ -178,6 +178,7 @@ class Model(object):
         self.ticks_per_sec = 60
 
         self.walking_speed = 10
+        self.initial_walking = 10
         self.flying_speed = 15
         
         self.world_info = None

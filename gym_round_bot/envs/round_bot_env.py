@@ -103,7 +103,7 @@ class RoundBotEnv(gym.Env):
         else: 
             raise Exception('Unknown render mode: '+mode)
 
-    def load(self, world='rb1', controller={"name":'Simple_TetaSpeed',"dteta":20,"speed":10}, winsize=[80,60], global_pov=None, perspective=True):
+    def load(self, world='rb1', controller={"name":'Simple_TetaSpeed',"dtheta":20,"speed":10}, winsize=[80,60], global_pov=None, perspective=True):
         """
         Loads a world into environnement
         """
@@ -119,10 +119,14 @@ class RoundBotEnv(gym.Env):
 
         try:
             if controller["name"]=="Simple_TetaSpeed":
-                self.controller = round_bot_controller.Simple_TetaSpeed_Controller(model=self.model, dteta=controller["dteta"],speed=controller["speed"])
+                self.controller = round_bot_controller.Simple_TetaSpeed_Controller(model=self.model, dtheta=controller["dtheta"],speed=controller["speed"])
+                self.action_space = spaces.Discrete(len(self.controller.actions))
 
             elif controller["name"]=="Simple_XZ":
-                self.controller = round_bot_controller.Simple_XZ_Controller(model=self.model,speed=controller["speed"])
+                xzrange=controller["xzrange"]
+                self.controller = round_bot_controller.Simple_XZ_Controller(model=self.model, speed=controller["speed"], xzrange=xzrange)
+                self.action_space = spaces.MultiDiscrete([ [-1*xzrange,xzrange],[-1*xzrange,xzrange] ])
+                print("EEEEEEE"+str(self.action_space.sample()))
                 
         except Exception as e:
             raise Exception("Error : unable to create controller with args : " + str(controller) )
@@ -134,11 +138,8 @@ class RoundBotEnv(gym.Env):
         except Exception as e:
             raise Exception("Error : could not load window for world : " + world)
         # observation are RGB images of rendered world      
-        self.observation_space = spaces.Box(low=0, high=255, shape=[winsize[0], winsize[1], 3])
-        self.action_space = spaces.Discrete(len(self.controller.action_meaning))
+        self.observation_space = spaces.Box(low=0, high=255, shape=[winsize[0], winsize[1], 3])        
 
-    def get_action_meanings(self):
-        return [self.controller.action_meaning[i] for i in self.action_space]
 
 
     
