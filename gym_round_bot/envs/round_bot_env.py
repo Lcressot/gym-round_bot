@@ -65,7 +65,7 @@ class RoundBotEnv(gym.Env):
             w = self.model.world_info["width"]
             d = self.model.world_info["depth"]
             # check distance to top right corner
-            if (x-w/2.0)**2 + (z-d/2.0)**2 < (0.3*min(w,d)/2.0)**2:
+            if (x-w/2.0)**2 + (z-d/2.0)**2 < (0.3*min(w,d))**2:
                 reward = reward + 1.0
             # reward 0 else                 
 
@@ -103,7 +103,7 @@ class RoundBotEnv(gym.Env):
         else: 
             raise Exception('Unknown render mode: '+mode)
 
-    def load(self, world='rb1', controller={"name":'Simple_TetaSpeed',"dteta":20,"speed":10}, winsize=[80,60], global_pov=None, perspective=True):
+    def load(self, world='rb1', controller={"name":'Simple_TetaSpeed',"dtheta":20,"speed":10}, winsize=[80,60], global_pov=None, perspective=True):
         """
         Loads a world into environnement
         """
@@ -119,7 +119,7 @@ class RoundBotEnv(gym.Env):
 
         try:
             if controller["name"]=="Simple_TetaSpeed":
-                self.controller = round_bot_controller.Simple_TetaSpeed_Controller(model=self.model, dteta=controller["dteta"],speed=controller["speed"])
+                self.controller = round_bot_controller.Simple_TetaSpeed_Controller(model=self.model, dtheta=controller["dtheta"],speed=controller["speed"])
 
             elif controller["name"]=="Simple_XZ":
                 self.controller = round_bot_controller.Simple_XZ_Controller(model=self.model,speed=controller["speed"])

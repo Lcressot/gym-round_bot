@@ -23,11 +23,11 @@ class Controller(object):
 
 class Simple_TetaSpeed_Controller(Controller):
 	"""
-	This class controls the robot with fixed dteta rotations and fixed speed forward move
+	This class controls the robot with fixed dtheta rotations and fixed speed forward move
 	"""
-	def __init__(self, model, dteta, speed):
+	def __init__(self, model, dtheta, speed):
 		super(Simple_TetaSpeed_Controller,self).__init__(model,"Simple_TetaSpeed")
-		self.dteta = dteta
+		self.dtheta = dtheta
 		self.model.walking_speed = speed
 		self.action_meaning = {
 		0 : "MOVEFORWARD",
@@ -38,8 +38,8 @@ class Simple_TetaSpeed_Controller(Controller):
 		self.actions = {
 		0 : "self.model.strafe[0]=-1", #-1 is forward
         1 : "self.model.strafe[0]=0",
-        2 : "self.model.change_robot_rotation(self.dteta,0)",
-        3 : "self.model.change_robot_rotation(-self.dteta,0)",
+        2 : "self.model.change_robot_rotation(self.dtheta,0)",
+        3 : "self.model.change_robot_rotation(-self.dtheta,0)",
 		}
 
 	@property
