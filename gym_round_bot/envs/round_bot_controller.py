@@ -42,7 +42,7 @@ class Simple_TetaSpeed_Controller(Controller):
         3 : "self.model.change_robot_rotation(-self.dteta,0)",
 		}
 
-	@speed.setter
+	@property
 	def speed(self, s):
 		self.model.walking_speed = s
 
@@ -66,13 +66,13 @@ class Simple_XZ_Controller(Controller):
         3 : "MOVE LEFT", 
 		}
 		self.actions = {
-		0 : "self.model.strafe[0]=-1", #-1 is forward
-        1 : "self.model.strafe[0]=1", # move backward
-        2 : "self.model.strafe[1]=1",
-        3 : "self.model.strafe[0]=-1",
+		0 : "self.model.strafe[1]=0; self.model.strafe[0]=-1", #-1 is forward
+        1 : "self.model.strafe[1]=0; self.model.strafe[0]=1",
+        2 : "self.model.strafe[0]=0; self.model.strafe[1]=1", 
+        3 : "self.model.strafe[0]=0; self.model.strafe[1]=-1",
 		}
 
-	@speed.setter
+	@property
 	def speed(self, s):
 		self.model.walking_speed = s
 

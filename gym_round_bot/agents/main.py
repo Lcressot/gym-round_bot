@@ -32,7 +32,7 @@ if __name__ == '__main__':
     
     env = gym.make(args.env_id)
     if args.env_id=='RoundBot-v0':
-       env.unwrapped.load(world='rb1',winsize=winsize, controller={"name":'Simple_TetaSpeed',"dteta":args.dteta,"speed":args.speed},global_pov=(0,20,0),perspective=False)
+       env.unwrapped.load(world='rb1',winsize=winsize, controller={"name":'Simple_XZ',"speed":args.speed},global_pov=(0,20,0),perspective=False)
     #policy=args.policy_id
     #myagent = myagent.make(env.action_space,policy)
     

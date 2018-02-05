@@ -19,7 +19,7 @@ COMPATIBLE_WORLDS={ "rb1", # rectangle set, first person view, reward in top lef
                     "rb1_blocks", # rectangle set, first person view, reward in top left corner, middle blocks
 }
 
-COMPATIBLE_CONTROLLERS ={ "Simple_TetaSpeed",
+COMPATIBLE_CONTROLLERS ={ "Simple_TetaSpeed", "Simple_XZ"
 }
 
 class RoundBotEnv(gym.Env):
@@ -117,11 +117,15 @@ class RoundBotEnv(gym.Env):
         self.world = world
         self.model = round_bot_model.Model(world)
 
-        if controller["name"]=="Simple_TetaSpeed":
-            try:
+        try:
+            if controller["name"]=="Simple_TetaSpeed":
                 self.controller = round_bot_controller.Simple_TetaSpeed_Controller(model=self.model, dteta=controller["dteta"],speed=controller["speed"])
-            except Exception as e:
-                raise Exception("Error : unable to create controller with args : " + str(controller) )
+
+            elif controller["name"]=="Simple_XZ":
+                self.controller = round_bot_controller.Simple_XZ_Controller(model=self.model,speed=controller["speed"])
+                
+        except Exception as e:
+            raise Exception("Error : unable to create controller with args : " + str(controller) )
         
         self.winSize= list(winsize)
         try:
