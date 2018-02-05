@@ -71,12 +71,11 @@ class Agent(object):
         episode_starts=[]
         reward_ep=np.zeros((n_ep,1))
         t=0
-        t1= time.clock()   
+        t1= time.time()   
 
         if keep_screen:
             env.reset()
             winsize=env.render(mode='rgb_array').shape
-            size_line=new_winsize[0]*new_winsize[1]*3
 
         for i in range(n_ep):
             # random seed to current time
@@ -99,11 +98,8 @@ class Agent(object):
                     done = j>=max_step
                 if keep_screen:
                     rnd=env.render(mode='rgb_image')
-                    #rnd=scipy.misc.imresize(rnd, (new_winsize[0],new_winsize[1],3))
-                    #plt.imshow(rnd.reshape(16,16,3), interpolation='nearest')
-                    #plt.imshow(rnd)
-                    #plt.pause(0.0001)
-                    #rnd=rnd.reshape((new_winsize[0],new_winsize[1],3))/255.
+                    if new_winsize:
+                        rnd=scipy.misc.imresize(rnd, (new_winsize[0],new_winsize[1],3))                   
                     screens.append(rnd.reshape(-1))
                 observations.append(ob)
                 rewards.append(reward)
@@ -116,10 +112,12 @@ class Agent(object):
                 t+=1
                 if t==100:
                     # print expected computation time
-                    t2= time.clock()
+                    t2= time.time()
                     print('Expected computation time: '+str( (t2-t1)/100.0*n_ep*max_step) +' s')
             if verbose:
                 print( "mean step time execution for trajectory "+str(i)+" : " + str((t2-t1)/t) )
+        t2= time.time()
+        print('Final computation time: '+str(t2-t1) +' s')
         return {"reward_ep":reward_ep,"rewards":rewards, "observations":observations, "actions":actions, "episode_starts":episode_starts, "screens":screens}
 
 

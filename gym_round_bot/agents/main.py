@@ -12,7 +12,7 @@ import agent
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('-id','--env_id', default='RoundBot-v0', help='Select the environment to run')
-    #parser.add_argument('-c','--controller', default='Simple_XZ', help='Select the agent\'s controller')
+    parser.add_argument('-c','--controller', default='Simple_XZ', help='Select the agent\'s controller')
     parser.add_argument('-p','--policy_id', default='RandomAgent', help='Select the policy of the agent to run')
     parser.add_argument('-ms','--max_step',  type=int,default=200, help='Number of steps in a trajectory')
     parser.add_argument('-w','--winsize', nargs=2, type=int, metavar=('w','h'), default=(16,16), help='Number of steps in a trajectory')
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     
     env = gym.make(args.env_id)
     if args.env_id=='RoundBot-v0':
-       env.unwrapped.load(world='rb1',winsize=winsize, controller={"name":'Simple_XZ',"speed":args.speed,"xzrange":2},global_pov=(0,20,0),perspective=False)
+       env.unwrapped.load(world='rb1',winsize=winsize, controller={"name":args.controller,"speed":args.speed,"xzrange":2},global_pov=(0,20,0),perspective=False)
        env.action_space = env.unwrapped.action_space
     #policy=args.policy_id
     #myagent = myagent.make(env.action_space,policy)
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     # policy=agent.Epsilon_greedy_policy(env.action_space,epsilon=0.1)
     # myagent=agent.Agent_Q_learning(env.action_space,policy)
     myagent=agent.Agent(env.action_space,policy)
-    stats=myagent.train(env,n_ep,max_step,verbose=False,keep_screen=True,new_winsize=(16,16,3))
+    stats=myagent.train(env,n_ep,max_step,verbose=False,keep_screen=True,new_winsize=None)
     # plt.plot(stats["reward_ep"])
     # plt.show()
 
@@ -57,4 +57,7 @@ if __name__ == '__main__':
         #save dictionnary
         stats["episode_starts"][0]=True
         stats["episode_starts"][-1]=False
-        np.savez(args.recordto, rewards=stats["rewards"], observations=stats["screens"], actions=np.reshape(stats["actions"],(-1,1)),episode_starts=stats["episode_starts"])
+        if len(np.asarray(stats['actions']).shape)==1:            
+            stats['actions']=np.reshape(stats["actions"],(-1,1))
+        np.savez(args.recordto, rewards=stats["rewards"], observations=stats["screens"], actions=stats["actions"],episode_starts=stats["episode_starts"])
+            

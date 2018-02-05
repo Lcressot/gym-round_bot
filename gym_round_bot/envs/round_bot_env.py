@@ -126,7 +126,6 @@ class RoundBotEnv(gym.Env):
                 xzrange=controller["xzrange"]
                 self.controller = round_bot_controller.Simple_XZ_Controller(model=self.model, speed=controller["speed"], xzrange=xzrange)
                 self.action_space = spaces.MultiDiscrete([ [-1*xzrange,xzrange],[-1*xzrange,xzrange] ])
-                print("EEEEEEE"+str(self.action_space.sample()))
                 
         except Exception as e:
             raise Exception("Error : unable to create controller with args : " + str(controller) )
