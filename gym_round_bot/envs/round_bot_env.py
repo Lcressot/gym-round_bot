@@ -24,7 +24,7 @@ COMPATIBLE_CONTROLLERS ={ "Simple_TetaSpeed",
 
 class RoundBotEnv(gym.Env):
 
-    metadata = {'render.modes': ['human', 'rgb_array']}
+    metadata = {'render.modes': ['human', 'rgb_array','rgb_image']}
 
     def __init__(self):
         """
@@ -85,17 +85,23 @@ class RoundBotEnv(gym.Env):
         observation : the initial observation of the space. (Initial reward is assumed to be 0.)
         """
         self.model.reset()
-        return self.window.get_image(reshape=False)#get image as a numpy line
+        self.current_observation = self.window.get_image(reshape=False)#get image as a numpy line
+        return self.current_observation
         
 
     def _render(self, mode='human', close=False):
 
         if mode == 'rgb_array':
             return self.current_observation
-        if mode == 'human':
+        elif mode == 'human':
             # this slows down rendering with a factor 10 !
             if not self.window.visible:
                 self.window.set_visible(True)
+        elif mode == 'rgb_image':
+            # reshape line array
+            return self.window.get_image(reshape=True)
+        else: 
+            raise Exception('Unknown render mode: '+mode)
 
     def load(self, world='rb1', controller={"name":'Simple_TetaSpeed',"dteta":20,"speed":10}, winsize=[80,60], global_pov=None, perspective=True):
         """
