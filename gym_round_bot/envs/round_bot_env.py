@@ -65,7 +65,7 @@ class RoundBotEnv(gym.Env):
             w = self.model.world_info["width"]
             d = self.model.world_info["depth"]
             # check distance to top right corner
-            if (x-w/2.0)**2 + (z-d/2.0)**2 < (0.3*min(w,d)/2.0)**2:
+            if (x-w/2.0)**2 + (z-d/2.0)**2 < (0.3*min(w,d))**2:
                 reward = reward + 1.0
             # reward 0 else                 
 

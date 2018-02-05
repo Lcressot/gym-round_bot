@@ -12,6 +12,7 @@ import agent
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('-id','--env_id', default='RoundBot-v0', help='Select the environment to run')
+    #parser.add_argument('-c','--controller', default='Simple_XZ', help='Select the agent\'s controller')
     parser.add_argument('-p','--policy_id', default='RandomAgent', help='Select the policy of the agent to run')
     parser.add_argument('-ms','--max_step',  type=int,default=200, help='Number of steps in a trajectory')
     parser.add_argument('-w','--winsize', nargs=2, type=int, metavar=('w','h'), default=(16,16), help='Number of steps in a trajectory')
