@@ -21,12 +21,12 @@ class Controller(object):
 		exec(self.actions[action])
 
 
-class Simple_TetaSpeed_Controller(Controller):
+class Simple_ThetaSpeed_Controller(Controller):
 	"""
 	This class controls the robot with fixed dtheta rotations and fixed speed forward move
 	"""
 	def __init__(self, model, dtheta, speed):
-		super(Simple_TetaSpeed_Controller,self).__init__(model,"int")
+		super(Simple_ThetaSpeed_Controller,self).__init__(model,"int")
 		self.dtheta = dtheta
 		self.model.walking_speed = speed
 		self.action_meaning = "\

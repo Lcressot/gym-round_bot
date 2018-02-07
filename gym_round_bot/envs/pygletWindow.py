@@ -2,6 +2,8 @@ import math
 import numpy as np
 from sys import platform
 
+import scipy.misc
+
 from collections import deque
 from pyglet import image
 from pyglet.gl import *
@@ -35,7 +37,7 @@ class PygletWindow(pyglet.window.Window):
         self.exclusive = False
 
         # Global point of view : if None, view is subjective
-        self.global_pov = global_pov
+        self.global_pov = global_pov        
         if not global_pov:
             if not perspective:
                 print('Warning : no global_pov provided, setting perspective to True')
@@ -112,7 +114,7 @@ class PygletWindow(pyglet.window.Window):
         nparr = np.fromstring(data,dtype=np.uint8)
         if reshape:
             nparr=nparr.reshape(self.width,self.height,3)
-            nparr=np.flipud(nparr)
+            #nparr=np.flipud(nparr)
         # flip upside down
         return nparr    
 
@@ -243,9 +245,9 @@ class PygletWindow(pyglet.window.Window):
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 
-    def set_3d(self):
+    def set_3d(self, offset_xzangle=0.0):
         """ Configure OpenGL to draw in 3d.
-
+            offset_xzangle : put offset to xOz angle, used for getting several views at each position and fusion them
         """
         width, height = self.get_size()
         glEnable(GL_DEPTH_TEST)
@@ -265,7 +267,7 @@ class PygletWindow(pyglet.window.Window):
             glTranslatef(-x, -y, -z)
         else:
             x, y = self.model.robot_rotation
-            glRotatef(x, 0, 1, 0)
+            glRotatef(x+offset_xzangle, 0, 1, 0)
             glRotatef(-y, math.cos(math.radians(x)), 0, math.sin(math.radians(x)))
             x,y, z = self.model.robot_position
             glTranslatef(-x, -y, -z)        
@@ -353,14 +355,46 @@ class PygletWindow(pyglet.window.Window):
 
     def step(self, dt):
         """
-        Perform manually a drawing step
+        Performs manually a drawing step
         """
         self.update(dt)
         if self.visible: # slows down rendering with a factor 10 !
             self.dispatch_events()
         self.on_draw()
         self.flip()
+
+    def multiview_render(self, xzangles, as_line=True):
+        """
+        xzangles : list of angles representing subjective view rotation in plane xOz (positives to negatives)
+        as_line : Boolean for returning a line shaped image
         
+        Returns a simple fusion of subjective views with given angles, used to widen the field of view
+
+        Note : this function doesn't perform any model updates ! It must be done before
+        """        
+        nviews = len(xzangles)
+        multiview_rnd = np.zeros([self.height, self.width, 3])
+        w = self.width/nviews
+
+        for i,xzangle in enumerate(xzangles):
+            # render view with this xzangle as xz offset angle
+            self.clear()
+            self.set_3d(xzangle)
+            glColor3d(1, 1, 1)
+            self.batch.draw()            
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+            if self.visible: # slows down rendering with a factor 10 !
+                self.dispatch_events()
+            self.flip()
+            rnd = self.get_image(reshape=True)
+            # resize it (streching)
+            rnd = scipy.misc.imresize(rnd, (self.height,w,3)) # warning imresize take x,y and not w,h !
+            # insert it in multiview_rnd
+            multiview_rnd[:,i*w:(i+1)*w,:] = rnd            
+            
+        return multiview_rnd if not as_line else np.reshape(multiview_rnd,[1,self.width*self.height*3])
+
+
     def debug_render(self):
         """
         debug render

@@ -5,7 +5,7 @@ import os
     This file allows to build worlds
 """
 
-def build_rb1_world(model,width=20, hwalls=2, wwalls=40, dwalls=1):
+def build_rb1_world(model,width=20, hwalls=5, wwalls=40, dwalls=1, texture_bricks='/texture_minecraft.png', texture_robot="/robot.png"):
     """
     Builds a simple rectangle planar world with walls around
     Return : texture path, world information
@@ -20,8 +20,8 @@ def build_rb1_world(model,width=20, hwalls=2, wwalls=40, dwalls=1):
     wwalls = 2*n # width of walls    
 
     # load texture in current directory
-    block_texture_path = os.path.dirname(__file__) + '/texture.png'
-    robot_texture_path = os.path.dirname(__file__) + '/robot.png'
+    block_texture_path = os.path.dirname(__file__) + texture_bricks
+    robot_texture_path = os.path.dirname(__file__) + texture_robot
     texture_paths = {'brick':block_texture_path, 'robot':robot_texture_path}
 
     GRASS = round_bot_model.Block.tex_coords((1, 0), (0, 1), (0, 0))

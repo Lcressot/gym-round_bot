@@ -12,6 +12,8 @@ except ImportError as e:
     # TODO : set dependencies for round_bot (pyglet)
     raise error.DependencyNotInstalled("{}. (HINT: you can install round_bot dependencies by running 'pip install gym[round_bot]'.)".format(e))
 
+import numpy as np
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -19,7 +21,7 @@ COMPATIBLE_WORLDS={ "rb1", # rectangle set, first person view, reward in top lef
                     "rb1_blocks", # rectangle set, first person view, reward in top left corner, middle blocks
 }
 
-COMPATIBLE_CONTROLLERS ={ "Simple_TetaSpeed", "Simple_XZ"
+COMPATIBLE_CONTROLLERS ={ "Simple_ThetaSpeed", "Simple_XZ"
 }
 
 class RoundBotEnv(gym.Env):
@@ -41,6 +43,7 @@ class RoundBotEnv(gym.Env):
         self.action_space = None        
         self.current_observation = None
         self.controller = None        
+        self.multiview = None
         self.load() #default world loaded
                 
 
@@ -52,8 +55,15 @@ class RoundBotEnv(gym.Env):
 
         # perform action
         self.controller.step(action)
+        
         # update
-        self.window.step(0.1) # update with 1 second intervall
+        if not self.multiview:
+            self.window.step(0.1) # update with 1 second intervall
+            # get observation
+            self.current_observation = self.window.get_image(reshape=False)
+        else:
+            self.window.update(0.1) # update with 1 second intervall
+            self.current_observation = self.window.multiview_render(self.multiview, as_line=True)
 
         # compute reward depending on the world
         if self.world == "rb1":                            
@@ -64,16 +74,13 @@ class RoundBotEnv(gym.Env):
             x,y,z = self.model.robot_position
             w = self.model.world_info["width"]
             d = self.model.world_info["depth"]
-            # check distance to top right corner
-            if (x-w/2.0)**2 + (z-d/2.0)**2 < (0.3*min(w,d))**2:
+            # check distance to bottom left
+            if (x-(-w)/2.0)**2 + (z-(-d)/2.0)**2 < (0.3*min(w,d))**2:
                 reward = reward + 1.0
             # reward 0 else                 
 
-        # get observation
-        self.current_observation = self.window.get_image(reshape=False)
+        # this environment has no terminal state and no info
         info = {}
-
-        # this environment has no terminal state
         return self.current_observation, reward, False, info
         
 
@@ -95,15 +102,25 @@ class RoundBotEnv(gym.Env):
             return self.current_observation
         elif mode == 'human':
             # this slows down rendering with a factor 10 !
+            # TODO : show current observation on screen (potentially fusionned image, and not only last render !)
             if not self.window.visible:
                 self.window.set_visible(True)
         elif mode == 'rgb_image':
             # reshape line array
-            return self.window.get_image(reshape=True)
+            return np.reshape(self.current_observation, [self.winSize[0],self.winSize[1],3])
         else: 
             raise Exception('Unknown render mode: '+mode)
 
-    def load(self, world='rb1', controller={"name":'Simple_TetaSpeed',"dtheta":20,"speed":10}, winsize=[80,60], global_pov=None, perspective=True):
+    def load(self,
+            world='rb1',
+            controller={"name":'Simple_ThetaSpeed',"dtheta":20,"speed":10},
+            winsize=[80,60],
+            global_pov=None,
+            perspective=True,
+            visible=False,
+            multiview=None,
+            focal=65.0,
+            ):
         """
         Loads a world into environnement
         """
@@ -117,27 +134,33 @@ class RoundBotEnv(gym.Env):
         self.world = world
         self.model = round_bot_model.Model(world)
 
-        try:
-            if controller["name"]=="Simple_TetaSpeed":
-                self.controller = round_bot_controller.Simple_TetaSpeed_Controller(model=self.model, dtheta=controller["dtheta"],speed=controller["speed"])
-                self.action_space = spaces.Discrete(len(self.controller.actions))
 
-            elif controller["name"]=="Simple_XZ":
-                xzrange=controller["xzrange"]
-                self.controller = round_bot_controller.Simple_XZ_Controller(model=self.model, speed=controller["speed"], xzrange=xzrange)
-                self.action_space = spaces.MultiDiscrete([ [-1*xzrange,xzrange],[-1*xzrange,xzrange] ])
-                
-        except Exception as e:
-            raise Exception("Error : unable to create controller with args : " + str(controller) )
+        if controller["name"]=="Simple_ThetaSpeed":
+            self.controller = round_bot_controller.Simple_ThetaSpeed_Controller(model=self.model, dtheta=controller["dtheta"],speed=controller["speed"])
+            self.action_space = spaces.Discrete(len(self.controller.actions))
+
+        elif controller["name"]=="Simple_XZ":
+            xzrange=controller["xzrange"]
+            self.controller = round_bot_controller.Simple_XZ_Controller(model=self.model, speed=controller["speed"], xzrange=xzrange)
+            self.action_space = spaces.MultiDiscrete([ [-1*xzrange,xzrange],[-1*xzrange,xzrange] ])
         
         self.winSize= list(winsize)
-        try:
-            self.window = pygletWindow.PygletWindow(self.model, global_pov=global_pov, perspective = perspective, interactive=False, width=winsize[0], height=winsize[1], caption='Round bot in '+world+' world', resizable=False, visible=True)
-            #self.window = pygletWindow.PygletWindow(self.model, width=winsize[0]/2, height=winsize[1]/2, caption='Round bot in '+world+' world', resizable=False, visible=False)
-        except Exception as e:
-            raise Exception("Error : could not load window for world : " + world)
-        # observation are RGB images of rendered world      
-        self.observation_space = spaces.Box(low=0, high=255, shape=[winsize[0], winsize[1], 3])        
+        #try:
+        self.window = pygletWindow.PygletWindow(self.model,
+                                                global_pov=global_pov,
+                                                perspective = perspective,
+                                                interactive=False,
+                                                focal=focal,
+                                                width=winsize[0],
+                                                height=winsize[1],
+                                                caption='Round bot in '+world+' world',
+                                                resizable=False,
+                                                visible=visible
+                                                )
+        # observation are RGB images of rendered world (as line arrays)
+        self.observation_space = spaces.Box(low=0, high=255, shape=[1, winsize[0]*winsize[1]*3])
+
+        self.multiview = multiview # if not None, observations will be fusion of subjective view with given relative xOz angles
 
 
 
