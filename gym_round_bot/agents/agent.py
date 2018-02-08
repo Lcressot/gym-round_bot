@@ -6,6 +6,7 @@ import scipy.misc
 import random
 from matplotlib import pyplot as plt
 
+
 class Policy(object):
     """Policy for the agent"""
     def __init__(self, action_space):
@@ -13,18 +14,21 @@ class Policy(object):
     def __call___(self,observation):
         raise Exception("not implemented error")
 
+
 class Random_policy(Policy):
     def __init__(self,action_space):
         super(Random_policy,self).__init__(action_space)
     def __call__(self,observation):
         return self.action_space.sample()
  
+
 class Greedy_policy(Policy):
     def __init__(self,action_space):
         super(Greedy_policy,self).__init__(action_space)
         self.Q = defaultdict(lambda: np.zeros(action_space.n))
     def __call__(self,observation):
         return np.argmax(self.Q[observation])
+
 
 class Epsilon_greedy_policy(Greedy_policy):
     def __init__(self,action_space,epsilon):
@@ -35,15 +39,7 @@ class Epsilon_greedy_policy(Greedy_policy):
         if random.random() < self.epsilon:
             return super(Epsilon_greedy_policy,self).__call__(observation)
         else:
-            return np.random.choice( xrange(self.action_space.n) )
-
-        # nA=self.action_space.n
-        # action_probs = np.ones(nA, dtype=float) * self.epsilon / nA
-        # action_probs[best_action] += (1.0 - self.epsilon)
-        # if not sample:
-        #     return action_probs
-        # else:
-        #     return np.random.choice(np.arange(len(action_probs)), p=action_probs)
+            return np.random.choice( xrange(self.action_space.n) )       
 
 
 class Agent(object):
@@ -62,6 +58,8 @@ class Agent(object):
 
     def train(self,env,n_ep,max_step,verbose=False,keep_screen=False,new_winsize=None):
         """Run n_ep episodes of maximum max_step length on environment env"""
+        
+        # init all used variables :
         reward = 0.0
         done = False
         screens=[]
@@ -70,6 +68,7 @@ class Agent(object):
         actions=[]
         episode_starts=[]
         reward_ep=np.zeros((n_ep,1))
+        seeds = env.seed(n_ep)
         t=0
         t1= time.time()   
 
@@ -79,7 +78,7 @@ class Agent(object):
 
         for i in range(n_ep):
             # random seed to current time
-            random.seed(None)
+            random.seed(seeds[i])
             ob = env.reset()
             if self.transformation:
                 ob=self.transformation(ob)
@@ -87,33 +86,42 @@ class Agent(object):
             done=False
             old_action=None
             while not done:
+                # choose action from policy with current observation
                 action = self.policy(ob)
-                if type(action)==type([]):
-                    action=tuple(action) # convert lists to tuple for controller                    
+                if type(action)!=type(int) and type(action)!=type(tuple()):
+                    action=tuple(action) # convert lists to tuple for controller
+                # perform a step in the environnment to observe the results of this action
                 new_ob, reward, done, _ = env.step(action)
                 if self.transformation:
                     new_ob=self.tranformation(new_ob)
+                # update learning parameters accordingly
                 self.update(ob,new_ob,old_action,action,reward,done)
+                # stop if j is above max_step
                 if not done:
                     done = j>=max_step
+                # keep screens as line numpy arrays if asked
                 if keep_screen:
                     rnd=env.render(mode='rgb_image')
                     if new_winsize:
                         rnd=scipy.misc.imresize(rnd, (new_winsize[0],new_winsize[1],3))                   
                     screens.append(rnd.reshape(-1))
+                # keeps the rest of parameters for recording
                 observations.append(ob)
                 rewards.append(reward)
                 actions.append(action)
                 episode_starts.append(done)
+                reward_ep[i]+=reward # rewards per episode
+                # increase counters and save old variables
                 j+=1
                 ob=new_ob
-                old_action=action
-                reward_ep[i]+=reward
+                old_action=action                
                 t+=1
+
+                # print expected computation time
                 if t==100:
-                    # print expected computation time
                     t2= time.time()
                     print('Expected computation time: '+str( (t2-t1)/100.0*n_ep*max_step) +' s')
+
             if verbose:
                 print( "mean step time execution for trajectory "+str(i)+" : " + str((t2-t1)/t) )
         t2= time.time()
@@ -131,28 +139,4 @@ class Agent_Q_learning(Agent):
     def update(self,ob,new_ob,old_action,action,reward,done): 
         td_delta = reward + self.discount_factor*np.max( self.policy.Q[new_ob])  - self.policy.Q[ob][action]
         self.policy.Q[ob][action] += self.alpha * td_delta
-        #print(self.policy.Q[ob])
-#class RandomAgent(Agent):
-#    """The world's simplest agent!"""
-#    def __init__(self, action_space):
-#        super(RandomAgent,self).__init__(action_space)
-#
-#    def act(self, observation, reward, done):
-#        return self.action_space.sample()
-#
-#class GreedyAgent(Agent):
-#    """The world's simplest agent!"""
-#    def __init__(self, action_space):
-#        super(GreedyAgent,self).__init__(action_space)
-#
-#    def act(self, observation, reward, done,Q):
-#
-#        return self.action_space.sample()
-#
-#def make(action_space,policy='RandomAgent',info={}):
-#    if policy=='RandomAgent':
-#   return RandomAgent(action_space)
-#    elif policy=='GreedyAgent':
-#   return GreedyAgent(action_space)
-#    else:
-#   raise Exception("Unknown policy in agent.make: " +policy)
+        

@@ -62,7 +62,7 @@ class Simple_XZ_Controller(Controller):
 		self.initial_speed = speed
 		self.xzrange = xzrange # how many maximum xz units you can move at once
 		self.action_meaning = "[x, z] 2-tuple with x and z between -xzrange and +xzrange"
-		self.actions = { (x,z) : "self.model.strafe="+str([x,z])+"; self.model.walking_speed=self.initial_speed*"+str(math.sqrt(x**2+z**2)) for x in range(-xzrange,xzrange+1) for z in range(-xzrange,xzrange+1) }
+		self.actions = { (x,z) : "self.model.strafe="+str([x-xzrange,z-xzrange])+"; self.model.walking_speed=self.initial_speed*"+str(math.sqrt((x-xzrange)**2+(z-xzrange)**2)) for x in range(0,2*xzrange+1) for z in range(0,2*xzrange+1) }
 
 	@property
 	def speed(self, s):

@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import time
 import agent
 
+# # need to do that for now
+# sys.path.append('~/Library/Mobile_Documents/com~apple~CloudDocs/Stage/travail/gym-round_bot/')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=None)
@@ -39,24 +41,24 @@ if __name__ == '__main__':
         
         global_pov = (0.0,args.global_pov,0.0) if args.global_pov and args.global_pov!=0.0 else None
         #env.unwrapped.load(world='rb1',winsize=winsize, controller={"name":args.controller,"speed":args.speed,"xzrange":2},global_pov=(0,20,0),perspective=True)
-        # env.unwrapped.load( world='rb1',
-        #                     winsize=winsize,
-        #                     controller={"name":args.controller,"speed":args.speed,"xzrange":2},
-        #                     global_pov=global_pov,
-        #                     visible=args.visible,
-        #                     perspective=args.perspective,
-        #                     multiview=[45.0, -45.0],
-        #                     focal=90.0
-        #                     )
         env.unwrapped.load( world='rb1',
                             winsize=winsize,
-                            controller={"name":'Simple_ThetaSpeed',"speed":args.speed,"dtheta":args.dtheta},
+                            controller={"name":args.controller,"speed":args.speed,"xzrange":2},
                             global_pov=global_pov,
                             visible=args.visible,
                             perspective=args.perspective,
-                            multiview=[45.0, -45.0],
-                            focal=90.0
+                            #multiview=[-120.0, 0.0, 120.0],
+                            #focal=120.0
                             )
+        # env.unwrapped.load( world='rb1',
+        #                     winsize=winsize,
+        #                     controller={"name":'Simple_ThetaSpeed',"speed":args.speed,"dtheta":args.dtheta},
+        #                     global_pov=global_pov,
+        #                     visible=args.visible,
+        #                     perspective=args.perspective,
+        #                     multiview=[120.0, 0, 120.0],
+        #                     focal=120.0
+        #                     )
         env.action_space = env.unwrapped.action_space
     #policy=args.policy_id
     #myagent = myagent.make(env.action_space,policy)

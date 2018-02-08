@@ -5,17 +5,18 @@ from gym import utils
 from gym.utils import seeding
 
 try:
+    #import round_bot_py
     import round_bot_model
     import pygletWindow
-    import round_bot_controller
+    import round_bot_controller    
 except ImportError as e:
     # TODO : set dependencies for round_bot (pyglet)
     raise error.DependencyNotInstalled("{}. (HINT: you can install round_bot dependencies by running 'pip install gym[round_bot]'.)".format(e))
 
 import numpy as np
 
-import logging
-logger = logging.getLogger(__name__)
+#import logging 
+#logger = logging.getLogger(__name__)
 
 COMPATIBLE_WORLDS={ "rb1", # rectangle set, first person view, reward in top left corner
                     "rb1_blocks", # rectangle set, first person view, reward in top left corner, middle blocks
@@ -47,7 +48,7 @@ class RoundBotEnv(gym.Env):
         self.load() #default world loaded
                 
 
-    def _step(self, action):
+    def step(self, action):
         """
         Perform one step
         """
@@ -75,7 +76,7 @@ class RoundBotEnv(gym.Env):
             w = self.model.world_info["width"]
             d = self.model.world_info["depth"]
             # check distance to bottom left
-            if (x-(-w)/2.0)**2 + (z-(-d)/2.0)**2 < (0.3*min(w,d))**2:
+            if (x+(-w)/2.0)**2 + (z+(-d)/2.0)**2 < (0.3*min(w,d))**2:
                 reward = reward + 1.0
             # reward 0 else                 
 
@@ -84,7 +85,7 @@ class RoundBotEnv(gym.Env):
         return self.current_observation, reward, False, info
         
 
-    def _reset(self):
+    def reset(self):
         """
         Resets the state of the environment, returning an initial observation.
         Outputs
@@ -96,7 +97,7 @@ class RoundBotEnv(gym.Env):
         return self.current_observation
         
 
-    def _render(self, mode='human', close=False):
+    def render(self, mode='human', close=False):
 
         if mode == 'rgb_array':
             return self.current_observation
@@ -110,6 +111,11 @@ class RoundBotEnv(gym.Env):
             return np.reshape(self.current_observation, [self.winSize[0],self.winSize[1],3])
         else: 
             raise Exception('Unknown render mode: '+mode)
+
+
+    def seed(self, seed=None):
+        seed = seeding.np_random(seed)
+        return [seed]
 
     def load(self,
             world='rb1',
@@ -142,7 +148,7 @@ class RoundBotEnv(gym.Env):
         elif controller["name"]=="Simple_XZ":
             xzrange=controller["xzrange"]
             self.controller = round_bot_controller.Simple_XZ_Controller(model=self.model, speed=controller["speed"], xzrange=xzrange)
-            self.action_space = spaces.MultiDiscrete([ [-1*xzrange,xzrange],[-1*xzrange,xzrange] ])
+            self.action_space = spaces.MultiDiscrete([2*xzrange+1,2*xzrange+1])
         
         self.winSize= list(winsize)
         #try:
