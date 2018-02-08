@@ -25,7 +25,16 @@ def rotation_matrices(rx,ry,rz):
 
 class Block(object):
 
-    def __init__(self,components,texture,block_type):
+    def __init__(self,components,texture,block_type, visible=True, ghost=False, collision_reward=0.0):
+        """
+        components : (x,y,z,w,h,d,rx,ry,rz) tuple of components for initialisation
+        texture : list of len 3
+                  The coordinates of the texture squares. Use `tex_coords()` to generate.       
+        block_type : type of the block for later use
+        visible : True if the block is visible. Collision will be detected even if not visible
+        ghost : True if block can be gone by, collision will still be detected
+        collision_reward : the reward returned at collision
+        """
 
         self.x, self.y, self.z, self.w, self.h, self.d, self.rx, self.ry, self.rz = components
         self._make_block(*components)
@@ -34,6 +43,10 @@ class Block(object):
         if not block_type in self._compatible_types:
             raise Exception("Uncompatible block type : "+block_type)
         self.block_type = block_type
+        self.visible = visible
+        self.isGhost = ghost
+        # return reward when collided
+        self.collision_reward=collision_reward
 
     @property
     def components(self):
@@ -189,7 +202,7 @@ class Model(object):
         # load world        
         self.load_world(world)
 
-        self.flying, self.collided = None, None
+        self.flying, self.collided, self.current_reward = None, None, None
 
         # reset first time
         self.reset()
@@ -218,17 +231,14 @@ class Model(object):
         self.flying = False   
         self.collided = False     
 
-    def add_block(self, components, texture, block_type='brick'):
-        """ Add a block with the given `texture` and `position` to the world.
+    def add_block(self, components, texture=None, block_type='brick', visible=True, ghost=False, collision_reward=0.0):
+        """ Add a block to the model depending on its type
 
         Parameters
         ----------
-        components : tuple of x,y,z,w,h,d block components
-        texture : list of len 3
-            The coordinates of the texture squares. Use `tex_coords()` to
-            generate.       
+        same as Block.__init__        
         """
-        block = Block( components, texture, block_type )
+        block = Block( components, texture, block_type, visible, ghost, collision_reward )
         if block_type=='brick':
             self.bricks.add( block )
         else:
@@ -256,14 +266,15 @@ class Model(object):
         block id
             The (x, y, z) position of the block to show.        
         """
-        #self.shown[block] = block.texture        
-        self.window.show_block(block)
+        #self.shown[block] = block.texture
+        if block.visible:   
+            self.window.show_block(block)
 
     def show_all_bricks(self):
         """ Show all blocks at once
         """
         for block in self.bricks:
-            if block.block_type=='brick':
+            if block.block_type=='brick' and block.visible:
                 self.show_block(block)
     
 
@@ -392,6 +403,7 @@ class Model(object):
         # TODO : improve to integer diagonal walls
         # TODO : optimize with walls and floors (x2) or with quadtree
         x,y,z = new_position
+        self.current_reward=0.0
         robot_width = self.robot_block.w
         robot_height = self.robot_block.h
         for brick in self.bricks:
@@ -404,7 +416,10 @@ class Model(object):
             if abs(y-yb) <  (h+robot_height)/2.0 :
                 ycol = True
             if xcol and zcol and ycol:
-                return True           
+                # get block collision reward to be used in RL envs, then return True
+                self.current_reward += brick.collision_reward
+                if not brick.isGhost: # detect collision only if block is not ghost
+                    return True           
 
         return False
 

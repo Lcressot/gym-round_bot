@@ -52,12 +52,10 @@ class RoundBotEnv(gym.Env):
         """
         Perform one step
         """
-        reward = 0.0
-
         # perform action
         self.controller.step(action)
         
-        # update
+        # update model and window
         if not self.multiview:
             self.window.step(0.1) # update with 1 second intervall
             # get observation
@@ -66,19 +64,8 @@ class RoundBotEnv(gym.Env):
             self.window.update(0.1) # update with 1 second intervall
             self.current_observation = self.window.multiview_render(self.multiview, as_line=True)
 
-        # compute reward depending on the world
-        if self.world == "rb1":                            
-            # reward -1 if agent bumps into a wall
-            if self.model.collided:
-                reward = reward - 1.0
-            # reward 1 if agent is in top right corner of the rectangle world with radius 0.3 * width
-            x,y,z = self.model.robot_position
-            w = self.model.world_info["width"]
-            d = self.model.world_info["depth"]
-            # check distance to bottom left
-            if (x+(-w)/2.0)**2 + (z+(-d)/2.0)**2 < (0.3*min(w,d))**2:
-                reward = reward + 1.0
-            # reward 0 else                 
+        # get reward :
+        reward = self.model.current_reward                     
 
         # this environment has no terminal state and no info
         info = {}
@@ -116,6 +103,7 @@ class RoundBotEnv(gym.Env):
     def seed(self, seed=None):
         seed = seeding.np_random(seed)
         return [seed]
+
 
     def load(self,
             world='rb1',

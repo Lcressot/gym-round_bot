@@ -17,6 +17,7 @@ if __name__ == '__main__':
     parser.add_argument('-c','--controller', default='Simple_XZ', help='Select the agent\'s controller')
     parser.add_argument('-p','--policy_id', default='RandomAgent', help='Select the policy of the agent to run')
     parser.add_argument('-ms','--max_step',  type=int,default=200, help='Number of steps in a trajectory')
+    parser.add_argument('-f','--focal',  type=float,default=65.0, help='Focal angle of camera')
     parser.add_argument('-w','--winsize', nargs=2, type=int, metavar=('w','h'), default=(16,16), help='Number of steps in a trajectory')
     parser.add_argument('-ep','--n_ep', type=int,default=26, help='number of episodes/trajetories')
     parser.add_argument('-r','--recordto', default='./datarb1.npz', help='npz record file')
@@ -48,7 +49,7 @@ if __name__ == '__main__':
                             visible=args.visible,
                             perspective=args.perspective,
                             #multiview=[-120.0, 0.0, 120.0],
-                            #focal=120.0
+                            focal=args.focal
                             )
         # env.unwrapped.load( world='rb1',
         #                     winsize=winsize,
@@ -57,7 +58,7 @@ if __name__ == '__main__':
         #                     visible=args.visible,
         #                     perspective=args.perspective,
         #                     multiview=[120.0, 0, 120.0],
-        #                     focal=120.0
+        #                     focal=args.focal
         #                     )
         env.action_space = env.unwrapped.action_space
     #policy=args.policy_id

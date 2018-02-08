@@ -358,10 +358,11 @@ class PygletWindow(pyglet.window.Window):
         Performs manually a drawing step
         """
         self.update(dt)
-        if self.visible: # slows down rendering with a factor 10 !
-            self.dispatch_events()
-        self.on_draw()
-        self.flip()
+        self.on_draw()       
+        if self.visible: 
+            self.dispatch_events() # slows down rendering with a factor 10 on OSX
+            if OSX:
+                self.flip() # slows down ubuntu
 
     def multiview_render(self, xzangles, as_line=True):
         """
@@ -383,9 +384,9 @@ class PygletWindow(pyglet.window.Window):
             glColor3d(1, 1, 1)
             self.batch.draw()            
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-            if self.visible: # slows down rendering with a factor 10 !
-                self.dispatch_events()
-            self.flip()
+            # if self.visible: # slows down rendering with a factor 10 !
+            #     self.dispatch_events()
+            #     self.flip()
             rnd = self.get_image(reshape=True)
             # resize it (streching)
             rnd = scipy.misc.imresize(rnd, (self.height,w,3)) # warning imresize take x,y and not w,h !
