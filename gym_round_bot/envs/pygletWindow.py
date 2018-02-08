@@ -1,3 +1,12 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+""" Cressot Loic
+    ISIR CNRS/UPMC
+    02/2018
+    code started from : https://github.com/fogleman/Minecraft
+""" 
+
 import math
 import numpy as np
 from sys import platform

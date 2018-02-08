@@ -1,3 +1,11 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+""" Cressot Loic
+    ISIR CNRS/UPMC
+    02/2018
+""" 
+
 from __future__ import division
 
 import sys

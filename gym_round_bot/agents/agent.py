@@ -1,3 +1,11 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+""" Cressot Loic & Merckling Astrid
+    ISIR CNRS/UPMC
+    02/2018
+""" 
+
 import numpy as np
 import time
 import copy
