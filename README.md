@@ -55,18 +55,21 @@ You can set your own values for max_episode_steps and reward_treshold.
 
 Here is a simple code for using the environment :
 ```Python
+import gym
+import gym_round_bot
+
 # create environment
 env = gym.make('RoundBot-v0')
 world = "rb1" # the world to load
 winsize=[100,80] # the size of window for rendering
-controller={"name":'Simple_ThetaSpeed',"dteta":45,"speed":5}
+controller={"name":'Simple_ThetaSpeed',"dtheta":45,"speed":5}
 
 # load the environment (if not called, default is world='rb1',winsize=[80,60], controller={"name":'Simple_ThetaSpeed',"dteta":20,"speed":10}), global_pov = None, perppective=True )
-env.unwrapped.load(world='rb1',winsize=winsize, controller=controller, global_pov = (0,40,0)), perppective=False)
+env.unwrapped.load(world='rb1',winsize=winsize, controller=controller, global_pov = (0,40,0), perspective=False)
 
-# perform a step
-ob, reward, done, _ = env.step(action)
-
-# render to screen if needed
-env.render()
+# perform steps
+while(True):
+    ob, reward, done, _ = env.step(0)
+    # render to screen if needed
+    env.render()
 ```
