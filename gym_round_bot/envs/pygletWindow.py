@@ -27,6 +27,8 @@ from pyglet.window import key, mouse
 # check if plateform is mac os
 if platform == "darwin":
     OSX = True
+else:
+    OSX = False
 
 
 class PygletWindow(pyglet.window.Window):
