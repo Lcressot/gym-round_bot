@@ -25,7 +25,7 @@ This script shows how to run a simple simulation (without Open AI Gym) simply by
 ### Controller :
 round_bot_controller.py
 
-This module defines a class for controlling the robot of a model. Given an action number, it can return its string meaning or perform the corresponding action in the model. For the Simple_ThetaSpeed controller, you can set the speed and teta rotation of the robot, but do no set a to high speed because you could go through walls !
+This module defines a class for controlling the robot of a model. Given an action number, it can return its string meaning or perform the corresponding action in the model. For the Theta controller, you can set the speed and teta rotation of the robot, but do no set a to high speed because you could go through walls !
 
 ### Open AI gym environment :
 round_bot_env.py
@@ -57,11 +57,11 @@ Here is a simple code for using the environment :
 ```Python
 # create environment
 env = gym.make('RoundBot-v0')
-world = "rb1" # the world to load
+world = 'rb1' # the world to load
 winsize=[100,80] # the size of window for rendering
-controller={"name":'Simple_ThetaSpeed',"dteta":45,"speed":5}
+controller={'name':'Theta','dteta':45,'speed':5}
 
-# load the environment (if not called, default is world='rb1',winsize=[80,60], controller={"name":'Simple_ThetaSpeed',"dteta":20,"speed":10}), global_pov = None, perppective=True )
+# load the environment (if not called, default is world='rb1',winsize=[80,60], controller={'name':'Theta','dteta':20,'speed':10}), global_pov = None, perppective=True )
 env.unwrapped.load(world='rb1',winsize=winsize, controller=controller, global_pov = (0,40,0)), perppective=False)
 
 # perform a step

@@ -20,7 +20,7 @@ class Policy(object):
     def __init__(self, action_space):
         self.action_space=action_space
     def __call___(self,observation):
-        raise Exception("not implemented error")
+        raise Exception('not implemented error')
 
 
 class Random_policy(Policy):
@@ -96,7 +96,7 @@ class Agent(object):
             while not done:
                 # choose action from policy with current observation
                 action = self.policy(ob)
-                if type(action)!=type(int) and type(action)!=type(tuple()):
+                if type(action)!=type(int()) and type(action)!=type(tuple()):
                     action=tuple(action) # convert lists to tuple for controller
                 # perform a step in the environnment to observe the results of this action
                 new_ob, reward, done, _ = env.step(action)
@@ -131,10 +131,10 @@ class Agent(object):
                     print('Expected computation time: '+str( (t2-t1)/100.0*n_ep*max_step) +' s')
 
             if verbose:
-                print( "mean step time execution for trajectory "+str(i)+" : " + str((t2-t1)/t) )
+                print( 'mean step time execution for trajectory '+str(i)+' : ' + str((t2-t1)/t) )
         t2= time.time()
         print('Final computation time: '+str(t2-t1) +' s')
-        return {"reward_ep":reward_ep,"rewards":rewards, "observations":observations, "actions":actions, "episode_starts":episode_starts, "screens":screens}
+        return {'reward_ep':reward_ep,'rewards':rewards, 'observations':observations, 'actions':actions, 'episode_starts':episode_starts, 'screens':screens}
 
 
 class Agent_Q_learning(Agent):

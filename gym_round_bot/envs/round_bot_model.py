@@ -49,7 +49,7 @@ class Block(object):
         self.texture = texture
         self._compatible_types = ('robot', 'brick')
         if not block_type in self._compatible_types:
-            raise Exception("Uncompatible block type : "+block_type)
+            raise Exception('Uncompatible block type : '+block_type)
         self.block_type = block_type
         self.visible = visible
         self.isGhost = ghost
@@ -182,7 +182,7 @@ class Cube(Block):
 
 class Model(object):
 
-    def __init__(self, world="rb1", show_robot = False):
+    def __init__(self, world='rb1', show_robot = False):
 
         # reference to window
         self.window = None

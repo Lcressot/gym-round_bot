@@ -12,37 +12,24 @@ from gym import error, spaces
 from gym import utils
 from gym.utils import seeding
 
-try:
-    #import round_bot_py
-    import round_bot_model
-    import pygletWindow
-    import round_bot_controller    
-except ImportError as e:
-    # TODO : set dependencies for round_bot (pyglet)
-    raise error.DependencyNotInstalled("{}. (HINT: you can install round_bot dependencies by running 'pip install gym[round_bot]'.)".format(e))
+# TODO : make those import work :
+import round_bot_model
+import pygletWindow
+import round_bot_controller    
 
 import numpy as np
 
-#import logging 
-#logger = logging.getLogger(__name__)
-
-COMPATIBLE_WORLDS={ "rb1", # rectangle set, first person view, reward in top left corner
-                    "rb1_blocks", # rectangle set, first person view, reward in top left corner, middle blocks
-}
-
-COMPATIBLE_CONTROLLERS ={ "Simple_ThetaSpeed", "Simple_XZ"
-}
 
 class RoundBotEnv(gym.Env):
 
     metadata = {'render.modes': ['human', 'rgb_array','rgb_image']}
-
+    
+                
     def __init__(self):
         """
         Inits the attributes to None.
         Default world is loaded. Can be changed with call to env.unwrapped.load(newworld,newWinSize)
-        """
-
+        """        
         self.viewer = None
         self.world = None        
         self.model = None
@@ -54,7 +41,16 @@ class RoundBotEnv(gym.Env):
         self.controller = None        
         self.multiview = None
         self.load() #default world loaded
-                
+
+    @property
+    def compatible_worlds(self):        
+        return {'rb1', # rectangle set, first person view, reward in top left corner
+                'rb1_blocks', # rectangle set, first person view, reward in top left corner, middle blocks
+                }
+
+    @property
+    def compatible_controllers(self):        
+        return { 'Theta', 'XZ' }
 
     def step(self, action):
         """
@@ -115,7 +111,7 @@ class RoundBotEnv(gym.Env):
 
     def load(self,
             world='rb1',
-            controller={"name":'Simple_ThetaSpeed',"dtheta":20,"speed":10},
+            controller={'name':'Theta','dtheta':20,'speed':10},
             winsize=[80,60],
             global_pov=None,
             perspective=True,
@@ -126,24 +122,24 @@ class RoundBotEnv(gym.Env):
         """
         Loads a world into environnement
         """
-        if not world in COMPATIBLE_WORLDS:
-            raise(Exception('Error: unknown or uncompatible world \"' + world + '\" for environnement round_bot'))
+        if not world in self.compatible_worlds:
+            raise(Exception('Error: unknown or uncompatible world \'' + world + '\' for environnement round_bot'))
         
-        if not "name" in controller or not controller["name"] in COMPATIBLE_CONTROLLERS:
-            raise(Exception('Error: unknown or uncompatible controller \"' + str(controller) + '\" for environnement round_bot'))
+        if not 'name' in controller or not controller['name'] in self.compatible_controllers:
+            raise(Exception('Error: unknown or uncompatible controller \'' + str(controller) + '\' for environnement round_bot'))
                     
         ## shared settings
         self.world = world
         self.model = round_bot_model.Model(world)
 
 
-        if controller["name"]=="Simple_ThetaSpeed":
-            self.controller = round_bot_controller.Simple_ThetaSpeed_Controller(model=self.model, dtheta=controller["dtheta"],speed=controller["speed"])
-            self.action_space = spaces.Discrete(len(self.controller.actions))
+        if controller['name']=='Theta':
+            self.controller = round_bot_controller.Theta_Controller(model=self.model, dtheta=controller['dtheta'],speed=controller['speed'])
+            self.action_space = spaces.MultiDiscrete([5,5])
 
-        elif controller["name"]=="Simple_XZ":
-            xzrange=controller["xzrange"]
-            self.controller = round_bot_controller.Simple_XZ_Controller(model=self.model, speed=controller["speed"], xzrange=xzrange)
+        elif controller['name']=='XZ':
+            xzrange=controller['xzrange']
+            self.controller = round_bot_controller.XZ_Controller(model=self.model, speed=controller['speed'], xzrange=xzrange)
             self.action_space = spaces.MultiDiscrete([2*xzrange+1,2*xzrange+1])
         
         self.winSize= list(winsize)

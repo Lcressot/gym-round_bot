@@ -25,7 +25,7 @@ from pyglet.window import key, mouse
 """
 
 # check if plateform is mac os
-if platform == "darwin":
+if platform == 'darwin':
     OSX = True
 
 
@@ -316,8 +316,8 @@ class PygletWindow(pyglet.window.Window):
         """ Configure the OpenGL fog properties.
 
         """
-        # Enable fog. Fog "blends a fog color with each rasterized pixel fragment's
-        # post-texturing color."
+        # Enable fog. Fog 'blends a fog color with each rasterized pixel fragment's
+        # post-texturing color.'
         glEnable(GL_FOG)
         # Set the fog color.
         glFogfv(GL_FOG_COLOR, (GLfloat * 4)(0.5, 0.69, 1.0, 1))
@@ -335,16 +335,16 @@ class PygletWindow(pyglet.window.Window):
         """ Basic OpenGL configuration.
 
         """
-        # Set the color of "clear", i.e. the sky, in rgba.
+        # Set the color of 'clear', i.e. the sky, in rgba.
         glClearColor(0.2, 0.2, 0.2, 1)
         # Enable culling (not rendering) of back-facing facets -- facets that aren't
         # visible to you.
         glEnable(GL_CULL_FACE)
         # Set the texture minification/magnification function to GL_NEAREST (nearest
         # in Manhattan distance) to the specified texture coordinates. GL_NEAREST
-        # "is generally faster than GL_LINEAR, but it can produce textured images
+        # 'is generally faster than GL_LINEAR, but it can produce textured images
         # with sharper edges because the transition between texture elements is not
-        # as smooth."
+        # as smooth.'
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
         #setup_fog()
@@ -400,7 +400,7 @@ class PygletWindow(pyglet.window.Window):
             # resize it (streching)
             rnd = scipy.misc.imresize(rnd, (self.height,w,3)) # warning imresize take x,y and not w,h !
             # insert it in multiview_rnd
-            multiview_rnd[:,i*w:(i+1)*w,:] = rnd            
+            multiview_rnd[:,i*w:(i+1)*w,:] = 255-rnd # warning scipy has invert colors !            
             
         return multiview_rnd if not as_line else np.reshape(multiview_rnd,[1,self.width*self.height*3])
 
