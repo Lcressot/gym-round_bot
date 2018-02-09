@@ -1,5 +1,0 @@
-gym_round_bot.egg-info/PKG-INFO
-gym_round_bot.egg-info/SOURCES.txt
-gym_round_bot.egg-info/dependency_links.txt
-gym_round_bot.egg-info/requires.txt
-gym_round_bot.egg-info/top_level.txt
