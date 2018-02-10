@@ -48,17 +48,6 @@ cd gym-round_bot
 pip3 install -e .
 ```
 
-For now, you also need to copy the above text in gym/gym/envs/\_\_init\_\_.py :
-```Python
-register(
-    id='RoundBot-v0',
-    entry_point='gym_round_bot.envs:RoundBotEnv',
-    #max_episode_steps=?,
-    #reward_threshold=?,
-)
-```
-You can set your own values for max_episode_steps and reward_treshold.
-
 # Use
 
 Here is a simple code for using the environment :
