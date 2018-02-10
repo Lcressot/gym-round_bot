@@ -25,10 +25,7 @@ from pyglet.window import key, mouse
 """
 
 # check if plateform is mac os
-if platform == 'darwin':
-    OSX = True
-else:
-    OSX = False
+OSX = (platform == 'darwin')
 
 
 class PygletWindow(pyglet.window.Window):
@@ -110,7 +107,7 @@ class PygletWindow(pyglet.window.Window):
         """
         #self.model.process_queue()
 
-        for _ in xrange(m):
+        for _ in range(m):
             self.model.update(dt / m)
 
     def get_image(self,reshape=True):
@@ -188,17 +185,17 @@ class PygletWindow(pyglet.window.Window):
             return
         # allow to control robot for debug mode
         if self.model.flying:
-            if (symbol == key.W and OSX) or (symbol == key.Z and not OSX):
+            if symbol == key.Z:
                 self.model.strafe[0] -= 1
             elif symbol == key.S: # same for qwerty  and azerty
                 self.model.strafe[0] += 1
-            elif (symbol == key.A and OSX) or (symbol == key.Q and not OSX):
+            elif symbol == key.Q:
                 self.model.strafe[1] -= 1
             elif symbol == key.D: # same for qwerty and azerty
                 self.model.strafe[1] += 1
-            elif (symbol == key.E and OSX) or (symbol == key.Z and not OSX):
+            elif symbol == key.E:
                 self.model.change_robot_rotation(10,0)
-            elif (symbol == key.Q and OSX) or (symbol == key.A and not OSX):
+            elif symbol == key.A:
                 self.model.change_robot_rotation(-10,0)            
 
         if symbol == key.ESCAPE:
@@ -233,11 +230,11 @@ class PygletWindow(pyglet.window.Window):
             return
         # allow to control robot for debug mode
         if self.model.flying:
-            if (symbol == key.W and OSX) or (symbol == key.Z and not OSX):
+            if symbol == key.Z:
                 self.model.strafe[0] += 1
             elif symbol == key.S: # same for qwerty  and azerty
                 self.model.strafe[0] -= 1
-            elif (symbol == key.A and OSX) or (symbol == key.Q and not OSX):
+            elif symbol == key.Q: 
                 self.model.strafe[1] += 1
             elif symbol == key.D: # same for qwerty and azerty
                 self.model.strafe[1] -= 1        

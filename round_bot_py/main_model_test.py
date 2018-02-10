@@ -11,7 +11,7 @@ from __future__ import division
 import sys
 
 #import round_bot_py
-import round_bot_model as tb_model
+import round_bot_model
 import pygletWindow
 
 
@@ -20,7 +20,7 @@ if __name__ == '__main__':
     world = 'rb1_blocks'
     world = 'rb1'
     winsize=[300,300]
-    model = tb_model.Model(world)
+    model = round_bot_model.Model(world)
     window = pygletWindow.PygletWindow(
     	model,
 		global_pov=(0,20,0),

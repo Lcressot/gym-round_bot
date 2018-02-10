@@ -3,27 +3,29 @@
 This repository gives a robotic simulation environment compatible with OpenAI gym. The simulation is a simple round bot driving in a simple maze-type world with walls. It is desgined as follows :
 
 ### Model :
-round_bot_model.py
+round_bot_py/round_bot_model.py
 
 The 3D model of the simulation (no OpenGl) which loads the world's points and moves the robot, dealing with collisions. This module should not include rendering code (see MVC code structure) because visualisation is done in the pygletWindow module.
 
 ### Window :
-pygletWindow.py
+round_bot_py/pygletWindow.py
 
 + A class inherited from python Pyglet library for rendering 3D scenes (given by the model) with OpenGL. Interaction with user is possible (to control the model's robot) if the window is set to visible and interactive. If the window is visible and interactive, control the robot for debugging your world or have fun with tab (to enter control mode), and ZSQD AE and mouse for direction and rotation.
 + Set the view to subjective with global_pov=None or set it to global with for instance global_pov=(0,40,0)
 + If you set global_pov, you can set perspective to False to render in orthogonal mode
 
 ### Worlds :
-round_bot_worlds.py
+round_bot_py/round_bot_worlds.py
 
 This module defines functions for loading/building simulated worlds : each function loads/builds a different world. Later, this module could be replaced by a function for writting/reading worlds information in files.
 
-### Main.py
+### Main_model_test
+round_bot_py/main_model_test.py
+
 This script shows how to run a simple simulation (without Open AI Gym) simply by constructing a model and a visible interactive window.
 
 ### Controller :
-round_bot_controller.py
+round_bot_py/round_bot_controller.py
 
 This module defines a class for controlling the robot of a model. Given an action number, it can return its string meaning or perform the corresponding action in the model. For the Theta controller, you can set the speed and teta rotation of the robot, but do no set a to high speed because you could go through walls !
 
@@ -35,9 +37,15 @@ This module defines the OpenAI gym compatible environment using a model and a wi
 
 # Installation
 
+python 2:
 ```bash
 cd gym-round_bot
 pip install -e .
+```
+python 3:
+```bash
+cd gym-round_bot
+pip3 install -e .
 ```
 
 For now, you also need to copy the above text in gym/gym/envs/\_\_init\_\_.py :

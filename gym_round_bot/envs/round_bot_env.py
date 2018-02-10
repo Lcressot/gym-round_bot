@@ -12,10 +12,7 @@ from gym import error, spaces
 from gym import utils
 from gym.utils import seeding
 
-# TODO : make those import work :
-import round_bot_model
-import pygletWindow
-import round_bot_controller    
+from round_bot_py import *
 
 import numpy as np
 

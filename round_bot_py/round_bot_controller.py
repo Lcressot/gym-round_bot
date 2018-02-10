@@ -6,7 +6,7 @@
     02/2018
 """ 
 
-import round_bot_model
+from round_bot_py import round_bot_model
 import numpy as np
 
 """

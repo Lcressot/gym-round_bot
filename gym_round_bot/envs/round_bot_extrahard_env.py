@@ -12,14 +12,7 @@ from gym import error, spaces
 from gym import utils
 from gym.utils import seeding
 
-try:
-    #import round_bot_py
-    import round_bot_model
-    import pygletWindow
-    import round_bot_controller    
-except ImportError as e:
-    # TODO : set dependencies for round_bot (pyglet)
-    raise error.DependencyNotInstalled("{}. (HINT: you can install round_bot dependencies by running 'pip install gym[round_bot]'.)".format(e))
+import round_bot_py   
 
 import numpy as np
 
