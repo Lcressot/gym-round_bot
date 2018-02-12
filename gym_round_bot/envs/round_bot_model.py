@@ -10,7 +10,7 @@
 import random
 import time
 import math
-from round_bot_py import round_bot_worlds
+from gym_round_bot.envs import round_bot_worlds
 import numpy as np
 
 """

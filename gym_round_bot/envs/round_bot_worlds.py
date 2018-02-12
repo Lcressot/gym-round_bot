@@ -23,7 +23,7 @@ def build_rb1_world(model,width=20, hwalls=5, dwalls=1, texture_bricks='/texture
     # dwalls is depth of walls
 
     """
-    from round_bot_py import round_bot_model
+    from gym_round_bot.envs import round_bot_model
     # wwalls = width of walls
     wwalls = width
     n = width/2.0  # 1/2 width and depth of this (squarred) world
@@ -79,7 +79,7 @@ def build_rb1_blocks_world(model, width=20, hwalls=2, wwalls=40, dwalls=2):
     Builds a simple rectangle planar world with walls around, and two blocks in the middle
     Return : texture path, world information
     """
-    from round_bot_py import round_bot_model
+    from gym_round_bot.envs import round_bot_model
     n = width/2.0  # 1/2 width and depth of world
     wwalls = 2*n # width of walls    
     texture_paths, world_info = build_rb1_world(model,width=width, hwalls=hwalls, wwalls=wwalls, dwalls=dwalls)

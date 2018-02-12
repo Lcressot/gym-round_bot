@@ -12,7 +12,9 @@ from gym import error, spaces
 from gym import utils
 from gym.utils import seeding
 
-from round_bot_py import *
+from gym_round_bot.envs import pygletWindow
+from gym_round_bot.envs import round_bot_model
+from gym_round_bot.envs import round_bot_controller
 
 import numpy as np
 
