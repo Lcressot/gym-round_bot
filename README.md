@@ -56,22 +56,20 @@ import gym
 import gym_round_bot
 
 # create environment
+import gym
+import gym_round_bot
+
+# create environment
 env = gym.make('RoundBot-v0')
 world = 'rb1' # the world to load
 winsize=[100,80] # the size of window for rendering
 
-controller={'name':'Theta','dteta':45,'speed':5}
-
-# load the environment (if not called, default is world='rb1',winsize=[80,60], controller={'name':'Theta','dteta':20,'speed':10}), global_pov = None, perppective=True )
-env.unwrapped.load(world='rb1',winsize=winsize, controller=controller, global_pov = (0,20,0)), perppective=False)
-
-# perform a step
-ob, reward, done, _ = env.step(action)
-
+controller={'name':'Theta','dtheta':45,'speed':5}
+env.unwrapped.load(world='rb1',winsize=winsize, controller=controller, global_pov = (0,20,0), perspective=False)
 
 # perform steps
 while(True):
-    ob, reward, done, _ = env.step(0)
-    # render to screen if needed
-    env.render()
+	ob, reward, done, _ = env.step((0,0))
+	# render to screen if needed
+	env.render()
 ```
