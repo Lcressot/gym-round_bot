@@ -20,6 +20,18 @@ class Controller(object):
 		self.action_meaning = {} # dictionnary to map actions number to their string meaning
 		self._actions = {} # dictionnary to map actions number to their code meaning
 
+	@property
+	def num_actions(self): # num_actions is a constant private parameter
+		raise Exception("Not implemented error : num_actions not implemented for Controller abstract class")
+
+	@property
+	def actions_mapping(self):
+		"""
+		Returns a mapping from actions to integer indices. Ex: {(0,0):0, (0,1):1, (1,0):2}
+		"""
+		keys = self._actions.keys()
+		return dict( zip(keys, range(len(keys))) )
+
 	def step(self, action):
 		"""
 		Controls the model's robot to perform the action
