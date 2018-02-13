@@ -50,6 +50,11 @@ class RoundBotEnv(gym.Env):
     @property
     def compatible_controllers(self):        
         return { 'Theta', 'XZ' }
+    
+    @property
+    def num_actions(self):
+        return self.controller.num_actions
+    
 
     def step(self, action):
         """
@@ -160,5 +165,3 @@ class RoundBotEnv(gym.Env):
         self.multiview = multiview # if not None, observations will be fusion of subjective view with given relative xOz angles
 
 
-
-    
