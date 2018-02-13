@@ -25,6 +25,10 @@ class Controller(object):
 		raise Exception("Not implemented error : num_actions not implemented for Controller abstract class")
 
 	@property
+	def num_actions(self):
+		return len(self._actions)
+
+	@property
 	def actions_mapping(self):
 		"""
 		Returns a mapping from actions to integer indices. Ex: {(0,0):0, (0,1):1, (1,0):2}
@@ -62,11 +66,6 @@ class Theta_Controller(Controller):
 	def speed(self):
 		return self._model.walking_speed
 
-	@property
-	def num_actions(self): # num_actions is a constant private parameter
-		return 25
-
-
 
 class XZ_Controller(Controller):
 	"""
@@ -86,7 +85,3 @@ class XZ_Controller(Controller):
 	@property
 	def speed(self):
 		return self._initial_speed
-
-	@property
-	def num_actions(self): # num_actions is a private parameter
-		return (2*self._xzrange+1)**2

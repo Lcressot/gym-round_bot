@@ -55,6 +55,9 @@ class RoundBotEnv(gym.Env):
     def num_actions(self):
         return self.controller.num_actions
     
+    @property
+    def actions_mapping(self):
+        return self.controller.actions_mapping
 
     def step(self, action):
         """
