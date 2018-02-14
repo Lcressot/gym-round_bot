@@ -369,8 +369,9 @@ class PygletWindow(pyglet.window.Window):
         self.on_draw()       
         if self.visible: 
             self.dispatch_events() # slows down rendering with a factor 10 on OSX
-            if OSX:
-                self.flip() # slows down ubuntu
+            #if OSX or True:
+            #print(self.context.config.double_buffer)
+            self.flip() # slows down ubuntu
 
     def multiview_render(self, xzangles, as_line=True):
         """
