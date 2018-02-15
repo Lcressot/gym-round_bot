@@ -366,11 +366,12 @@ class PygletWindow(pyglet.window.Window):
         Performs manually a drawing step
         """
         self.update(dt)
-        self.on_draw()       
+        self.on_draw()
+        self.dispatch_events() # slows down rendering with a factor 10 on OSX 
         if self.visible: 
-            self.dispatch_events() # slows down rendering with a factor 10 on OSX
-            if OSX:
-                self.flip() # slows down ubuntu
+            # self.dispatch_events() # slows down rendering with a factor 10 on OSX
+            # if OSX:
+            self.flip() # slows down ubuntu
 
     def multiview_render(self, xzangles, as_line=True):
         """
