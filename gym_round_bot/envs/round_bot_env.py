@@ -145,7 +145,10 @@ class RoundBotEnv(gym.Env):
             self.action_space = spaces.MultiDiscrete([5,5])
 
         elif controller['name']=='XZ':
-            xzrange=controller['xzrange']
+            try:
+                xzrange=controller['xzrange']
+            except:
+                xzrange=2
             self.controller = round_bot_controller.XZ_Controller(model=self.model, speed=controller['speed'], xzrange=xzrange)
             self.action_space = spaces.MultiDiscrete([2*xzrange+1,2*xzrange+1])
         
