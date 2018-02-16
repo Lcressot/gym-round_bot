@@ -24,9 +24,6 @@ from pyglet.window import key, mouse
     This file defines the environnement's window and renderer
 """
 
-# check if plateform is mac os
-OSX = (platform == 'darwin')
-
 
 class PygletWindow(pyglet.window.Window):
 
@@ -119,11 +116,13 @@ class PygletWindow(pyglet.window.Window):
         data = ( GLubyte * (3*self.width*self.height) )(0)
         glReadPixels(0, 0, self.width, self.height, gl.GL_RGB, gl.GL_UNSIGNED_BYTE, data)
         # convert to numpy array
-        nparr = np.fromstring(data,dtype=np.uint8)
+        nparr = np.fromstring(data,dtype=np.uint8)        
         if reshape:
+            # reshape as image
             nparr=nparr.reshape(self.width,self.height,3)
-            #nparr=np.flipud(nparr)
-        # flip upside down
+        else:
+            # reshape as line vector
+            nparr=nparr.reshape(1,self.width*self.height*3)
         return nparr    
 
    
@@ -367,11 +366,11 @@ class PygletWindow(pyglet.window.Window):
         """
         self.update(dt)
         self.on_draw()
-        self.dispatch_events() # slows down rendering with a factor 10 on OSX 
         if self.visible: 
             # self.dispatch_events() # slows down rendering with a factor 10 on OSX
             # if OSX:
-            self.flip() # slows down ubuntu
+            self.dispatch_events() # slows down rendering with a factor 10 on OSX
+            # self.flip()
 
     def multiview_render(self, xzangles, as_line=True):
         """
