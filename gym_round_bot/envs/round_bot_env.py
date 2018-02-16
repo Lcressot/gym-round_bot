@@ -70,10 +70,10 @@ class RoundBotEnv(gym.Env):
         if not self.multiview:
             self.window.step(0.1) # update with 1 second intervall
             # get observation
-            self.current_observation = self.window.get_image(reshape=False)
+            self.current_observation = self.window.get_image(reshape=True)
         else:
             self.window.update(0.1) # update with 1 second intervall
-            self.current_observation = self.window.multiview_render(self.multiview, as_line=True)
+            self.current_observation = self.window.multiview_render(self.multiview, as_line=False)
 
         # get reward :
         reward = self.model.current_reward                     
@@ -91,22 +91,24 @@ class RoundBotEnv(gym.Env):
         observation : the initial observation of the space. (Initial reward is assumed to be 0.)
         """
         self.model.reset()
-        self.current_observation = self.window.get_image(reshape=False)#get image as a numpy line
+        self.current_observation = self.window.get_image(reshape=True)#get image as a numpy line
         return self.current_observation
         
 
     def render(self, mode='human', close=False):
 
         if mode == 'rgb_array':
-            return self.current_observation
+            # reshape as line
+            return np.reshape(self.current_observation,[1,-1])
         elif mode == 'human':
             # this slows down rendering with a factor 10 !
             # TODO : show current observation on screen (potentially fusionned image, and not only last render !)
             if not self.window.visible:
                 self.window.set_visible(True)
         elif mode == 'rgb_image':
-            # reshape line array
-            return np.reshape(self.current_observation, [self.winSize[0],self.winSize[1],3])
+            ## reshape line array
+            #return np.reshape(self.current_observation, [self.winSize[0],self.winSize[1],3])
+            return self.current_observation
         else: 
             raise Exception('Unknown render mode: '+mode)
 
