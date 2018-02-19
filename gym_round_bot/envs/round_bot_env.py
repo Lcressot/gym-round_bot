@@ -17,6 +17,8 @@ from gym_round_bot.envs import round_bot_model
 from gym_round_bot.envs import round_bot_controller
 
 import numpy as np
+import scipy.misc
+
 
 
 class RoundBotEnv(gym.Env):
@@ -75,6 +77,9 @@ class RoundBotEnv(gym.Env):
             self.window.update(0.1) # update with 1 second intervall
             self.current_observation = self.window.multiview_render(self.multiview, as_line=False)
 
+        if self.obssize:
+            self.current_observation = scipy.misc.imresize(self.current_observation, (self.obssize[0],self.obssize[1],3)) # warning imresize take x,y and not w,h !
+
         # get reward :
         reward = self.model.current_reward                     
 
@@ -92,6 +97,8 @@ class RoundBotEnv(gym.Env):
         """
         self.model.reset()
         self.current_observation = self.window.get_image(reshape=True)#get image as a numpy line
+        if self.obssize:
+            self.current_observation = scipy.misc.imresize(self.current_observation, (self.obssize[0],self.obssize[1],3)) # warning imresize take x,y and not w,h !
         return self.current_observation
         
 
@@ -121,22 +128,33 @@ class RoundBotEnv(gym.Env):
     def load(self,
             world='rb1',
             controller={'name':'Theta','dtheta':20,'speed':10},
-            winsize=[80,60],
+            winsize=[300,300],
             global_pov=None,
             perspective=True,
             visible=False,
             multiview=None,
             focal=65.0,
+            obssize=[16,16],
             ):
         """
         Loads a world into environnement
+
+        Parameters :
+        - winsize : the dimensions of the rendering window
+        - obssize : the dimensions of the observations (reshaped from window render), if None, no reshape
+        - controller : the controller of the robot
+        - global_pov : a tuple vector of global point of view
+        - perspective : Bool for normal perspective. False is orthogonal perspective
+        - visible
+        - multiview : list of angles for multi-view rendering. The renders will be fusioned into one image
+        - focal : the camera focal (<180°)
         """
         if not world in self.compatible_worlds:
             raise(Exception('Error: unknown or uncompatible world \'' + world + '\' for environnement round_bot'))
         
         if not 'name' in controller or not controller['name'] in self.compatible_controllers:
             raise(Exception('Error: unknown or uncompatible controller \'' + str(controller) + '\' for environnement round_bot'))
-                    
+
         ## shared settings
         self.world = world
         self.model = round_bot_model.Model(world)
@@ -171,5 +189,6 @@ class RoundBotEnv(gym.Env):
         self.observation_space = spaces.Box(low=0, high=255, shape=[1, winsize[0]*winsize[1]*3])
 
         self.multiview = multiview # if not None, observations will be fusion of subjective view with given relative xOz angles
+        self.obssize = obssize if not winsize==obssize else None # if equal to winsize, no need to reshape
 
 
