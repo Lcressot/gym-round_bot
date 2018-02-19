@@ -37,11 +37,16 @@ class RoundBotEnv(gym.Env):
         self.winSize= None
         self.window = None
         self.observation_space = None
-        self.action_space = None        
         self.current_observation = None
         self.controller = None        
         self.multiview = None
+        # self.action_space -> property
         self.load() #default world loaded
+
+    @property
+    def action_space(self):
+        # self.action_space is self.controller.action_space
+        return self.controller.action_space
 
     @property
     def compatible_worlds(self):        
@@ -49,10 +54,6 @@ class RoundBotEnv(gym.Env):
                 'rb1_blocks', # rectangle set, first person view, reward in top left corner, middle blocks
                 }
 
-    @property
-    def compatible_controllers(self):        
-        return { 'Theta', 'XZ' }
-    
     @property
     def num_actions(self):
         return self.controller.num_actions
@@ -127,7 +128,7 @@ class RoundBotEnv(gym.Env):
 
     def load(self,
             world='rb1',
-            controller={'name':'Theta','dtheta':20,'speed':10},
+            controller=round_bot_controller.make(name='Theta',dtheta=20,speed=10,map2int=False),
             winsize=[300,300],
             global_pov=None,
             perspective=True,
@@ -152,25 +153,14 @@ class RoundBotEnv(gym.Env):
         if not world in self.compatible_worlds:
             raise(Exception('Error: unknown or uncompatible world \'' + world + '\' for environnement round_bot'))
         
-        if not 'name' in controller or not controller['name'] in self.compatible_controllers:
-            raise(Exception('Error: unknown or uncompatible controller \'' + str(controller) + '\' for environnement round_bot'))
 
         ## shared settings
         self.world = world
         self.model = round_bot_model.Model(world)
 
-
-        if controller['name']=='Theta':
-            self.controller = round_bot_controller.Theta_Controller(model=self.model, dtheta=controller['dtheta'],speed=controller['speed'])
-            self.action_space = spaces.MultiDiscrete([5,5])
-
-        elif controller['name']=='XZ':
-            try:
-                xzrange=controller['xzrange']
-            except:
-                xzrange=2
-            self.controller = round_bot_controller.XZ_Controller(model=self.model, speed=controller['speed'], xzrange=xzrange)
-            self.action_space = spaces.MultiDiscrete([2*xzrange+1,2*xzrange+1])
+        # save controller and plug it to model :
+        self.controller = controller
+        self.controller.model = self.model
         
         self.winSize= list(winsize)
         #try:
