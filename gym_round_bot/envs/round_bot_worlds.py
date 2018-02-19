@@ -13,7 +13,7 @@ import os
     This file allows to build worlds
 """
 
-def build_rb1_world(model,width=20, hwalls=5, dwalls=1, texture_bricks='/textures/texture_test.png', texture_robot='/textures/robot.png'):
+def build_rb1_world(model,width=20, hwalls=5, dwalls=1, texture_bricks='/textures/texture_minecraft.png', texture_robot='/textures/robot.png'):
     """
     Builds a simple rectangle planar world with walls around
     Return : texture path, world information
