@@ -34,7 +34,6 @@ class RoundBotEnv(gym.Env):
         self.viewer = None
         self.world = None        
         self.model = None
-        self.winSize= None
         self.window = None
         self.observation_space = None
         self.current_observation = None
@@ -115,7 +114,6 @@ class RoundBotEnv(gym.Env):
                 self.window.set_visible(True)
         elif mode == 'rgb_image':
             ## reshape line array
-            #return np.reshape(self.current_observation, [self.winSize[0],self.winSize[1],3])
             return self.current_observation
         else: 
             raise Exception('Unknown render mode: '+mode)
@@ -128,8 +126,8 @@ class RoundBotEnv(gym.Env):
 
     def load(self,
             world='rb1',
-            controller=round_bot_controller.make(name='Theta',dtheta=20,speed=10,map2int=False),
-            winsize=[300,300],
+            controller=round_bot_controller.make(name='Theta',dtheta=20,speed=10,int_actions=False),
+            winsize=[16,16],
             global_pov=None,
             perspective=True,
             visible=False,
@@ -162,8 +160,11 @@ class RoundBotEnv(gym.Env):
         self.controller = controller
         self.controller.model = self.model
         
-        self.winSize= list(winsize)
-        #try:
+        # oservation size cannot be bigger than window size
+        if obssize[0] > winsize[0] and obssize[1] > winsize[1] :
+            winsize = obssize
+
+        # build window
         self.window = pygletWindow.PygletWindow(self.model,
                                                 global_pov=global_pov,
                                                 perspective = perspective,

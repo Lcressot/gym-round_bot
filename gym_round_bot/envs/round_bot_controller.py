@@ -15,17 +15,17 @@ from gym import spaces
 """
     
 class Controller(object):
-    def __init__(self, controllerType, model=None, map2int=False):
+    def __init__(self, controllerType, model=None, int_actions=False):
         """
             Abstract class for controllers : i.e actions to code exectution mappings
-            map2int : bool for mapping actions to their intger value
+            int_actions : bool for taking int actions
         """
         self._model = model # can be set after initialization
         self.controllerType = controllerType # type of actions : ex int for integers, tuple2 for (x,y) tuples, float...
         self.action_meaning = {} # dictionnary to map actions number to their string meaning
         self._actions = {} # dictionnary to map actions number to their code meaning
-        self.map2int = map2int        
-        self._actions_mapping = self.actions_mapping # build action mapping, can be used if actions are not int
+        self.int_actions = int_actions
+        self._reversed_actions_mapping = self.reverse_actions_mapping # build reversed action mapping
         self._action_space = None  # the gym action space corresponding to this controller
 
     @property
@@ -46,7 +46,15 @@ class Controller(object):
         Returns a mapping from actions to integer indices. Ex: {(0,0):0, (0,1):1, (1,0):2}
         """
         keys = self._actions.keys()
-        return dict( zip(keys, range(len(keys))) )
+        return dict( zip(keys, range(len(keys))) )        
+
+    @property
+    def reverse_actions_mapping(self):
+        """
+        Returns a mapping from integers indices to action. Ex: {0:(0,0), 1:(0,1), 2:(1,0)}
+        """
+        keys = self._actions.keys()
+        return dict( zip( range(len(keys)), keys) )
 
     @property
     def action_space(self):
@@ -57,9 +65,9 @@ class Controller(object):
         Controls the model's robot to perform the action
         Execute code containded in actions dictionnary
         """
-        if self.map2int:
-            # If actions are not of type int, convert them to int with _actions_mapping
-            action = self._actions_mapping[action]
+        if self.int_actions:
+            # If actions are taken as int, convert them to the correct format
+            action = self._reversed_actions_mapping[action]
             
         exec(self._actions[action])
 
@@ -69,8 +77,8 @@ class Theta_Controller(Controller):
     """
     This class controls the robot with fixed dtheta rotations and fixed speed forward move
     """
-    def __init__(self, model, dtheta, speed, map2int):
-        super(Theta_Controller,self).__init__('Theta tuple2',model, map2int)
+    def __init__(self, model, dtheta, speed, int_actions):
+        super(Theta_Controller,self).__init__('Theta tuple2',model, int_actions)
         self.dtheta = dtheta
         self._initial_speed = speed
         self.action_meaning = '[s, dth] 2-tuple coding for speed between -initial_speed*2 and +initial_speed*2 and dtheta between -2dt and 2dt'
@@ -93,8 +101,8 @@ class XZ_Controller(Controller):
     """
     This class controls the robot to move on (oXZ) plan, always looking in the same direction
     """
-    def __init__(self, model, speed, xzrange=2, map2int=False):
-        super(XZ_Controller,self).__init__('XZ tuple2', model, map2int)
+    def __init__(self, model, speed, xzrange=2, int_actions=False):
+        super(XZ_Controller,self).__init__('XZ tuple2', model, int_actions)
         self._initial_speed = speed
         self._xzrange = xzrange # how many maximum xz units you can move at once
         self.action_meaning = '[x, z] 2-tuple coding for x and z between -xzrange and +xzrange'
@@ -111,17 +119,17 @@ class XZ_Controller(Controller):
 
 
 
-def make(name, speed, dtheta=0.0, xzrange=1, map2int=False, model=None):
+def make(name, speed, dtheta=0.0, xzrange=1, int_actions=False, model=None):
     """
     Functions for making controller objects
     """
     compatible_controller = {'Theta, XZ'}
 
     if name=='Theta':
-        return Theta_Controller(model=model, dtheta=dtheta,speed=speed, map2int=map2int)
+        return Theta_Controller(model=model, dtheta=dtheta,speed=speed, int_actions=int_actions)
 
     elif name=='XZ':        
-        return XZ_Controller(model=model, speed=speed, map2int=map2int, xzrange=xzrange)
+        return XZ_Controller(model=model, speed=speed, int_actions=int_actions, xzrange=xzrange)
 
     else :
         raise Exception('unknown or uncompatible controller name \'' + name + '\'. Compatible controllers are : '+str(compatible_controller))
