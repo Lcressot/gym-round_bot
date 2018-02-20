@@ -59,12 +59,18 @@ def build_rb1_world(model,width=20, hwalls=5, dwalls=1, texture_bricks='/texture
     #right wall
     model.add_block( (n, hwalls/2, 0, dwalls, hwalls, wwalls, 0.0, 0.0, 0.0), MUD, collision_reward = -1)
 
+
     # Build invisible ghost reward block in the corner
-    # model.add_block( (-n+wr/2+dwalls/2, hwalls/2, -n+wr/2+dwalls/2, wr, hwalls, wr, 0.0, 0.0, 0.0), MUD, visible=False, ghost=True, collision_reward = 1)
     model.add_block( (n-(wr/2+dwalls/2), hwalls/2, -n+(wr/2+dwalls/2), wr, hwalls, wr, 0.0, 0.0, 0.0), MUD, visible=False, ghost=True, collision_reward = 1)
+
 
     # Build robot block, set initial height to bot_heigh/2 + small offset to avoid ground collision
     model.add_block( (0, bot_height/2.0+0.1, 0, 2*bot_diameter, bot_height, 2*bot_diameter, 0.0, 0.0, 0.0), BOT, block_type='robot')
+
+
+    # add starting areas (the height=0 of block does not matter here, only area of (hwalls-2*dwalls)^2)
+    model.add_block( (0, bot_height/2.0+0.1, 0, wwalls-2*dwalls, 0, hwalls-2*dwalls, 0.0, 0.0, 0.0), None, block_type='start')
+
 
     world_info = {  'width' : 2*n,
                     'depth' : 2*n,

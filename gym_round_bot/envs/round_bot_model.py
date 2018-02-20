@@ -33,23 +33,29 @@ def rotation_matrices(rx,ry,rz):
 
 class Block(object):
 
-    def __init__(self,components,texture,block_type, visible=True, ghost=False, collision_reward=0.0):
+    def __init__(self, components, texture, block_type, visible=True, ghost=False, collision_reward=0.0):
         """
         components : (x,y,z,w,h,d,rx,ry,rz) tuple of components for initialisation
         texture : list of len 3
                   The coordinates of the texture squares. Use `tex_coords()` to generate.       
-        block_type : type of the block for later use
+        block_type : type of the block
         visible : True if the block is visible. Collision will be detected even if not visible
         ghost : True if block can be gone by, collision will still be detected
         collision_reward : the reward returned at collision
         """
+        if not block_type in {'robot','brick','start'}:
+            raise Exception('Unknown block type : ' + block_type + ' for Block object initialisation')
+
+        if block_type == 'start':
+            # start blocks are used to create starting areas for the robot when model.reset() is called
+            # the robot appears a random coordinate inside random a randomly selected start block
+            visible=False # start are invisible
+            ghost=True # start are ghost, cannot be collided
+            texture = None # unused texture
 
         self.x, self.y, self.z, self.w, self.h, self.d, self.rx, self.ry, self.rz = components
         self._make_block(*components)
-        self.texture = texture
-        self._compatible_types = ('robot', 'brick')
-        if not block_type in self._compatible_types:
-            raise Exception('Uncompatible block type : '+block_type)
+        self.texture = texture        
         self.block_type = block_type
         self.visible = visible
         self.isGhost = ghost
@@ -182,7 +188,12 @@ class Cube(Block):
 
 class Model(object):
 
-    def __init__(self, world='rb1', show_robot = False):
+    def __init__(self, world='rb1', show_robot = False, random_start_pos=True, random_start_rot=False):
+        """
+        Class for round bot model. This class should play the model role of MVC structure,
+        and should not deal with the rendering and the windowing (see class PygletWindow)
+        or the controlling (see class RoundBotEnv)
+        """
 
         # reference to window
         self.window = None
@@ -193,8 +204,15 @@ class Model(object):
         # Mapping from shown blocks to their texture
         self.shown = dict()
 
+        # set of starting areas:
+        self.start_areas  = set()
+
         # wether to show robot or not
         self.show_robot = show_robot       
+        # whether to start randomly in starting_areas or always at the same initial position
+        self.random_start_pos = random_start_pos
+        # whether to rotation should be randomly chosen or not in reset()
+        self.random_start_rot = random_start_rot
 
         self.ticks_per_sec = 60
 
@@ -205,7 +223,6 @@ class Model(object):
         self.world_info = None
         self.texture_paths = None # used for rendering with window
         self.start_position, self.start_rotation, self.start_strafe = None,None,None
-        self.robot_height, self.robot_diameter = None,None
 
         # load world        
         self.load_world(world)
@@ -214,11 +231,30 @@ class Model(object):
 
         # reset first time
         self.reset()
+
+    @property
+    def robot_diameter(self):
+        return self.robot_block.w/2.0
+
+    @property
+    def robot_height(self):
+        return self.robot_block.h
         
     def reset(self):
         # Current x, y, z position in the world, specified with floats. Note
         # that, perhaps unlike in math class, the y-axis is the vertical axis.
-        self.robot_position = self.start_position
+
+        if self.random_start_pos:           
+            start_area = random.choice( list(self.start_areas) )
+            # sample x and z cooridinates
+            self.robot_position = [0,]*3
+            self.robot_position[0] = random.random()*(start_area.w-2*self.robot_diameter) + start_area.x - (start_area.w-2*self.robot_diameter)/2.0
+            self.robot_position[2] = random.random()*(start_area.d-2*self.robot_diameter) + start_area.z - (start_area.d-2*self.robot_diameter)/2.0
+            self.robot_position[1] = start_area.y
+
+        else:
+            self.robot_position = self.start_position
+
 
         # First element is rotation of the player in the x-z plane (ground
         # plane) measured from the z-axis down. The second is the rotation
@@ -226,7 +262,10 @@ class Model(object):
         #
         # The vertical plane rotation ranges from -90 (looking straight down) to
         # 90 (looking straight up). The horizontal rotation range is unbounded.
-        self.robot_rotation = self.start_rotation
+        self.robot_rotation = list(self.start_rotation)
+
+        if self.random_start_rot:
+            self.robot_rotation[0] = random.random()*360  # only x component is randomly sampled                       
 
         # Strafing is moving lateral to the direction you are facing,
         # e.g. moving to the left or right while continuing to face forward.
@@ -249,8 +288,10 @@ class Model(object):
         block = Block( components, texture, block_type, visible, ghost, collision_reward )
         if block_type=='brick':
             self.bricks.add( block )
-        else:
-            self.robot_block = block 
+        elif block_type=='robot':
+            self.robot_block = block
+        elif block_type=='start':
+            self.start_areas.add(block)
 
 
     def remove_block(self, block):

@@ -81,10 +81,6 @@ class RoundBotEnv(gym.Env):
         if self.obssize:
             self.current_observation = scipy.misc.imresize(self.current_observation, (self.obssize[0],self.obssize[1],3)) # warning imresize take x,y and not w,h !
 
-        # reshape observation as line array if asked
-        if not self.image_obs:            
-            self.current_observation = np.reshape(self.current_observation, [1,self.obs_dim] )
-
         # get reward :
         reward = self.model.current_reward                     
 
@@ -105,10 +101,7 @@ class RoundBotEnv(gym.Env):
         # resize image if asked
         if self.obssize:
             self.current_observation = scipy.misc.imresize(self.current_observation, (self.obssize[0],self.obssize[1],3)) # warning imresize take x,y and not w,h !
-        # reshape observation as line array if asked
-        if not self.image_obs:            
-            self.current_observation = np.reshape(self.current_observation, [1,self.obs_dim] )
-
+      
         return self.current_observation
         
 
@@ -143,8 +136,7 @@ class RoundBotEnv(gym.Env):
             visible=False,
             multiview=None,
             focal=65.0,
-            obssize=[16,16],
-            image_obs=True
+            obssize=[16,16]
             ):
         """
         Loads a world into environnement
@@ -158,7 +150,6 @@ class RoundBotEnv(gym.Env):
         - visible
         - multiview : list of angles for multi-view rendering. The renders will be fusioned into one image
         - focal : the camera focal (<180°)
-        - image_obs : Wether observations are image or line shaped
         """
         if not world in self.compatible_worlds:
             raise(Exception('Error: unknown or uncompatible world \'' + world + '\' for environnement round_bot'))
@@ -166,7 +157,6 @@ class RoundBotEnv(gym.Env):
         ## shared settings
         self.world = world
         self.model = round_bot_model.Model(world)
-        self.image_obs = image_obs
         self.obssize = obssize
 
         # save controller and plug it to model :
