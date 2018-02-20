@@ -77,8 +77,13 @@ class RoundBotEnv(gym.Env):
             self.window.update(0.1) # update with 1 second intervall
             self.current_observation = self.window.multiview_render(self.multiview, as_line=False)
 
+        # resize image if asked
         if self.obssize:
             self.current_observation = scipy.misc.imresize(self.current_observation, (self.obssize[0],self.obssize[1],3)) # warning imresize take x,y and not w,h !
+
+        # reshape observation as line array if asked
+        if not self.image_obs:            
+            self.current_observation = np.reshape(self.current_observation, [1,self.obs_dim] )
 
         # get reward :
         reward = self.model.current_reward                     
@@ -97,8 +102,13 @@ class RoundBotEnv(gym.Env):
         """
         self.model.reset()
         self.current_observation = self.window.get_image(reshape=True)#get image as a numpy line
+        # resize image if asked
         if self.obssize:
             self.current_observation = scipy.misc.imresize(self.current_observation, (self.obssize[0],self.obssize[1],3)) # warning imresize take x,y and not w,h !
+        # reshape observation as line array if asked
+        if not self.image_obs:            
+            self.current_observation = np.reshape(self.current_observation, [1,self.obs_dim] )
+
         return self.current_observation
         
 
@@ -134,6 +144,7 @@ class RoundBotEnv(gym.Env):
             multiview=None,
             focal=65.0,
             obssize=[16,16],
+            image_obs=True
             ):
         """
         Loads a world into environnement
@@ -147,14 +158,16 @@ class RoundBotEnv(gym.Env):
         - visible
         - multiview : list of angles for multi-view rendering. The renders will be fusioned into one image
         - focal : the camera focal (<180°)
+        - image_obs : Wether observations are image or line shaped
         """
         if not world in self.compatible_worlds:
             raise(Exception('Error: unknown or uncompatible world \'' + world + '\' for environnement round_bot'))
         
-
         ## shared settings
         self.world = world
         self.model = round_bot_model.Model(world)
+        self.image_obs = image_obs
+        self.obssize = obssize
 
         # save controller and plug it to model :
         self.controller = controller
@@ -163,6 +176,9 @@ class RoundBotEnv(gym.Env):
         # oservation size cannot be bigger than window size
         if obssize[0] > winsize[0] and obssize[1] > winsize[1] :
             winsize = obssize
+
+        shape = self.obssize if self.obssize else self.winsize
+        self.obs_dim = shape[0]*shape[1]*3
 
         # build window
         self.window = pygletWindow.PygletWindow(self.model,
@@ -177,7 +193,7 @@ class RoundBotEnv(gym.Env):
                                                 visible=visible
                                                 )
         # observation are RGB images of rendered world (as line arrays)
-        self.observation_space = spaces.Box(low=0, high=255, shape=[1, winsize[0]*winsize[1]*3])
+        self.observation_space = spaces.Box(low=0, high=255, shape=[1, winsize[0]*winsize[1]*3],dtype=np.uint8)
 
         self.multiview = multiview # if not None, observations will be fusion of subjective view with given relative xOz angles
         self.obssize = obssize if not winsize==obssize else None # if equal to winsize, no need to reshape

@@ -25,8 +25,9 @@ class Controller(object):
         self.action_meaning = {} # dictionnary to map actions number to their string meaning
         self._actions = {} # dictionnary to map actions number to their code meaning
         self.int_actions = int_actions
-        self._reversed_actions_mapping = self.reverse_actions_mapping # build reversed action mapping
         self._action_space = None  # the gym action space corresponding to this controller
+        self._reversed_actions_mapping = None # to be build with self.reverse_actions_mapping afer self._actions initializatio n
+
 
     @property
     def model(self):
@@ -87,6 +88,7 @@ class Theta_Controller(Controller):
                                     +'self._model.change_robot_rotation('+str((d-2)*self.dtheta)+',0);'
                                     for s in range(0,2*2+1) for d in range(0,5) }
         self._action_space = spaces.MultiDiscrete([5,5])
+        self._reversed_actions_mapping = self.reverse_actions_mapping # build reversed action mapping
 
     @property
     def speed(self, s):
@@ -108,6 +110,7 @@ class XZ_Controller(Controller):
         self.action_meaning = '[x, z] 2-tuple coding for x and z between -xzrange and +xzrange'
         self._actions = { (x,z) : 'self._model.strafe='+str([x-xzrange,z-xzrange])+'; self._model.walking_speed=self._initial_speed*'+str(np.sqrt((x-xzrange)**2+(z-xzrange)**2)) for x in range(0,2*xzrange+1) for z in range(0,2*xzrange+1) }
         self._action_space = spaces.MultiDiscrete([2*xzrange+1,2*xzrange+1])
+        self._reversed_actions_mapping = self.reverse_actions_mapping # build reversed action mapping
 
     @property
     def speed(self, s):
@@ -119,7 +122,7 @@ class XZ_Controller(Controller):
 
 
 
-def make(name, speed, dtheta=0.0, xzrange=1, int_actions=False, model=None):
+def make(name, speed, dtheta=0.0, xzrange=2, int_actions=False, model=None):
     """
     Functions for making controller objects
     """
