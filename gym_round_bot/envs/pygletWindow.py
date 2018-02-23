@@ -77,6 +77,9 @@ class PygletWindow(pyglet.window.Window):
             self.model.show_robot=True
             self.show_block(self.model.robot_block)
 
+        # render first frame
+        self.on_draw()
+
     def show_block(self, block):
         """ Private implementation of the `show_block()` method.
         """
