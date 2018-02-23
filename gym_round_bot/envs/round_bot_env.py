@@ -39,6 +39,7 @@ class RoundBotEnv(gym.Env):
         self.current_observation = None
         self.controller = None        
         self.multiview = None
+        self.resize_image = False
         # self.action_space -> property
         self.load() #default world loaded
 
@@ -78,7 +79,7 @@ class RoundBotEnv(gym.Env):
             self.current_observation = self.window.multiview_render(self.multiview, as_line=False)
 
         # resize image if asked
-        if self.obssize:
+        if self.resize_image:
             self.current_observation = scipy.misc.imresize(self.current_observation, (self.obssize[0],self.obssize[1],3)) # warning imresize take x,y and not w,h !
 
         # get reward :
@@ -130,20 +131,20 @@ class RoundBotEnv(gym.Env):
     def load(self,
             world='rb1',
             controller=round_bot_controller.make(name='Theta',dtheta=20,speed=10,int_actions=False),
-            winsize=[16,16],
+            obssize=[16,16],
+            winsize=None,
             global_pov=None,
             perspective=True,
             visible=False,
             multiview=None,
-            focal=65.0,
-            obssize=[16,16]
+            focal=65.0,            
             ):
         """
         Loads a world into environnement
 
         Parameters :
-        - winsize : the dimensions of the rendering window
         - obssize : the dimensions of the observations (reshaped from window render), if None, no reshape
+        - winsize : the dimensions of the rendering window (if None, set to obssize)
         - controller : the controller of the robot
         - global_pov : a tuple vector of global point of view
         - perspective : Bool for normal perspective. False is orthogonal perspective
@@ -163,9 +164,15 @@ class RoundBotEnv(gym.Env):
         self.controller = controller
         self.controller.model = self.model
         
+        # if winsize is None, set it to obssize
+        if not winsize:
+            winsize = obssize 
         # oservation size cannot be bigger than window size
         if obssize[0] > winsize[0] and obssize[1] > winsize[1] :
             winsize = obssize
+
+        # resize rendered image if obsize != winsize
+        self.resize_image = (obssize!=winsize)
 
         shape = self.obssize if self.obssize else self.winsize
         self.obs_dim = shape[0]*shape[1]*3
