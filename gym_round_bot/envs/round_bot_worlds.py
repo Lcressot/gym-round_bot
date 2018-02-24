@@ -13,7 +13,11 @@ import os
     This file allows to build worlds
 """
 
-def build_rb1_world(model,width=20, hwalls=5, dwalls=1, texture_bricks='/textures/texture_test.png', texture_robot='/textures/robot.png'):
+def build_rb1_world(model, width=20, hwalls=5, dwalls=1,
+                    texture_bricks='/textures/texture_test.png',
+                    texture_robot='/textures/robot.png',
+                    texture_visualisation='/textures/visualisation.png',
+                    ):
     """
     Builds a simple rectangle planar world with walls around
     Return : texture path, world information
@@ -30,9 +34,12 @@ def build_rb1_world(model,width=20, hwalls=5, dwalls=1, texture_bricks='/texture
     wr = width/3.0 # wr width of reward area
 
     # get texture paths in current directory
-    block_texture_path = os.path.dirname(__file__) + texture_bricks
+    brick_texture_path = os.path.dirname(__file__) + texture_bricks
     robot_texture_path = os.path.dirname(__file__) + texture_robot
-    texture_paths = {'brick':block_texture_path, 'robot':robot_texture_path}
+    visualisation_texture_path = os.path.dirname(__file__) + texture_visualisation
+    texture_paths = {'brick':brick_texture_path,
+                     'robot':robot_texture_path,
+                     'visualisation':visualisation_texture_path }
 
     # create textures coordinates
     GRASS = round_bot_model.Block.tex_coords((1, 0), (0, 1), (0, 0))
@@ -40,7 +47,11 @@ def build_rb1_world(model,width=20, hwalls=5, dwalls=1, texture_bricks='/texture
     SAND = round_bot_model.Block.tex_coords((1, 1), (1, 1), (1, 1))
     BRICK = round_bot_model.Block.tex_coords((2, 0), (2, 0), (2, 0))
     STONE = round_bot_model.Block.tex_coords((2, 1), (2, 1), (2, 1))
+
     BOT = round_bot_model.Block.tex_coords((0, 0), (0, 1), (0, 1))
+
+    START = round_bot_model.Block.tex_coords((0, 0), (0, 0), (0, 0))
+    REWARD = round_bot_model.Block.tex_coords((0, 1), (0, 1), (0, 1))
 
     # set robot specifications
     bot_diameter = 1
@@ -60,8 +71,8 @@ def build_rb1_world(model,width=20, hwalls=5, dwalls=1, texture_bricks='/texture
     model.add_block( (n, hwalls/2, 0, dwalls, hwalls, wwalls, 0.0, 0.0, 0.0), MUD, collision_reward = -1)
 
 
-    # Build invisible ghost reward block in the corner
-    model.add_block( (n-(wr/2+dwalls/2), hwalls/2, -n+(wr/2+dwalls/2), wr, hwalls, wr, 0.0, 0.0, 0.0), MUD, visible=False, ghost=True, collision_reward = 1)
+    # Build reward block in the corner
+    model.add_block( (n-(wr/2+dwalls/2), hwalls/2, -n+(wr/2+dwalls/2), wr, hwalls, wr, 0.0, 0.0, 0.0), REWARD, block_type='reward', collision_reward = 1)
 
 
     # Build robot block, set initial height to bot_heigh/2 + small offset to avoid ground collision
@@ -69,7 +80,7 @@ def build_rb1_world(model,width=20, hwalls=5, dwalls=1, texture_bricks='/texture
 
 
     # add starting areas (the height=0 of block does not matter here, only area of (hwalls-2*dwalls)^2)
-    model.add_block( (0, bot_height/2.0+0.1, 0, wwalls-2*dwalls, 0, hwalls-2*dwalls, 0.0, 0.0, 0.0), None, block_type='start')
+    model.add_block( (0, bot_height/2.0+0.1, 0, wwalls-2*dwalls, 0, hwalls-2*dwalls, 0.0, 0.0, 0.0), START, block_type='start')
 
 
     world_info = {  'width' : 2*n,

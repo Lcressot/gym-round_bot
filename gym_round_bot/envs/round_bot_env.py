@@ -17,8 +17,6 @@ from gym_round_bot.envs import round_bot_model
 from gym_round_bot.envs import round_bot_controller
 
 import numpy as np
-import scipy.misc
-
 
 
 class RoundBotEnv(gym.Env):
@@ -39,7 +37,6 @@ class RoundBotEnv(gym.Env):
         self.current_observation = None
         self.controller = None        
         self.multiview = None
-        self.resize_image = False
         # self.action_space -> property
         self.load() #default world loaded
 
@@ -78,10 +75,6 @@ class RoundBotEnv(gym.Env):
             self.window.update(0.1) # update with 1 second intervall
             self.current_observation = self.window.multiview_render(self.multiview, as_line=False)
 
-        # resize image if asked
-        if self.resize_image:
-            self.current_observation = scipy.misc.imresize(self.current_observation, (self.obssize[0],self.obssize[1],3)) # warning imresize take x,y and not w,h !
-
         # get reward :
         reward = self.model.current_reward                     
 
@@ -99,9 +92,6 @@ class RoundBotEnv(gym.Env):
         """
         self.model.reset()
         self.current_observation = self.window.get_image(reshape=True)#get image as a numpy line
-        # resize image if asked
-        if self.obssize:
-            self.current_observation = scipy.misc.imresize(self.current_observation, (self.obssize[0],self.obssize[1],3)) # warning imresize take x,y and not w,h !
       
         return self.current_observation
         
@@ -144,7 +134,7 @@ class RoundBotEnv(gym.Env):
 
         Parameters :
         - obssize : the dimensions of the observations (reshaped from window render), if None, no reshape
-        - winsize : the dimensions of the rendering window (if None, set to obssize)
+        - winsize : the dimensions of the observation window (if None, no observation window)
         - controller : the controller of the robot
         - global_pov : a tuple vector of global point of view
         - perspective : Bool for normal perspective. False is orthogonal perspective
@@ -162,37 +152,41 @@ class RoundBotEnv(gym.Env):
 
         # save controller and plug it to model :
         self.controller = controller
-        self.controller.model = self.model
-        
-        # if winsize is None, set it to obssize
-        if not winsize:
-            winsize = obssize 
-        # oservation size cannot be bigger than window size
-        if obssize[0] > winsize[0] and obssize[1] > winsize[1] :
-            winsize = obssize
-
-        # resize rendered image if obsize != winsize
-        self.resize_image = (obssize!=winsize)
+        self.controller.model = self.model        
 
         shape = self.obssize if self.obssize else self.winsize
         self.obs_dim = shape[0]*shape[1]*3
 
-        # build window
-        self.window = pygletWindow.PygletWindow(self.model,
+        # build main window
+        self.window = pygletWindow.MainWindow(self.model,
                                                 global_pov=global_pov,
                                                 perspective = perspective,
                                                 interactive=False,
                                                 focal=focal,
-                                                width=winsize[0],
-                                                height=winsize[1],
+                                                width=obssize[0],
+                                                height=obssize[1],
                                                 caption='Round bot in '+world+' world',
                                                 resizable=False,
                                                 visible=visible
                                                 )
+
+        # build secondary observation window if asked
+        if winsize:
+            self.monitor_window = pygletWindow.SecondaryWindow(self.model,
+                                                    global_pov = (0,20,0),
+                                                    perspective = False,
+                                                    width=winsize[0],
+                                                    height=winsize[1],
+                                                    caption='Observation window '+ world,
+                                                    resizable=False,
+                                                    visible=True,
+                                                    )
+            # plug monitor_window to window
+            self.window.add_follower(self.monitor_window)
+
         # observation are RGB images of rendered world (as line arrays)
-        self.observation_space = spaces.Box(low=0, high=255, shape=[1, winsize[0]*winsize[1]*3],dtype=np.uint8)
+        self.observation_space = spaces.Box(low=0, high=255, shape=[1, obssize[0]*obssize[1]*3],dtype=np.uint8)
 
         self.multiview = multiview # if not None, observations will be fusion of subjective view with given relative xOz angles
-        self.obssize = obssize if not winsize==obssize else None # if equal to winsize, no need to reshape
 
 

@@ -43,7 +43,7 @@ class Block(object):
         ghost : True if block can be gone by, collision will still be detected
         collision_reward : the reward returned at collision
         """
-        if not block_type in {'robot','brick','start'}:
+        if not block_type in {'robot','brick','start','reward'}:
             raise Exception('Unknown block type : ' + block_type + ' for Block object initialisation')
 
         if block_type == 'start':
@@ -51,7 +51,13 @@ class Block(object):
             # the robot appears a random coordinate inside random a randomly selected start block
             visible=False # start are invisible
             ghost=True # start are ghost, cannot be collided
-            texture = None # unused texture
+
+        elif block_type == 'reward':
+            # reward blocks are used to give +- reward to the robot when crossed, they are
+            # in fact the same as bricks with visible=False and ghost=True but can also be shown
+            # in secondary windows for obervations
+            visible=False # start are invisible
+            ghost=True # start are ghost, cannot be collided
 
         self.x, self.y, self.z, self.w, self.h, self.d, self.rx, self.ry, self.rz = components
         self._make_block(*components)
@@ -188,27 +194,22 @@ class Cube(Block):
 
 class Model(object):
 
-    def __init__(self, world='rb1', show_robot = False, random_start_pos=True, random_start_rot=False):
+    def __init__(self, world='rb1', random_start_pos=True, random_start_rot=False):
         """
         Class for round bot model. This class should play the model role of MVC structure,
         and should not deal with the rendering and the windowing (see class PygletWindow)
         or the controlling (see class RoundBotEnv)
         """
 
-        # reference to window
-        self.window = None
+        # reference to windows
+        self.windows = set()
         
         # A set of all blocks
         self.bricks = set()
-        
-        # Mapping from shown blocks to their texture
-        self.shown = dict()
 
         # set of starting areas:
         self.start_areas  = set()
-
-        # wether to show robot or not
-        self.show_robot = show_robot       
+    
         # whether to start randomly in starting_areas or always at the same initial position
         self.random_start_pos = random_start_pos
         # whether to rotation should be randomly chosen or not in reset()
@@ -239,6 +240,9 @@ class Model(object):
     @property
     def robot_height(self):
         return self.robot_block.h
+
+    def add_window(self, window):
+        self.windows.add(window)
         
     def reset(self):
         # Current x, y, z position in the world, specified with floats. Note
@@ -292,13 +296,14 @@ class Model(object):
             self.robot_block = block
         elif block_type=='start':
             self.start_areas.add(block)
+        elif block_type=='reward':            
+            self.bricks.add( block ) # add reward blocks to bricks to detect collisions
 
 
     def remove_block(self, block):
         """ Remove the block
         """        
-        if block in self.shown:
-            self.hide_block(block)
+        self.hide_block(block)
             
         if not block==self.robot_block:
             self.bricks.remove(block)
@@ -306,32 +311,26 @@ class Model(object):
             del self.robot_block
         
    
-    def show_block(self, block):
-        """ Show the block at the given `position`. This method assumes the
-        block has already been added with add_block()
-
-        Parameters
-        ----------
-        block id
-            The (x, y, z) position of the block to show.        
+    def show_block(self, block, window):
+        """ Show the block in given window
         """
-        #self.shown[block] = block.texture
-        if block.visible:   
-            self.window.show_block(block)
+        window.show_block(block)
+        # the window object decides whether to actually show the block or not
+        # depending on the block type, its option visible and so on
 
-    def show_all_bricks(self):
+    def show_all_bricks(self, window):
         """ Show all blocks at once
         """
         for block in self.bricks:
-            if block.block_type=='brick' and block.visible:
-                self.show_block(block)
+            self.show_block(block, window)
     
 
     def hide_block(self, block):
         """ Hide the block . Hiding does not remove the
         block from the world.
         """
-        self.shown.pop(block)
+        for w in self.windows:
+            w.hide_block(block)
         
 
     # def get_sight_vector(self):
@@ -341,7 +340,7 @@ class Model(object):
     
     #     x, y = self.robot_rotation
     #     # y ranges from -90 to 90, or -pi/2 to pi/2, so m ranges from 0 to 1 and
-    #     # is 1 when looking ahead parallel to the ground and 0 when looking
+    #     # is 1 __en looking ahead parallel to the ground and 0 when looking
     #     # straight up or down.
     #     m = math.cos(math.radians(y))
     #     # dy ranges from -1 to 1 and is -1 when looking straight down and 1 when
@@ -422,15 +421,12 @@ class Model(object):
         if not self.collided:
             self.robot_position = new_position
 
-        if self.show_robot:
-            # update robot's block            
-            rx,ry = self.robot_rotation
-            x, y, z = self.robot_position
-            self.robot_block.translate_and_rotate_to(x,y,z,-ry,-rx,0.0)
-            # try: # if robot is shown, update the shown vertices
-            self.shown[self.robot_block].vertices = self.robot_block.vertices
-            # except:
-            #     None
+    
+        # update robot's block
+        # but don't add it in shown dict because this block is not show in all windows using the model      
+        rx,ry = self.robot_rotation
+        x, y, z = self.robot_position
+        self.robot_block.translate_and_rotate_to(x,y,z,-ry,-rx,0.0)
 
 
     def collide(self, new_position):
