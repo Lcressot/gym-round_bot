@@ -88,8 +88,8 @@ class Theta_Controller(Controller):
         """ Private initialisation of Theta_Controller
         """
         self.action_meaning = '[s, dth] 2-tuple coding for speed between -initial_speed*2 and +initial_speed*2 and dtheta between -2dt and 2dt'
-        self._actions = { (s,d) : 'self._model.strafe[0]='+str(np.sign(s))
-                                    +'; self._model.walking_speed=self._initial_speed*'+str(s-2)+';'
+        self._actions = { (s,d) : 'self._model.strafe[0]='+str(0 if s-2==0 else np.sign(s-2))
+                                    +'; self._model.walking_speed=self._initial_speed*'+str(abs(s-2))+';'
                                     +'self._model.change_robot_rotation('+str((d-2)*self.dtheta)+',0);'
                                     for s in range(0,2*2+1) for d in range(0,5) }
         self._action_space = spaces.MultiDiscrete([5,5])
