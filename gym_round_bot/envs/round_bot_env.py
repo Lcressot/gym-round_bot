@@ -38,6 +38,7 @@ class RoundBotEnv(gym.Env):
         self.controller = None        
         self.multiview = None
         # self.action_space -> property
+        self.monitor_window = None
         self.load() #default world loaded
 
     @property
@@ -76,7 +77,7 @@ class RoundBotEnv(gym.Env):
             self.current_observation = self.window.multiview_render(self.multiview, as_line=False)
 
         # get reward :
-        reward = self.model.current_reward                     
+        reward = self.model.current_reward              
 
         # this environment has no terminal state and no info
         info = {}
@@ -189,4 +190,9 @@ class RoundBotEnv(gym.Env):
 
         self.multiview = multiview # if not None, observations will be fusion of subjective view with given relative xOz angles
 
-
+    def message(self, message):
+        """
+        Get message from training and use it if possible
+        """
+        if self.monitor_window:
+            self.monitor_window.message = message

@@ -203,21 +203,16 @@ class PygletWindow(pyglet.window.Window):
         self.set_3d()
         glColor3d(1, 1, 1)
         self.batch.draw()
-        #self.draw_focused_block()
-        # self.set_2d()
-        # self.draw_label()
-        #self.draw_reticle()
+        
+        self._on_draw()
+        
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
-    def draw_label(self):
-        """ Draw the label in the top left of the screen.
-
+    def _on_draw(self):
         """
-        x,y, z = self.model.robot_position
-        self.label.text = '%02d (%.2f, %.2f, %.2f) %d / %d' % (
-            pyglet.clock.get_fps(), x, y, z,
-            len(self.model.shown), len(self.model.textures))
-        self.label.draw()
+        Class private on_draw method
+        """
+        raise NotImplemented
 
     def draw_reticle(self):
         """ Draw the crosshairs in the center of the screen.
@@ -347,6 +342,11 @@ class MainWindow(PygletWindow):
         for w in self.followers:
             w.step(dt)
 
+    def _on_draw(self):
+        """
+        Class private on_draw method
+        """
+        return
 
     def add_follower(self, secondary_window):
         """
@@ -500,6 +500,10 @@ class SecondaryWindow(PygletWindow):
     """
 
     def __init__(self, model, global_pov=None, perspective=True, focal=65.0, *args, **kwargs):
+        self.message = ''
+         # The label that is displayed in the top left of the canvas.
+        self.label = pyglet.text.Label('', font_name='Arial', font_size=18, x=10, y=kwargs['height'] - 10, 
+                                        anchor_x='left', anchor_y='top', color=(255, 255, 255, 255))    
         super(SecondaryWindow, self).__init__(model=model, global_pov=global_pov, perspective=perspective, interactive=False, focal=focal, *args, **kwargs)
 
     def _init(self):
@@ -515,6 +519,20 @@ class SecondaryWindow(PygletWindow):
         Private (protected) update of a SeondaryWindow object
         """
         return
+
+    def _on_draw(self):
+        """
+        Class private on_draw method
+        """
+        self.set_2d()
+        # draw some information on label
+        self.draw_label(self.message)
+
+    def draw_label(self, label_text):
+        """ Draw the label in the top left of the screen.
+        """
+        self.label.text = label_text        
+        self.label.draw()
 
     def follow(self, main_window):
         """

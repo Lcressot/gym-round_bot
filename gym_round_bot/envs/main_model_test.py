@@ -31,7 +31,7 @@ if __name__ == '__main__':
 		height=winsize[1],
 		caption='Round bot in '+world+' world',
 		resizable=False,
-		visible=True
+		visible=False
 	)
 
     secwindow = pygletWindow.SecondaryWindow(
