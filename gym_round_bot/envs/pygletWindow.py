@@ -510,7 +510,10 @@ class SecondaryWindow(PygletWindow):
         """
         self.main_window = None
         self.texture_groups['start'] = TextureGroup(image.load(self.model.texture_paths['visualisation']).get_texture())
-        self.texture_groups['reward'] = self.texture_groups['start']        
+        self.texture_groups['reward'] = self.texture_groups['start']  
+        # show start areas
+        for sa in self.model.start_areas:
+            self.show_block(sa)      
 
     def _update(self, dt):
         """

@@ -475,8 +475,8 @@ class Model(object):
         """
         if world == 'rb1':
             texture_paths, world_info = round_bot_worlds.build_rb1_world(self)
-        elif world == 'rb1_blocks':
-            texture_paths, world_info = round_bot_worlds.build_rb1_blocks_world(self)
+        elif world == 'rb1_1wall':
+            texture_paths, world_info = round_bot_worlds.build_rb1_1wall_world(self)
         else:
             raise(Exception('Error: unknown world : ' + world))
 

@@ -49,7 +49,7 @@ class RoundBotEnv(gym.Env):
     @property
     def compatible_worlds(self):        
         return {'rb1', # rectangle set, first person view, reward in top left corner
-                'rb1_blocks', # rectangle set, first person view, reward in top left corner, middle blocks
+                'rb1_1wall', # rectangle set, first person view, reward in top left corner, middle blocks
                 }
 
     @property
@@ -145,8 +145,7 @@ class RoundBotEnv(gym.Env):
         """
         if not world in self.compatible_worlds:
             raise(Exception('Error: unknown or uncompatible world \'' + world + '\' for environnement round_bot'))
-        
-        ## shared settings
+           ## shared settings
         self.world = world
         self.model = round_bot_model.Model(world)
         self.obssize = obssize
