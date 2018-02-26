@@ -111,7 +111,7 @@ def build_rb1_1wall_world(model, width=20, hwalls=2, dwalls=2):
     BOT = round_bot_model.Block.tex_coords((0, 0), (0, 1), (0, 1))
     START = round_bot_model.Block.tex_coords((0, 0), (0, 0), (0, 0))
     REWARD = round_bot_model.Block.tex_coords((0, 1), (0, 1), (0, 1))
-    STONE = round_bot_model.Block.tex_coords((2, 1), (2, 1), (2, 1))
+    SAND = round_bot_model.Block.tex_coords((1, 1), (1, 1), (1, 1))
 
     n = width/2.0  # 1/2 width and depth of world
     wwalls = 2*n # width of walls
@@ -122,7 +122,7 @@ def build_rb1_1wall_world(model, width=20, hwalls=2, dwalls=2):
     bot_height = 1
     
     # middle wall
-    model.add_block( (n/2, hwalls/2, -n/4, wwalls/2, hwalls, dwalls, 0.0, 0.0, 0.0), STONE, collision_reward = -1)
+    model.add_block( (n/2, hwalls/2, -n/4, wwalls/2, hwalls, dwalls, 0.0, 0.0, 0.0), SAND, collision_reward = -1)
 
     # Build reward block in the corner
     model.add_block( (n-(wr/2+dwalls/2), bot_height/2.0, -n+(wr/2+dwalls/2), wr, bot_height/3.0, wr, 0.0, 0.0, 0.0), REWARD, block_type='reward', collision_reward = 1)
@@ -130,6 +130,7 @@ def build_rb1_1wall_world(model, width=20, hwalls=2, dwalls=2):
     model.add_block( (0, bot_height/2.0+0.1, 0, 2*bot_diameter, bot_height, 2*bot_diameter, 0.0, 0.0, 0.0), BOT, block_type='robot')
     # add starting areas (the height=0 of block does not matter here, only area of (hwalls-2*dwalls)^2)
     model.add_block( (0, bot_height/2.0+0.1, (wwalls-2*dwalls)/4, wwalls-2*dwalls, 0.1, (wwalls-2*dwalls)/2, 0.0, 0.0, 0.0), START, block_type='start')
+    model.add_block( ( -(wwalls-2*dwalls)/4, bot_height/2.0+0.1, -(wwalls-2*dwalls)/4, (wwalls-2*dwalls)/2, 0.1, (wwalls-2*dwalls)/2, 0.0, 0.0, 0.0), START, block_type='start')
 
 
     return texture_paths, world_info
