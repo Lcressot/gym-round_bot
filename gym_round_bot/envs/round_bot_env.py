@@ -155,8 +155,9 @@ class RoundBotEnv(gym.Env):
         self.controller = controller
         self.controller.model = self.model        
 
-        shape = self.obssize if self.obssize else self.winsize
+        shape = self.obssize
         self.obs_dim = shape[0]*shape[1]*3
+
 
         # build main window
         self.window = pygletWindow.MainWindow(self.model,

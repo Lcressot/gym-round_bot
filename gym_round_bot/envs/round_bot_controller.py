@@ -75,20 +75,24 @@ class Controller(object):
 
 
 class Theta_Controller(Controller):
-    """
-    This class controls the robot with fixed dtheta rotations and fixed speed forward move
+    """ This class controls the robot with 2 fixed dtheta rotations and 2 fixed speed forward/bacwkard move
     """
     def __init__(self, model, dtheta, speed, int_actions):
         super(Theta_Controller,self).__init__('Theta tuple2',model, int_actions)
         self.dtheta = dtheta
         self._initial_speed = speed
+        self._init()
+        self._reversed_actions_mapping = self.reverse_actions_mapping # build reversed action mapping
+
+    def _init(self):
+        """ Private initialisation of Theta_Controller
+        """
         self.action_meaning = '[s, dth] 2-tuple coding for speed between -initial_speed*2 and +initial_speed*2 and dtheta between -2dt and 2dt'
         self._actions = { (s,d) : 'self._model.strafe[0]='+str(np.sign(s))
                                     +'; self._model.walking_speed=self._initial_speed*'+str(s-2)+';'
                                     +'self._model.change_robot_rotation('+str((d-2)*self.dtheta)+',0);'
                                     for s in range(0,2*2+1) for d in range(0,5) }
         self._action_space = spaces.MultiDiscrete([5,5])
-        self._reversed_actions_mapping = self.reverse_actions_mapping # build reversed action mapping
 
     @property
     def speed(self, s):
@@ -97,6 +101,22 @@ class Theta_Controller(Controller):
     @property
     def speed(self):
         return self._model.walking_speed
+
+
+class Theta2_Controller(Theta_Controller):
+    """ This class controls the robot with fixed dtheta rotations and fixed speed forward (no backward) move
+    """
+    def __init__(self, model, dtheta, speed, int_actions):
+        super(Theta2_Controller,self).__init__(model, dtheta, speed, int_actions)        
+        
+    def _init(self):
+        """ Private initialisation of Theta2_Controller
+        """
+        self.action_meaning = '[s, dth] 2-tuple coding for speed between 0 and +initial_speed and dtheta between -dt and dt'
+        self._actions = { (s,d) : 'self._model.strafe[0]='+str(-s)
+                                    +';self._model.change_robot_rotation('+str((d-1)*self.dtheta)+',0);'
+                                    for s in range(0,2) for d in range(0,2+1) }
+        self._action_space = spaces.MultiDiscrete([2,3])
 
 
 class XZ_Controller(Controller):
@@ -130,6 +150,9 @@ def make(name, speed, dtheta=0.0, xzrange=2, int_actions=False, model=None):
 
     if name=='Theta':
         return Theta_Controller(model=model, dtheta=dtheta,speed=speed, int_actions=int_actions)
+
+    elif name=='Theta2':
+        return Theta2_Controller(model=model, dtheta=dtheta,speed=speed, int_actions=int_actions)
 
     elif name=='XZ':        
         return XZ_Controller(model=model, speed=speed, int_actions=int_actions, xzrange=xzrange)

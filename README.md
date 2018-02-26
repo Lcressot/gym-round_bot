@@ -13,6 +13,7 @@ pygletWindow.py
 + A class inherited from python Pyglet library for rendering 3D scenes (given by the model) with OpenGL. Interaction with user is possible (to control the model's robot) if the window is set to visible and interactive. If the window is visible and interactive, control the robot for debugging your world or have fun with tab (to enter control mode), and ZSQD AE and mouse for direction and rotation.
 + Set the view to subjective with global_pov=None or set it to global with for instance global_pov=(0,40,0)
 + If you set global_pov, you can set perspective to False to render in orthogonal mode
++ Use a MainWindow for rendering and optionnaly a SecondaryWindow object for monitoring the training/testing
 
 ### Worlds :
 round_bot_worlds.py
@@ -62,10 +63,11 @@ import gym_round_bot
 # create environment
 env = gym.make('RoundBot-v0')
 world = 'rb1' # the world to load
-winsize=[100,80] # the size of window for rendering
+obssize=[16,16] # the size of observations (rendering window)
+winsize=[100,80] # the size of monitoring window (None if not wanted)
 
 controller={'name':'Theta','dtheta':45,'speed':5}
-env.unwrapped.load(world='rb1',winsize=winsize, controller=controller, global_pov = (0,20,0), perspective=False)
+env.unwrapped.load(world='rb1',obssize=obssize, winsize=winsize, controller=controller, global_pov = (0,20,0), perspective=False)
 
 # perform steps
 while(True):

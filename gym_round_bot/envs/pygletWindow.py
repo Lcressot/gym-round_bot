@@ -87,7 +87,6 @@ class PygletWindow(pyglet.window.Window):
         # render first frame
         self.on_draw()
 
-
     def _init(self):
         """
         Private (protected) initialiation of a window
@@ -258,7 +257,6 @@ class PygletWindow(pyglet.window.Window):
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
         #setup_fog()
         self.switch_to() # set opengl context to this window
-
 
     def multiview_render(self, xzangles, as_line=True):
         """
