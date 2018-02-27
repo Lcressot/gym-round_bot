@@ -39,6 +39,7 @@ class RoundBotEnv(gym.Env):
         self.multiview = None
         # self.action_space -> property
         self.monitor_window = None
+        self.max_step=None
         self.load() #default world loaded
 
     @property
@@ -78,10 +79,12 @@ class RoundBotEnv(gym.Env):
 
         # get reward :
         reward = self.model.current_reward              
-
-        # this environment has no terminal state and no info
-        info = {}
-        return self.current_observation, reward, False, info
+        # check if done
+        self.current_step += 1
+        done = (self.current_step == self.max_step) if self.max_step else False
+        # no info
+        info={}
+        return self.current_observation, reward, done, {}
         
 
     def reset(self):
@@ -93,6 +96,7 @@ class RoundBotEnv(gym.Env):
         """
         self.model.reset()
         self.current_observation = self.window.get_image(reshape=True)#get image as a numpy line
+        self.current_step = 0
       
         return self.current_observation
         
@@ -128,7 +132,8 @@ class RoundBotEnv(gym.Env):
             perspective=True,
             visible=False,
             multiview=None,
-            focal=65.0,            
+            focal=65.0,
+            max_step=100,
             ):
         """
         Loads a world into environnement
@@ -142,6 +147,7 @@ class RoundBotEnv(gym.Env):
         - visible
         - multiview : list of angles for multi-view rendering. The renders will be fusioned into one image
         - focal : the camera focal (<180°)
+        - max_step = if not None, maximum number of steps before done is returned
         """
         if not world in self.compatible_worlds:
             raise(Exception('Error: unknown or uncompatible world \'' + world + '\' for environnement round_bot'))
@@ -149,6 +155,8 @@ class RoundBotEnv(gym.Env):
         self.world = world
         self.model = round_bot_model.Model(world)
         self.obssize = obssize
+        self.max_step = max_step
+        self.current_step = 0
 
         # save controller and plug it to model :
         self.controller = controller
