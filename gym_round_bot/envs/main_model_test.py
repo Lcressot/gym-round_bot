@@ -17,15 +17,15 @@ import pygletWindow
 
 if __name__ == '__main__':
 
-    world = 'rb1_blocks'
-    world = 'rb1'
+    world = 'rb1_1wall'
+    #world = 'rb1'
     winsize=[300,300]
     model = round_bot_model.Model(world)
-    window = pygletWindow.PygletWindow(
+    window = pygletWindow.MainWindow(
     	model,
-		global_pov=(0,20,0),
-		#global_pov=None,
-		perspective=False,
+		#global_pov=(0,20,0),
+		global_pov=None,
+		perspective=True,
 		interactive=True,
 		width=winsize[0],
 		height=winsize[1],
@@ -34,7 +34,16 @@ if __name__ == '__main__':
 		visible=True
 	)
 
+    secwindow = pygletWindow.SecondaryWindow(
+        model,
+        global_pov=(0,20,0),
+        #global_pov=None,
+        perspective=False,        
+        width=winsize[0],
+        height=winsize[1],
+        caption='Observation window '+world,
+        visible=True
+    )
+
+    window.add_follower(secwindow)
     window.start()
-    # for i in range(1,3):
-    #     window.step(0.1)
-    #     window.debug_render()

@@ -23,89 +23,118 @@ from pyglet.window import key, mouse
 """
     This file defines the environnement's window and renderer
 """
-
-
+################################################################################################################################
 class PygletWindow(pyglet.window.Window):
+################################################################################################################################
+    """
+        Abstract class for rendering in a window with pyglet
+    """
 
     def __init__(self, model, global_pov=None, perspective=True, interactive=False, focal=65.0, *args, **kwargs):
         super(PygletWindow, self).__init__(*args, **kwargs)
 
-        # A Batch is a collection of vertex lists for batched rendering.
-        self.batch = pyglet.graphics.Batch()
-
-        # A TextureGroup manages an OpenGL texture.
-        self.texture_groups = {'brick':None, 'robot':None}
-        self.texture_groups['brick'] = TextureGroup(image.load(model.texture_paths['brick']).get_texture())
-        self.texture_groups['robot'] = TextureGroup(image.load(model.texture_paths['robot']).get_texture())
-
-        # Whether or not the window exclusively captures the mouse.
-        self.exclusive = False
-
-        # Global point of view : if None, view is subjective
-        self.global_pov = global_pov        
+         # Global point of view : if None, view is subjective
+        self.global_pov = global_pov
         if not global_pov:
             if not perspective:
                 print('Warning : no global_pov provided, setting perspective to True')
                 perspective = True
         else:
             self.ortho_width = self.global_pov[1]*np.tan(np.radians(focal/2.0)) 
+        
         # perspective or orthogonal projection
         self.perspective = perspective
-        self.focal = focal        
+        self.focal = focal
+
+        # Wheter or not the user can interact with the window
+        self.interactive = interactive          
 
         # Wether or not the window has its own thread
         self.threaded = False
 
-        # Wheter or not the user can interact with the window
-        self.interactive = interactive        
-
-        # Which sector the player is currently in.
-        #self.sector = None
-
-        # The crosshairs at the center of the screen.
-        #self.reticle = None
+        # Whether or not the window exclusively captures the mouse.
+        self.exclusive = False        
 
         # Instance of the model that handles the world.
         self.model = model
 
-        # set window pointer of model
-        self.model.window = self
+        # Mapping from shown blocks to textures
+        self.shown = dict()
+
+        # A Batch is a collection of vertex lists for batched rendering.
+        self.batch = pyglet.graphics.Batch()
+
+        # A TextureGroup manages an OpenGL texture.
+        self.texture_groups = dict()
+        self.texture_groups['brick'] = TextureGroup(image.load(self.model.texture_paths['brick']).get_texture())
+        self.texture_groups['robot'] = TextureGroup(image.load(self.model.texture_paths['robot']).get_texture())
+
+
+        # add this window pointer to model
+        self.model.add_window(self)
+
+        # call private initialisation method
+        self._init()
 
         # show all blocks
-        self.model.show_all_bricks()
+        self.model.show_all_bricks(self)
+
         if self.global_pov: # if global_pov, show robot's block
-            self.model.show_robot=True
             self.show_block(self.model.robot_block)
 
+        # set up opengl
+        self.setup_gl()
+        # render first frame
+        self.on_draw()
+
+    def _init(self):
+        """
+        Private (protected) initialiation of a window
+        """
+        raise NotImplemented
+
+    def update(self, dt):
+
+        self._update(dt)
+        # update robot if global_pov
+        if self.global_pov:
+            rb=self.model.robot_block
+            self.shown[rb].vertices = rb.vertices
+
+    def step(self, dt):
+        """
+        Performs manually a drawing step
+        """
+        self.update(dt)
+        self.on_draw()       
+        if self.visible: 
+            self.dispatch_events() # slows down rendering with a factor 10 on OSX
+            self.flip()
+
+    def _update(self, dt):
+        """
+        Private (protected) update of a window
+        """
+        raise NotImplemented
+
     def show_block(self, block):
-        """ Private implementation of the `show_block()` method.
+        """ Add block the shown dict
         """
-        # FIXME Maybe `add_indexed()` should be used instead
-        self.model.shown[block] = self.batch.add(24, GL_QUADS, self.texture_groups[block.block_type],
-            ('v3f/static', block.vertices),
-            ('t2f/static', list(block.texture)))    
+        if self._show_block(block): # decide whether to show the block or not depending on the window
+            self.shown[block] = self.batch.add(24, GL_QUADS, self.texture_groups[block.block_type],
+                ('v3f/static', block.vertices),
+                ('t2f/static', list(block.texture)))   
 
-    def set_exclusive_mouse(self, exclusive):
-        """ If `exclusive` is True, the game will capture the mouse, if False
-        the game will ignore the mouse.
-
+    def _show_block(self, block):
         """
-        super(PygletWindow, self).set_exclusive_mouse(exclusive)
-        self.exclusive = exclusive   
-
-    def update(self, dt, m=1):
+            Private Boolean function for deciding whether to show a block or not 
         """ 
-        Parameters
-        ----------
-        dt : float
-            The change in time since the last call.
-        m :  subdisivions of step
+        raise NotImplemented
 
+    def hide_block(self, block):
+        """ Remove block from shown dict
         """
-        #self.model.process_queue()
-
-        for _ in range(m):
-            self.model.update(dt / m)
+        self.shown.pop(block)
 
     def get_image(self,reshape=True):
         """
@@ -124,8 +153,222 @@ class PygletWindow(pyglet.window.Window):
             # reshape as line vector
             nparr=nparr.reshape(1,self.width*self.height*3)
         return nparr    
-
    
+    def set_2d(self):
+        """ Configure OpenGL to draw in 2d.
+
+        """
+        width, height = self.get_size()
+        glDisable(GL_DEPTH_TEST)
+        glViewport(0, 0, width, height)
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        glOrtho(0, width, 0, height, -1, 1)
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+
+    def set_3d(self, offset_xzangle=0.0):
+        """ Configure OpenGL to draw in 3d.
+            offset_xzangle : put offset to xOz angle, used for getting several views at each position and fusion them
+        """
+        width, height = self.get_size()
+        glEnable(GL_DEPTH_TEST)
+        glViewport(0, 0, width, height)
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        if self.perspective:
+            gluPerspective(self.focal, width / float(height), 0.1, 60.0)
+        else :
+            # if not perspective, make orthogonal projection given the global_pov            
+            glOrtho(self.ortho_width, -self.ortho_width, self.ortho_width, -self.ortho_width ,0.1, 60.0)
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+        if self.global_pov:
+            glRotatef(90, 45, 0, 0) # look down           
+            x,y, z = self.global_pov
+            glTranslatef(-x, -y, -z)
+        else:
+            x, y = self.model.robot_rotation
+            glRotatef(x+offset_xzangle, 0, 1, 0)
+            glRotatef(-y, math.cos(math.radians(x)), 0, math.sin(math.radians(x)))
+            x,y, z = self.model.robot_position
+            glTranslatef(-x, -y, -z)        
+
+    def on_draw(self):
+        """ Called by pyglet to draw the canvas.
+
+        """
+        self.clear()
+        self.set_3d()
+        glColor3d(1, 1, 1)
+        self.batch.draw()
+        
+        self._on_draw()
+        
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+
+    def _on_draw(self):
+        """
+        Class private on_draw method
+        """
+        raise NotImplemented
+
+    def draw_reticle(self):
+        """ Draw the crosshairs in the center of the screen.
+
+        """
+        glColor3d(0, 0, 0)
+        self.reticle.draw(GL_LINES)
+
+    def setup_fog():
+        """ Configure the OpenGL fog properties.
+
+        """
+        # Enable fog. Fog 'blends a fog color with each rasterized pixel fragment's
+        # post-texturing color.'
+        glEnable(GL_FOG)
+        # Set the fog color.
+        glFogfv(GL_FOG_COLOR, (GLfloat * 4)(0.5, 0.69, 1.0, 1))
+        # Say we have no preference between rendering speed and quality.
+        glHint(GL_FOG_HINT, GL_DONT_CARE)
+        # Specify the equation used to compute the blending factor.
+        glFogi(GL_FOG_MODE, GL_LINEAR)
+        # How close and far away fog starts and ends. The closer the start and end,
+        # the denser the fog in the fog range.
+        glFogf(GL_FOG_START, 20.0)
+        glFogf(GL_FOG_END, 60.0)
+
+
+    def setup_gl(self):
+        """ Basic OpenGL configuration.
+
+        """
+        # Set the color of 'clear', i.e. the sky, in rgba.
+        glClearColor(0.2, 0.2, 0.2, 1)
+        # Enable culling (not rendering) of back-facing facets -- facets that aren't
+        # visible to you.
+        glEnable(GL_CULL_FACE)
+        # Set the texture minification/magnification function to GL_NEAREST (nearest
+        # in Manhattan distance) to the specified texture coordinates. GL_NEAREST
+        # 'is generally faster than GL_LINEAR, but it can produce textured images
+        # with sharper edges because the transition between texture elements is not
+        # as smooth.'
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        #setup_fog()
+        self.switch_to() # set opengl context to this window
+
+    def multiview_render(self, xzangles, as_line=True):
+        """
+        xzangles : list of angles representing subjective view rotation in plane xOz (positives to negatives)
+        as_line : Boolean for returning a line shaped image
+        
+        Returns a simple fusion of subjective views with given angles, used to widen the field of view
+
+        Note : this function doesn't perform any model updates ! It must be done before
+        """        
+        nviews = len(xzangles)
+        multiview_rnd = np.zeros([self.height, self.width, 3])
+        w = self.width/nviews
+
+        for i,xzangle in enumerate(xzangles):
+            # render view with this xzangle as xz offset angle
+            self.clear()
+            self.set_3d(xzangle)
+            glColor3d(1, 1, 1)
+            self.batch.draw()            
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+            # if self.visible: # slows down rendering with a factor 10 !
+            #     self.dispatch_events()
+            #     self.flip()
+            rnd = self.get_image(reshape=True)
+            # resize it (streching)
+            rnd = scipy.misc.imresize(rnd, (self.height,w,3)) # warning imresize take x,y and not w,h !
+            # insert it in multiview_rnd
+            multiview_rnd[:,i*w:(i+1)*w,:] = 255-rnd # warning scipy has invert colors !            
+            
+        return multiview_rnd if not as_line else np.reshape(multiview_rnd,[1,self.width*self.height*3])
+
+
+
+
+################################################################################################################################
+class MainWindow(PygletWindow):
+################################################################################################################################
+    """
+        Class of main windows:
+    """
+
+    def __init__(self, model, global_pov=None, perspective=True, interactive=False, focal=65.0, *args, **kwargs):
+        super(MainWindow, self).__init__(model, global_pov, perspective, interactive, focal, *args, **kwargs)
+
+        # set of windows following this one
+        self.followers = set()
+
+    def _init(self):
+        """
+        Private (protected) initialiation of a MainWindow object
+        """
+        return
+        
+
+    def start(self):#, callback=None, ticks_per_sec=20):
+        """
+            Starts window thread and set a callback on given function
+        """
+        # schedule calls on 
+        # if callback:
+        #     pyglet.clock.schedule_interval(callback, 1.0 / ticks_per_sec, 1)
+        self.threaded = True
+        pyglet.app.run()
+
+    def _update(self, dt, m=1):
+        """ 
+        Private (protected) update of a window
+
+        Parameters
+        ----------
+        dt : float
+            The change in time since the last call.
+        m :  subdisivions of step
+
+        """
+        # only main window can call for model update
+        for _ in range(m):
+            self.model.update(dt / m)
+        # update following windows :
+        for w in self.followers:
+            w.step(dt)
+
+    def _on_draw(self):
+        """
+        Class private on_draw method
+        """
+        return
+
+    def add_follower(self, secondary_window):
+        """
+        adds a following window
+        """
+        self.followers.add(secondary_window)
+        secondary_window.follow(self)
+
+    def _show_block(self, block):
+        """
+            Private Boolean function for deciding whether to show a block or not 
+        """ 
+        # only show visible blocks
+        return block.visible
+
+    def set_exclusive_mouse(self, exclusive):
+        """ If `exclusive` is True, the game will capture the mouse, if False
+        the game will ignore the mouse.
+
+        """
+        super(PygletWindow, self).set_exclusive_mouse(exclusive)
+        self.exclusive = exclusive 
+
+
     def on_mouse_press(self, x, y, button, modifiers):
     #     """ Called when a mouse button is pressed. See pyglet docs for button
     #     amd modifier mappings.
@@ -196,9 +439,7 @@ class PygletWindow(pyglet.window.Window):
                 self.model.change_robot_rotation(10,0)
             elif symbol == key.A:
                 self.model.change_robot_rotation(-10,0)            
-
-        if symbol == key.ESCAPE:
-            self.set_exclusive_mouse(False)
+        
         elif symbol == key.TAB:
             if not self.model.flying:
                 # This call schedules the `update()` method to be called
@@ -209,7 +450,6 @@ class PygletWindow(pyglet.window.Window):
                 pyglet.clock.unschedule(self.update)
             
             self.model.flying = not self.model.flying
-
         
 
     def on_key_release(self, symbol, modifiers):
@@ -236,190 +476,87 @@ class PygletWindow(pyglet.window.Window):
             elif symbol == key.Q: 
                 self.model.strafe[1] += 1
             elif symbol == key.D: # same for qwerty and azerty
-                self.model.strafe[1] -= 1        
+                self.model.strafe[1] -= 1  
 
 
-    def set_2d(self):
-        """ Configure OpenGL to draw in 2d.
-
+    def on_close(self):
         """
-        width, height = self.get_size()
-        glDisable(GL_DEPTH_TEST)
-        glViewport(0, 0, width, height)
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        glOrtho(0, width, 0, height, -1, 1)
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-
-    def set_3d(self, offset_xzangle=0.0):
-        """ Configure OpenGL to draw in 3d.
-            offset_xzangle : put offset to xOz angle, used for getting several views at each position and fusion them
+        When user closes window
         """
-        width, height = self.get_size()
-        glEnable(GL_DEPTH_TEST)
-        glViewport(0, 0, width, height)
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        if self.perspective:
-            gluPerspective(self.focal, width / float(height), 0.1, 60.0)
-        else :
-            # if not perspective, make orthogonal projection given the global_pov            
-            glOrtho(self.ortho_width, -self.ortho_width, self.ortho_width, -self.ortho_width ,0.1, 60.0)
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        if self.global_pov:
-            glRotatef(90, 45, 0, 0) # look down           
-            x,y, z = self.global_pov
-            glTranslatef(-x, -y, -z)
-        else:
-            x, y = self.model.robot_rotation
-            glRotatef(x+offset_xzangle, 0, 1, 0)
-            glRotatef(-y, math.cos(math.radians(x)), 0, math.sin(math.radians(x)))
-            x,y, z = self.model.robot_position
-            glTranslatef(-x, -y, -z)        
+        for w in self.followers:
+            w.on_close()
+        super(MainWindow, self).on_close()
 
-    def on_draw(self):
-        """ Called by pyglet to draw the canvas.
 
+
+
+################################################################################################################################
+class SecondaryWindow(PygletWindow):
+################################################################################################################################
+    """
+        Class of secondary windows : used to observe model but don't interact with it
+    """
+
+    def __init__(self, model, global_pov=None, perspective=True, focal=65.0, *args, **kwargs):
+        self.message = ''
+         # The label that is displayed in the top left of the canvas.
+        self.label = pyglet.text.Label('', font_name='Arial', font_size=18, x=10, y=kwargs['height'] - 10, 
+                                        anchor_x='left', anchor_y='top', color=(255, 255, 255, 255))    
+        super(SecondaryWindow, self).__init__(model=model, global_pov=global_pov, perspective=perspective, interactive=False, focal=focal, *args, **kwargs)
+
+    def _init(self):
         """
-        self.clear()
-        self.set_3d()
-        glColor3d(1, 1, 1)
-        self.batch.draw()
-        #self.draw_focused_block()
-        # self.set_2d()
-        # self.draw_label()
-        #self.draw_reticle()
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        Private (protected) initialiation of a SeondaryWindow object
+        """
+        self.main_window = None
+        self.texture_groups['start'] = TextureGroup(image.load(self.model.texture_paths['visualisation']).get_texture())
+        self.texture_groups['reward'] = self.texture_groups['start']  
+        # show start areas
+        for sa in self.model.start_areas:
+            self.show_block(sa)      
 
-    def draw_label(self):
+    def _update(self, dt):
+        """
+        Private (protected) update of a SeondaryWindow object
+        """
+        return
+
+    def _on_draw(self):
+        """
+        Class private on_draw method
+        """
+        self.set_2d()
+        # draw some information on label
+        self.draw_label(self.message)
+
+    def draw_label(self, label_text):
         """ Draw the label in the top left of the screen.
-
         """
-        x,y, z = self.model.robot_position
-        self.label.text = '%02d (%.2f, %.2f, %.2f) %d / %d' % (
-            pyglet.clock.get_fps(), x, y, z,
-            len(self.model.shown), len(self.model.textures))
+        self.label.text = label_text        
         self.label.draw()
 
-    def draw_reticle(self):
-        """ Draw the crosshairs in the center of the screen.
-
+    def follow(self, main_window):
         """
-        glColor3d(0, 0, 0)
-        self.reticle.draw(GL_LINES)
-
-    def setup_fog():
-        """ Configure the OpenGL fog properties.
-
+        A secondary has to follow a main window
         """
-        # Enable fog. Fog 'blends a fog color with each rasterized pixel fragment's
-        # post-texturing color.'
-        glEnable(GL_FOG)
-        # Set the fog color.
-        glFogfv(GL_FOG_COLOR, (GLfloat * 4)(0.5, 0.69, 1.0, 1))
-        # Say we have no preference between rendering speed and quality.
-        glHint(GL_FOG_HINT, GL_DONT_CARE)
-        # Specify the equation used to compute the blending factor.
-        glFogi(GL_FOG_MODE, GL_LINEAR)
-        # How close and far away fog starts and ends. The closer the start and end,
-        # the denser the fog in the fog range.
-        glFogf(GL_FOG_START, 20.0)
-        glFogf(GL_FOG_END, 60.0)
+        self.main_window = main_window
 
-
-    def setup_gl(self):
-        """ Basic OpenGL configuration.
-
+    def on_close(self):
         """
-        # Set the color of 'clear', i.e. the sky, in rgba.
-        glClearColor(0.2, 0.2, 0.2, 1)
-        # Enable culling (not rendering) of back-facing facets -- facets that aren't
-        # visible to you.
-        glEnable(GL_CULL_FACE)
-        # Set the texture minification/magnification function to GL_NEAREST (nearest
-        # in Manhattan distance) to the specified texture coordinates. GL_NEAREST
-        # 'is generally faster than GL_LINEAR, but it can produce textured images
-        # with sharper edges because the transition between texture elements is not
-        # as smooth.'
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-        #setup_fog()
-        self.switch_to() # set opengl context to this window
-
-    def start(self):#, callback=None, ticks_per_sec=20):
+        When user closes window
         """
-            Starts window thread and set a callback on given function
+        # only close main window (and thus application) if it is not visible
+        if not self.main_window.visible:
+            # first, remove this window from main_window followers list to avoid recursion of on_close function
+            self.main_window.followers.remove(self)
+            # then call on_close
+            self.main_window.on_close()
+        super(SecondaryWindow, self).on_close()
+
+    def _show_block(self, block):
         """
-        # set up opengl
-        self.setup_gl()
-        # schedule calls on 
-        # if callback:
-        #     pyglet.clock.schedule_interval(callback, 1.0 / ticks_per_sec, 1)
-        self.threaded = True
-        pyglet.app.run()
-
-    def step(self, dt):
-        """
-        Performs manually a drawing step
-        """
-        self.update(dt)
-        self.on_draw()
-        if self.visible: 
-            # self.dispatch_events() # slows down rendering with a factor 10 on OSX
-            # if OSX:
-            self.dispatch_events() # slows down rendering with a factor 10 on OSX
-            # self.flip()
-
-    def multiview_render(self, xzangles, as_line=True):
-        """
-        xzangles : list of angles representing subjective view rotation in plane xOz (positives to negatives)
-        as_line : Boolean for returning a line shaped image
-        
-        Returns a simple fusion of subjective views with given angles, used to widen the field of view
-
-        Note : this function doesn't perform any model updates ! It must be done before
-        """        
-        nviews = len(xzangles)
-        multiview_rnd = np.zeros([self.height, self.width, 3])
-        w = self.width/nviews
-
-        for i,xzangle in enumerate(xzangles):
-            # render view with this xzangle as xz offset angle
-            self.clear()
-            self.set_3d(xzangle)
-            glColor3d(1, 1, 1)
-            self.batch.draw()            
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-            # if self.visible: # slows down rendering with a factor 10 !
-            #     self.dispatch_events()
-            #     self.flip()
-            rnd = self.get_image(reshape=True)
-            # resize it (streching)
-            rnd = scipy.misc.imresize(rnd, (self.height,w,3)) # warning imresize take x,y and not w,h !
-            # insert it in multiview_rnd
-            multiview_rnd[:,i*w:(i+1)*w,:] = 255-rnd # warning scipy has invert colors !            
-            
-        return multiview_rnd if not as_line else np.reshape(multiview_rnd,[1,self.width*self.height*3])
-
-
-    def debug_render(self):
-        """
-        debug render
-        """
-        import matplotlib.pyplot as plt
-        import numpy as np
-        # data = pyglet.image.get_buffer_manager().get_color_buffer().get_image_data().get_data('RGB',100)
-        # a = np.fromstring(data,dtype=np.uint8)
-        # print(len(a))
-        # read pixel data from opengl buffer
-        data = ( GLubyte * (3*self.width*self.height) )(0)
-        glReadPixels(0, 0, self.width, self.height, gl.GL_RGB, gl.GL_UNSIGNED_BYTE, data)
-        # convert to numpy array
-        nparr = np.fromstring(data,dtype=np.uint8).reshape(100,100,3)
-        plt.imshow(np.flipud(nparr), interpolation='nearest')
-        plt.pause(1)
-        #print(data)
-
+            Private Boolean function for deciding whether to show a block or not 
+        """ 
+        # show visible blocks and also invisible start and rewards
+        return True if block.visible or block.block_type=='start' or block.block_type=='reward' else False
 
