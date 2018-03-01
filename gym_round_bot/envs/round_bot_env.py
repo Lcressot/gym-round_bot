@@ -41,6 +41,7 @@ class RoundBotEnv(gym.Env):
         self.monitor_window = None
         self.max_step=None
         self.crash_stop=None
+        self.reward_stop=None
         self.load() #default world loaded
 
     @property
@@ -85,7 +86,8 @@ class RoundBotEnv(gym.Env):
         # stop if max_step specified and reached
         done = (self.current_step == self.max_step) if self.max_step else False
         # stop if crash_stop stop specified and crashed ( in a wall )
-        done = done or reward < 0 if self.crash_stop else done
+        done = (done or reward < 0) if self.crash_stop else done
+        done = (done or reward > 0) if self.reward_stop else done
         # no info
         info={}
         return self.current_observation, reward, done, {}
@@ -139,6 +141,7 @@ class RoundBotEnv(gym.Env):
             focal=65.0,
             max_step=100,
             crash_stop=False,
+            reward_stop=False
             ):
         """
         Loads a world into environnement
@@ -154,6 +157,7 @@ class RoundBotEnv(gym.Env):
         - focal : the camera focal (<180°)
         - max_step = if not None, maximum number of steps before done is returned
         - crash_stop = Stop when crashing in a wall with negative reward (for speeding dqn learning for instance)
+        - reward_stop = Stop when reaching reward
         """
         if not world in self.compatible_worlds:
             raise(Exception('Error: unknown or uncompatible world \'' + world + '\' for environnement round_bot'))
@@ -163,6 +167,7 @@ class RoundBotEnv(gym.Env):
         self.obssize = obssize
         self.max_step = max_step
         self.crash_stop = crash_stop
+        self.reward_stop = reward_stop
         self.current_step = 0
 
         # save controller and plug it to model :

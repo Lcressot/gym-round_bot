@@ -464,7 +464,7 @@ class Model(object):
                 # get block collision reward to be used in RL envs, then return True
                 self.current_reward += brick.collision_reward
                 if not brick.isGhost: # detect collision only if block is not ghost
-                    return True           
+                    return True        
 
         return False
 
