@@ -110,7 +110,7 @@ def build_rb1_1wall_world(model, width=20, hwalls=2, dwalls=2, wall_reward=-1, g
     Return : world information
     """
     ## first build default world
-    texture_paths, world_info = _build_rb1_default_world(model,width=width, hwalls=hwalls, dwalls=dwalls, rew_walls=rew_walls, wall_reward=wall_reward)
+    texture_paths, world_info = _build_rb1_default_world(model,width=width, hwalls=hwalls, dwalls=dwalls, wall_reward=wall_reward)
 
     ## then add specs
     from gym_round_bot.envs import round_bot_model
