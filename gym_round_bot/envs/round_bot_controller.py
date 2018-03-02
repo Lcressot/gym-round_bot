@@ -169,7 +169,7 @@ def make(name, speed, dtheta=0.0, xzrange=2, int_actions=False, model=None, fixe
     """
     Functions for making controller objects
     """
-    compatible_controller = {'Theta, XZ'}
+    compatible_controllers = {'Theta, Theta2, XZ, XZF'}
 
     if name=='Theta':
         return Theta_Controller(model=model, dtheta=dtheta,speed=speed, int_actions=int_actions)
@@ -184,6 +184,6 @@ def make(name, speed, dtheta=0.0, xzrange=2, int_actions=False, model=None, fixe
         return XZ_Controller_Fixed(model=model, speed=speed, xzrange=xzrange, int_actions=int_actions, fixed_point=fixed_point)
 
     else :
-        raise Exception('unknown or uncompatible controller name \'' + name + '\'. Compatible controllers are : '+str(compatible_controller))
+        raise Exception('unknown or uncompatible controller name \'' + name + '\'. Compatible controllers are : '+str(compatible_controllers))
 
 
