@@ -21,7 +21,7 @@ import numpy as np
 
 class RoundBotEnv(gym.Env):
 
-    metadata = {'render.modes': ['human', 'rgb_array','rgb_image']}
+    metadata = {'render.modes': ['human', 'rgb_array']}
     
                 
     def __init__(self):
@@ -39,7 +39,6 @@ class RoundBotEnv(gym.Env):
         self.multiview = None
         # self.action_space -> property
         self.monitor_window = None
-        self.max_step=None
         self.crash_stop=None
         self.reward_stop=None
         self.load() #default world loaded
@@ -82,10 +81,8 @@ class RoundBotEnv(gym.Env):
         # get reward :
         reward = self.model.current_reward              
         # check if done
-        self.current_step += 1
-        # stop if max_step specified and reached
-        done = (self.current_step == self.max_step) if self.max_step else False
         # stop if crash_stop stop specified and crashed ( in a wall )
+        done = False
         done = (done or reward < 0) if self.crash_stop else done
         done = (done or reward > 0) if self.reward_stop else done
         # no info
@@ -102,7 +99,6 @@ class RoundBotEnv(gym.Env):
         """
         self.model.reset()
         self.current_observation = self.window.get_image(reshape=True)#get image as a numpy line
-        self.current_step = 0
       
         return self.current_observation
         
@@ -111,15 +107,12 @@ class RoundBotEnv(gym.Env):
 
         if mode == 'rgb_array':
             # reshape as line
-            return np.reshape(self.current_observation,[1,-1])
+            return self.current_observation
         elif mode == 'human':
             # this slows down rendering with a factor 10 !
             # TODO : show current observation on screen (potentially fusionned image, and not only last render !)
             if not self.window.visible:
                 self.window.set_visible(True)
-        elif mode == 'rgb_image':
-            ## reshape line array
-            return self.current_observation
         else: 
             raise Exception('Unknown render mode: '+mode)
 
@@ -139,7 +132,6 @@ class RoundBotEnv(gym.Env):
             visible=False,
             multiview=None,
             focal=65.0,
-            max_step=100,
             crash_stop=False,
             reward_stop=False
             ):
@@ -155,7 +147,6 @@ class RoundBotEnv(gym.Env):
         - visible
         - multiview : list of angles for multi-view rendering. The renders will be fusioned into one image
         - focal : the camera focal (<180°)
-        - max_step = if not None, maximum number of steps before done is returned
         - crash_stop = Stop when crashing in a wall with negative reward (for speeding dqn learning for instance)
         - reward_stop = Stop when reaching reward
         """
@@ -165,10 +156,8 @@ class RoundBotEnv(gym.Env):
         self.world = world
         self.model = round_bot_model.Model(world)
         self.obssize = obssize
-        self.max_step = max_step
         self.crash_stop = crash_stop
         self.reward_stop = reward_stop
-        self.current_step = 0
 
         # save controller and plug it to model :
         self.controller = controller
