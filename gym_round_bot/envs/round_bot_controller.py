@@ -90,7 +90,7 @@ class Theta_Controller(Controller):
         self.action_meaning = '[s, dth] 2-tuple coding for speed between -initial_speed*2 and +initial_speed*2 and dtheta between -2dt and 2dt'
         self._actions = { (s,d) : 'self._model.strafe[0]='+str(0 if s-2==0 else np.sign(s-2))
                                     +'; self._model.walking_speed=self._initial_speed*'+str(abs(s-2))+';'
-                                    +'self._model.change_robot_rotation('+str((d-2)*self.dtheta)+',0);'
+                                    +'self._model._model.change_robot_rotation('+str((d-2)*self.dtheta)+',0);'
                                     for s in range(0,2*2+1) for d in range(0,5) }
         self._action_space = spaces.MultiDiscrete([5,5])
 
@@ -128,9 +128,16 @@ class XZ_Controller(Controller):
         self._initial_speed = speed
         self._xzrange = xzrange # how many maximum xz units you can move at once
         self.action_meaning = '[x, z] 2-tuple coding for x and z between -xzrange and +xzrange'
-        self._actions = { (x,z) : 'self._model.strafe='+str([x-xzrange,z-xzrange])+'; self._model.walking_speed=self._initial_speed*'+str(np.sqrt((x-xzrange)**2+(z-xzrange)**2)) for x in range(0,2*xzrange+1) for z in range(0,2*xzrange+1) }
+        self._init()
         self._action_space = spaces.MultiDiscrete([2*xzrange+1,2*xzrange+1])
         self._reversed_actions_mapping = self.reverse_actions_mapping # build reversed action mapping
+        
+    def _init(self):
+        self._actions = { (x,z) : 'self._model.strafe='
+                        +str([x-self._xzrange,z-self._xzrange])+'; self._model.walking_speed=self._initial_speed*'
+                        +str(np.sqrt((x-self._xzrange)**2+(z-self._xzrange)**2))
+                        for x in range(0,2*self._xzrange+1) for z in range(0,2*self._xzrange+1)
+                        }
 
     @property
     def speed(self, s):
@@ -141,8 +148,24 @@ class XZ_Controller(Controller):
         return self._model.walking_speed
 
 
+class XZ_Controller_Fixed(XZ_Controller):
+    """
+    This class controls the robot to move on (oXZ) plan, but always looking in to the same point P
+    """
+    def __init__(self, model, speed, xzrange=2, int_actions=False, fixed_point=[0,0]):
+        super(XZ_Controller_Fixed,self).__init__(model=model, speed=speed, xzrange=xzrange, int_actions=int_actions)
+        self._fixed_point = fixed_point
+    
+    def _init(self):
+        self._actions = { (x,z) : 'self._model.strafe='
+                        +str([x-self._xzrange,z-self._xzrange])+'; self._model.walking_speed=self._initial_speed*'
+                        +str(np.sqrt((x-self._xzrange)**2+(z-self._xzrange)**2))
+                        +'; vec=self._fixed_point-np.array(self._model.robot_position[0:3:2]);'
+                        +'self._model.robot_rotation[0] = 90+np.degrees( np.arctan2( vec[1], vec[0] )  )'
+                        for x in range(0,2*self._xzrange+1) for z in range(0,2*self._xzrange+1)
+                        }
 
-def make(name, speed, dtheta=0.0, xzrange=2, int_actions=False, model=None):
+def make(name, speed, dtheta=0.0, xzrange=2, int_actions=False, model=None, fixed_point=[0,0]):
     """
     Functions for making controller objects
     """
@@ -156,6 +179,9 @@ def make(name, speed, dtheta=0.0, xzrange=2, int_actions=False, model=None):
 
     elif name=='XZ':        
         return XZ_Controller(model=model, speed=speed, int_actions=int_actions, xzrange=xzrange)
+
+    elif name=='XZF':
+        return XZ_Controller_Fixed(model=model, speed=speed, xzrange=xzrange, int_actions=int_actions, fixed_point=fixed_point)
 
     else :
         raise Exception('unknown or uncompatible controller name \'' + name + '\'. Compatible controllers are : '+str(compatible_controller))
