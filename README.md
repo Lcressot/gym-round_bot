@@ -51,7 +51,7 @@ pip3 install -e .
 
 # Use
 
-Here is a simple code for using the environment :
+Here is a simple code for using the environment (cf test_env.py ):
 ```Python
 import gym
 import gym_round_bot
@@ -59,15 +59,28 @@ import gym_round_bot
 # create environment
 import gym
 import gym_round_bot
+from gym_round_bot.envs import round_bot_env
+from gym_round_bot.envs import round_bot_controller as rbc
 
-# create environment
-env = gym.make('RoundBot-v0')
+# set variables 
 world = 'rb1' # the world to load
 obssize=[16,16] # the size of observations (rendering window)
-winsize=[100,80] # the size of monitoring window (None if not wanted)
+winsize=[300,300] # the size of monitoring window (None if not wanted)
+controller = rbc.make('Theta2',speed=5,dtheta=15, xzrange=1, thetarange=1) # the robot controller
+                
+# set env metadata
+round_bot_env.set_metadata(
+        world=world,
+        obssize=obssize,
+        winsize=winsize,
+        controller=controller,
+   )
+    
+# create env 
+env = gym.make('RoundBot-v0')
 
-controller={'name':'Theta','dtheta':45,'speed':5}
-env.unwrapped.load(world='rb1',obssize=obssize, winsize=winsize, controller=controller, global_pov = (0,20,0), perspective=False)
+# need to be called at least once
+env.reset() 
 
 # perform steps
 while(True):
