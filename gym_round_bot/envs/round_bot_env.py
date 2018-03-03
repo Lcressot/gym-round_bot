@@ -22,12 +22,10 @@ import numpy as np
 class RoundBotEnv(gym.Env):
 
     metadata = {'render.modes': ['human', 'rgb_array']}
-    
-                
+                    
     def __init__(self):
         """
-        Inits the attributes to None.
-        Default world is loaded. Can be changed with call to env.unwrapped.load(newworld,newWinSize)
+        Inits the attributes to None.        
         """        
         self.viewer = None
         self.world = None        
@@ -41,7 +39,7 @@ class RoundBotEnv(gym.Env):
         self.monitor_window = None
         self.crash_stop=None
         self.reward_stop=None
-        self.load() #default world loaded
+        self._load() # load with loading_vars variables
 
     @property
     def action_space(self):
@@ -121,24 +119,11 @@ class RoundBotEnv(gym.Env):
         seed = seeding.np_random(seed)
         return [seed]
 
-
-    def load(self,
-            world='rb1',
-            controller=round_bot_controller.make(name='Theta',dtheta=20,speed=10,int_actions=False,xzrange=2,thetarange=2),
-            obssize=[16,16],
-            winsize=None,
-            global_pov=None,
-            perspective=True,
-            visible=False,
-            multiview=None,
-            focal=65.0,
-            crash_stop=False,
-            reward_stop=False
-            ):
+    def _load(self):
         """
-        Loads a world into environnement
+        Loads a world into environnement with metadata vars
 
-        Parameters :
+        Parameters used in metadata  for loading :
         - obssize : the dimensions of the observations (reshaped from window render), if None, no reshape
         - winsize : the dimensions of the observation window (if None, no observation window)
         - controller : the controller of the robot
@@ -150,17 +135,18 @@ class RoundBotEnv(gym.Env):
         - crash_stop = Stop when crashing in a wall with negative reward (for speeding dqn learning for instance)
         - reward_stop = Stop when reaching reward
         """
-        if not world in self.compatible_worlds:
+        metadata = RoundBotEnv.metadata
+        if not metadata['world'] in self.compatible_worlds:
             raise(Exception('Error: unknown or uncompatible world \'' + world + '\' for environnement round_bot'))
            ## shared settings
-        self.world = world
-        self.model = round_bot_model.Model(world)
-        self.obssize = obssize
-        self.crash_stop = crash_stop
-        self.reward_stop = reward_stop
+        self.world = metadata['world']
+        self.model = round_bot_model.Model(metadata['world'])
+        self.obssize = metadata['obssize']
+        self.crash_stop = metadata['crash_stop']
+        self.reward_stop = metadata['reward_stop']
 
         # save controller and plug it to model :
-        self.controller = controller
+        self.controller = metadata['controller']
         self.controller.model = self.model        
 
         shape = self.obssize
@@ -168,26 +154,26 @@ class RoundBotEnv(gym.Env):
 
 
         # build main window
-        self.window = pygletWindow.MainWindow(self.model,
-                                                global_pov=global_pov,
-                                                perspective = perspective,
+        self.window = pygletWindow.MainWindow(  self.model,
+                                                global_pov=metadata['global_pov'],
+                                                perspective = metadata['perspective'],
                                                 interactive=False,
-                                                focal=focal,
-                                                width=obssize[0],
-                                                height=obssize[1],
-                                                caption='Round bot in '+world+' world',
+                                                focal=metadata['focal'],
+                                                width=metadata['obssize'][0],
+                                                height=metadata['obssize'][1],
+                                                caption='Round bot in '+self.world+' world',
                                                 resizable=False,
-                                                visible=visible
+                                                visible=metadata['visible']
                                                 )
 
         # build secondary observation window if asked
-        if winsize:
+        if metadata['winsize']:
             self.monitor_window = pygletWindow.SecondaryWindow(self.model,
                                                     global_pov = (0,20,0),
                                                     perspective = False,
-                                                    width=winsize[0],
-                                                    height=winsize[1],
-                                                    caption='Observation window '+ world,
+                                                    width=metadata['winsize'][0],
+                                                    height=metadata['winsize'][1],
+                                                    caption='Observation window '+ self.world,
                                                     resizable=False,
                                                     visible=True,
                                                     )
@@ -195,9 +181,9 @@ class RoundBotEnv(gym.Env):
             self.window.add_follower(self.monitor_window)
 
         # observation are RGB images of rendered world (as line arrays)
-        self.observation_space = spaces.Box(low=0, high=255, shape=[1, obssize[0]*obssize[1]*3],dtype=np.uint8)
+        self.observation_space = spaces.Box(low=0, high=255, shape=[1, metadata['obssize'][0]*metadata['obssize'][1]*3],dtype=np.uint8)
 
-        self.multiview = multiview # if not None, observations will be fusion of subjective view with given relative xOz angles
+        self.multiview = metadata['multiview'] # if not None, observations will be fusion of subjective view with given relative xOz angles
 
     def message(self, message):
         """
@@ -205,3 +191,34 @@ class RoundBotEnv(gym.Env):
         """
         if self.monitor_window:
             self.monitor_window.message = message
+
+
+
+def set_metadata(world='rb1',
+                controller=round_bot_controller.make(name='Theta',dtheta=20,speed=10,int_actions=False,xzrange=2,thetarange=2),
+                obssize=[16,16],
+                winsize=None,
+                global_pov=None,
+                perspective=True,
+                visible=False,
+                multiview=None,
+                focal=65.0,
+                crash_stop=False,
+                reward_stop=False
+                ):
+    """ static module method for setting loading variables before call to gym.make
+    """
+    RoundBotEnv.metadata['world'] = world
+    RoundBotEnv.metadata['controller'] = controller
+    RoundBotEnv.metadata['obssize'] = obssize
+    RoundBotEnv.metadata['winsize'] = winsize
+    RoundBotEnv.metadata['global_pov'] = global_pov
+    RoundBotEnv.metadata['perspective'] = perspective
+    RoundBotEnv.metadata['visible'] = visible
+    RoundBotEnv.metadata['multiview'] = multiview
+    RoundBotEnv.metadata['focal'] = focal
+    RoundBotEnv.metadata['crash_stop'] = crash_stop
+    RoundBotEnv.metadata['reward_stop'] = reward_stop
+    
+
+set_metadata() # loading with default values
