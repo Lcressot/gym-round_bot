@@ -124,7 +124,7 @@ class RoundBotEnv(gym.Env):
 
     def load(self,
             world='rb1',
-            controller=round_bot_controller.make(name='Theta',dtheta=20,speed=10,int_actions=False),
+            controller=round_bot_controller.make(name='Theta',dtheta=20,speed=10,int_actions=False,xzrange=2,thetarange=2),
             obssize=[16,16],
             winsize=None,
             global_pov=None,
