@@ -176,7 +176,7 @@ class RoundBotEnv(gym.Env):
                                                     caption='Observation window '+ self.world,
                                                     resizable=False,
                                                     visible=True,
-                                                    )
+                                                    )           
             # plug monitor_window to window
             self.window.add_follower(self.monitor_window)
 

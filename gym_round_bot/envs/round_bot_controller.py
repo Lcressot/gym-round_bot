@@ -49,16 +49,38 @@ class Controller(object):
         """
         Returns a mapping from actions to integer indices. Ex: {(0,0):0, (0,1):1, (1,0):2}
         """
-        keys = self._actions.keys()
-        return dict( zip(keys, range(len(keys))) )        
+        # Easiest way of doing it :
+        # keys = self._actions.keys()
+        # return dict( zip(keys, range(len(keys))) )
+
+        # We choose the more way also implemented in our action_wrapper
+        action_space = self._action_space
+        name=type(action_space).__name__
+        if name == 'Discrete':
+            return {i:i for i in range(action_space.n)}
+        elif name =='MultiDiscrete':
+            r=[[]]
+            for x in action_space.nvec:
+                t = []
+                for y in list(range(x)):
+                    for i in r:
+                        t.append(i+[y])
+                r = t
+            return {tuple(r[i]): i for i in range(len(r))}
 
     @property
     def reverse_actions_mapping(self):
         """
         Returns a mapping from integers indices to action. Ex: {0:(0,0), 1:(0,1), 2:(1,0)}
         """
-        keys = self._actions.keys()
-        return dict( zip( range(len(keys)), keys) )
+        # Easiest way of doing it :
+        # keys = self._actions.keys()
+        # return dict( zip( range(len(keys)), keys) )
+
+        # We choose the more way also implemented in our action_wrapper
+        actions_mapping = self.actions_mapping
+        return {actions_mapping[k]:k for k in actions_mapping.keys()}
+
 
     @property
     def action_space(self):
@@ -172,7 +194,7 @@ class XZ_Controller_Fixed(XZ_Controller):
                         for x in range(0,2*self._xzrange+1) for z in range(0,2*self._xzrange+1)
                         }
 
-def make(name, speed, dtheta, xzrange, thetarange, int_actions=False, model=None, fixed_point=[0,0]):
+def make(name, speed=5, dtheta=7.0, xzrange=1, thetarange=1, int_actions=False, model=None, fixed_point=[0,0]):
     """
     Functions for making controller objects
     """
