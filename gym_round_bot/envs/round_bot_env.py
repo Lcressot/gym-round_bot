@@ -83,6 +83,7 @@ class RoundBotEnv(gym.Env):
         done = False
         done = (done or reward < 0) if self.crash_stop else done
         done = (done or reward > 0) if self.reward_stop else done
+
         # no info
         info={}
         return self.current_observation, reward, done, {}
