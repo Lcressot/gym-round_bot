@@ -81,15 +81,19 @@ class Controller(object):
         actions_mapping = self.actions_mapping
         return {actions_mapping[k]:k for k in actions_mapping.keys()}
 
-
     @property
     def action_space(self):
         if not self._action_space:
             print(Warning('returned action_space = None'))
-        elif self.int_actions: # return a Discrete space if int_actions is True
-            return spaces.Discrete(self.num_actions-1)
         else:
             return self._action_space
+
+    @property
+    def action_space_int(self):
+        if not self._action_space:
+            print(Warning('returned action_space = None'))
+        else:
+            return spaces.Discrete(self.num_actions-1)
 
     def step(self, action):
         """
