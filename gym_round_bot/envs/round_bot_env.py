@@ -133,15 +133,18 @@ class RoundBotEnv(gym.Env):
         - visible
         - multiview : list of angles for multi-view rendering. The renders will be fusioned into one image
         - focal : the camera focal (<180°)
-        - crash_stop = Stop when crashing in a wall with negative reward (for speeding dqn learning for instance)
-        - reward_stop = Stop when reaching reward
+        - crash_stop = (Bool) Stop when crashing in a wall with negative reward (for speeding dqn learning for instance)
+        - reward_stop = (Bool) Stop when reaching reward
+        - random_start = (Bool) randomly start from start positions or not
         """
         metadata = RoundBotEnv.metadata
         if not metadata['world'] in self.compatible_worlds:
             raise(Exception('Error: unknown or uncompatible world \'' + world + '\' for environnement round_bot'))
            ## shared settings
         self.world = metadata['world']
-        self.model = round_bot_model.Model(metadata['world'])
+        self.random_start = metadata['random_start']
+        random_start_rot = ('Theta' in metadata['controller'].controllerType)
+        self.model = round_bot_model.Model(metadata['world'], random_start_pos=self.random_start, random_start_rot=random_start_rot)
         self.obssize = metadata['obssize']
         self.crash_stop = metadata['crash_stop']
         self.reward_stop = metadata['reward_stop']
@@ -205,7 +208,8 @@ def set_metadata(world='rb1',
                 multiview=None,
                 focal=65.0,
                 crash_stop=False,
-                reward_stop=False
+                reward_stop=False,
+                random_start=True,
                 ):
     """ static module method for setting loading variables before call to gym.make
     """
@@ -220,6 +224,7 @@ def set_metadata(world='rb1',
     RoundBotEnv.metadata['focal'] = focal
     RoundBotEnv.metadata['crash_stop'] = crash_stop
     RoundBotEnv.metadata['reward_stop'] = reward_stop
+    RoundBotEnv.metadata['random_start'] = random_start
     
 
 set_metadata() # loading with default values
