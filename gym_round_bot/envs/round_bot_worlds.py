@@ -87,7 +87,7 @@ def build_rb1_world(model, width=20, hwalls=5, dwalls=1, wall_reward=-1, goal_re
 
     n = width/2.0  # 1/2 width and depth of world
     wwalls = 2*n # width of walls
-    wr = width/3.0 # wr width of reward area
+    wr = width/4.0 # wr width of reward area
    
     # set robot specifications
     bot_diameter = 1
@@ -121,7 +121,7 @@ def build_rb1_1wall_world(model, width=20, hwalls=2, dwalls=2, wall_reward=-1, g
 
     n = width/2.0  # 1/2 width and depth of world
     wwalls = 2*n # width of walls
-    wr = width/3.0 # wr width of reward area
+    wr = width/4.0 # wr width of reward area
  
     # set robot specifications
     bot_diameter = 1

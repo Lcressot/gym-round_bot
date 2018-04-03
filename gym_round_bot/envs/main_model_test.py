@@ -17,9 +17,9 @@ import pygletWindow
 
 if __name__ == '__main__':
 
-    world = 'rb1_1wall'
-    #world = 'rb1'
-    winsize=[600,600]
+    #world = 'rb1_1wall'
+    world = 'rb1'
+    winsize=[400,400]
     model = round_bot_model.Model(world)
     window = pygletWindow.MainWindow(
     	model,

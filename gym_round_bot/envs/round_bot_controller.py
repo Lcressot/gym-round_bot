@@ -15,7 +15,7 @@ from gym import spaces
 """
     
 class Controller(object):
-    def __init__(self, controllerType, xzrange, thetarange, model=None, int_actions=False):
+    def __init__(self, controllerType, xzrange, thetarange, model=None, int_actions=False, noise_ratio=0.1):
         """
             Abstract class for controllers : i.e actions to code exectution mappings
             int_actions : bool for taking int actions
@@ -29,6 +29,7 @@ class Controller(object):
         self.int_actions = int_actions
         self._action_space = None  # the gym action space corresponding to this controller
         self._reversed_actions_mapping = None # to be build with self.reverse_actions_mapping afer self._actions initializatio n
+        self.noise_ratio = noise_ratio # additive gaussian noise stdv ratio to speed 
 
     @property
     def model(self):
@@ -111,8 +112,8 @@ class Controller(object):
 class Theta_Controller(Controller):
     """ This class controls the robot with 2*thetarange dtheta rotations and xzrange fixed speed forward/bacwkard move
     """
-    def __init__(self, model, dtheta, speed, int_actions=int, xzrange=2, thetarange=2):
-        super(Theta_Controller,self).__init__('Theta tuple2',model=model, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange)
+    def __init__(self, model, dtheta, speed, int_actions=int, xzrange=2, thetarange=2, noise_ratio=0.1):
+        super(Theta_Controller,self).__init__('Theta tuple2',model=model, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
         self.dtheta = dtheta
         self._initial_speed = speed
         self._init()
@@ -122,9 +123,11 @@ class Theta_Controller(Controller):
         """ Private initialisation of Theta_Controller
         """
         self.action_meaning = '[s, dth] 2-tuple coding for speed between -initial_speed*2 and +initial_speed*2 and dtheta between -2dt and 2dt'
-        self._actions = { (s,d) : 'self._model.strafe[0]='+str(0 if s-self._xzrange==0 else np.sign(s-self._xzrange))
-                                    +'; self._model.walking_speed=self._initial_speed*'+str(abs(s-self._xzrange))+';'
-                                    +'self._model.change_robot_rotation('+str((d-self._thetarange)*self.dtheta)+',0);'
+        self._actions = { (s,d) : 'self._model.strafe[0]='+str(0 if s-self._xzrange==0 else np.sign(s-self._xzrange))+';'
+                                    +'sp=self._initial_speed*'+str(abs(s-self._xzrange))+';'
+                                    +'self._model.walking_speed= sp + np.random.normal(0,sp);'
+                                    +'dth ='+str((d-self._thetarange)*self.dtheta)+';'
+                                    +'self._model.change_robot_rotation(dth+np.random.normal(0,abs(dth)),0);'
                                     for s in range(0,2*self._xzrange+1) for d in range(0,2*self._thetarange+1) }
         self._action_space = spaces.MultiDiscrete([2*self._xzrange+1,2*self._thetarange+1])
 
@@ -140,15 +143,16 @@ class Theta_Controller(Controller):
 class Theta2_Controller(Theta_Controller):
     """ This class controls the robot like Theta but cannot go backwards
     """
-    def __init__(self, model, dtheta, xzrange=1, thetarange=1, speed=10.0, int_actions=False):
-        super(Theta2_Controller,self).__init__(model, dtheta=dtheta, speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange)        
+    def __init__(self, model, dtheta, xzrange=1, thetarange=1, speed=10.0, int_actions=False, noise_ratio=0.1):
+        super(Theta2_Controller,self).__init__(model, dtheta=dtheta, speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)        
         
     def _init(self):
         """ Private initialisation of Theta2_Controller
         """
         self.action_meaning = '[s, dth] 2-tuple coding for speed between 0 and +initial_speed and dtheta between -dt and dt'
-        self._actions = { (s,d) : 'self._model.strafe[0]='+str(np.sign(-s))
-                                    +';self._model.change_robot_rotation('+str((d-self._thetarange)*self.dtheta)+',0);'
+        self._actions = { (s,d) : 'self._model.strafe[0]='+str(np.sign(-s))+';'
+                                    +'dth='+str((d-self._thetarange)*self.dtheta)+';'
+                                    +'self._model.change_robot_rotation(dth+np.random.normal(0,abs(dth)),0);'
                                     for s in range(0,self._xzrange+1) for d in range(0,2*self._thetarange+1) }
         self._action_space = spaces.MultiDiscrete([1+self._xzrange,2*self._thetarange+1])
 
@@ -157,8 +161,8 @@ class XZ_Controller(Controller):
     """
     This class controls the robot to move on (oXZ) plan, always looking in the same direction
     """
-    def __init__(self, model, speed, xzrange=2, thetarange=2, int_actions=False):
-        super(XZ_Controller,self).__init__('XZ tuple2', model=model, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange)
+    def __init__(self, model, speed, xzrange=2, thetarange=2, int_actions=False, noise_ratio=0.1):
+        super(XZ_Controller,self).__init__('XZ tuple2', model=model, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
         self._initial_speed = speed
         self.action_meaning = '[x, z] 2-tuple coding for x and z between -xzrange and +xzrange'
         self._init()
@@ -166,9 +170,9 @@ class XZ_Controller(Controller):
         self._reversed_actions_mapping = self.reverse_actions_mapping # build reversed action mapping
         
     def _init(self):
-        self._actions = { (x,z) : 'self._model.strafe='
-                        +str([x-self._xzrange,z-self._xzrange])+'; self._model.walking_speed=self._initial_speed*'
-                        +str(np.sqrt((x-self._xzrange)**2+(z-self._xzrange)**2))
+        self._actions = { (x,z) : 'self._model.strafe='+str([x-self._xzrange,z-self._xzrange])+';'
+                        +'sp=self._initial_speed*'+str(np.sqrt((x-self._xzrange)**2+(z-self._xzrange)**2))+';'
+                        +'self._model.walking_speed = sp + np.random.normal(0,sp);'
                         for x in range(0,2*self._xzrange+1) for z in range(0,2*self._xzrange+1)
                         }
 
@@ -185,36 +189,36 @@ class XZ_Controller_Fixed(XZ_Controller):
     """
     This class controls the robot to move on (oXZ) plan, but always looking in to the same point P
     """
-    def __init__(self, model, speed, xzrange=2, thetarange=2, int_actions=False, fixed_point=[0,0]):
-        super(XZ_Controller_Fixed,self).__init__(model=model, speed=speed, xzrange=xzrange, thetarange=thetarange, int_actions=int_actions)
+    def __init__(self, model, speed, xzrange=2, thetarange=2, int_actions=False, fixed_point=[0,0], noise_ratio=0.1):
+        super(XZ_Controller_Fixed,self).__init__(model=model, speed=speed, xzrange=xzrange, thetarange=thetarange, int_actions=int_actions, noise_ratio=noise_ratio)
         self._fixed_point = fixed_point
     
     def _init(self):
-        self._actions = { (x,z) : 'self._model.strafe='
-                        +str([x-self._xzrange,z-self._xzrange])+'; self._model.walking_speed=self._initial_speed*'
-                        +str(np.sqrt((x-self._xzrange)**2+(z-self._xzrange)**2))
-                        +'; vec=self._fixed_point-np.array(self._model.robot_position[0:3:2]);'
+        self._actions = { (x,z) : 'self._model.strafe='+str([x-self._xzrange,z-self._xzrange])+';'
+                        +'sp=self._initial_speed*'+str(np.sqrt((x-self._xzrange)**2+(z-self._xzrange)**2))+';'
+                        +'self._model.walking_speed=sp + np.random.normal(0,sp);'                        
+                        +'vec=self._fixed_point-np.array(self._model.robot_position[0:3:2]);'
                         +'self._model.robot_rotation[0] = 90+np.degrees( np.arctan2( vec[1], vec[0] )  )'
                         for x in range(0,2*self._xzrange+1) for z in range(0,2*self._xzrange+1)
                         }
 
-def make(name, speed=5, dtheta=7.0, xzrange=1, thetarange=1, int_actions=False, model=None, fixed_point=[0,0]):
+def make(name, speed=5, dtheta=7.0, xzrange=1, thetarange=1, int_actions=False, model=None, fixed_point=[0,0],noise_ratio=0.1):
     """
     Functions for making controller objects
     """
     compatible_controllers = {'Theta, Theta2, XZ, XZF'}
 
     if name=='Theta':
-        return Theta_Controller(model=model, dtheta=dtheta,speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange)
+        return Theta_Controller(model=model, dtheta=dtheta,speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
 
     elif name=='Theta2':
-        return Theta2_Controller(model=model, dtheta=dtheta,speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange)
+        return Theta2_Controller(model=model, dtheta=dtheta,speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
 
     elif name=='XZ':        
-        return XZ_Controller(model=model, speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange)
+        return XZ_Controller(model=model, speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
 
     elif name=='XZF':
-        return XZ_Controller_Fixed(model=model, speed=speed, int_actions=int_actions, fixed_point=fixed_point, xzrange=xzrange, thetarange=thetarange)
+        return XZ_Controller_Fixed(model=model, speed=speed, int_actions=int_actions, fixed_point=fixed_point, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
 
     else :
         raise Exception('unknown or uncompatible controller name \'' + name + '\'. Compatible controllers are : '+str(compatible_controllers))
