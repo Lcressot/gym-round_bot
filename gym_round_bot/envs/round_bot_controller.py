@@ -125,9 +125,9 @@ class Theta_Controller(Controller):
         self.action_meaning = '[s, dth] 2-tuple coding for speed between -initial_speed*2 and +initial_speed*2 and dtheta between -2dt and 2dt'
         self._actions = { (s,d) : 'self._model.strafe[0]='+str(0 if s-self._xzrange==0 else np.sign(s-self._xzrange))+';'
                                     +'sp=self._initial_speed*'+str(abs(s-self._xzrange))+';'
-                                    +'self._model.walking_speed= sp + np.random.normal(0,sp);'
+                                    +'self._model.walking_speed= sp + np.random.normal(0,sp*self.noise_ratio);'
                                     +'dth ='+str((d-self._thetarange)*self.dtheta)+';'
-                                    +'self._model.change_robot_rotation(dth+np.random.normal(0,abs(dth)),0);'
+                                    +'self._model.change_robot_rotation(dth+np.random.normal(0,abs(dth)*self.noise_ratio),0);'
                                     for s in range(0,2*self._xzrange+1) for d in range(0,2*self._thetarange+1) }
         self._action_space = spaces.MultiDiscrete([2*self._xzrange+1,2*self._thetarange+1])
 
@@ -152,7 +152,7 @@ class Theta2_Controller(Theta_Controller):
         self.action_meaning = '[s, dth] 2-tuple coding for speed between 0 and +initial_speed and dtheta between -dt and dt'
         self._actions = { (s,d) : 'self._model.strafe[0]='+str(np.sign(-s))+';'
                                     +'dth='+str((d-self._thetarange)*self.dtheta)+';'
-                                    +'self._model.change_robot_rotation(dth+np.random.normal(0,abs(dth)),0);'
+                                    +'self._model.change_robot_rotation(dth+np.random.normal(0,abs(dth)*self.noise_ratio),0);'
                                     for s in range(0,self._xzrange+1) for d in range(0,2*self._thetarange+1) }
         self._action_space = spaces.MultiDiscrete([1+self._xzrange,2*self._thetarange+1])
 
@@ -170,9 +170,10 @@ class XZ_Controller(Controller):
         self._reversed_actions_mapping = self.reverse_actions_mapping # build reversed action mapping
         
     def _init(self):
+        print('self.noise_ratio',self.noise_ratio)
         self._actions = { (x,z) : 'self._model.strafe='+str([x-self._xzrange,z-self._xzrange])+';'
                         +'sp=self._initial_speed*'+str(np.sqrt((x-self._xzrange)**2+(z-self._xzrange)**2))+';'
-                        +'self._model.walking_speed = sp + np.random.normal(0,sp);'
+                        +'self._model.walking_speed = sp + np.random.normal(0,sp*self.noise_ratio);'
                         for x in range(0,2*self._xzrange+1) for z in range(0,2*self._xzrange+1)
                         }
 
@@ -196,7 +197,7 @@ class XZ_Controller_Fixed(XZ_Controller):
     def _init(self):
         self._actions = { (x,z) : 'self._model.strafe='+str([x-self._xzrange,z-self._xzrange])+';'
                         +'sp=self._initial_speed*'+str(np.sqrt((x-self._xzrange)**2+(z-self._xzrange)**2))+';'
-                        +'self._model.walking_speed=sp + np.random.normal(0,sp);'                        
+                        +'self._model.walking_speed=sp + np.random.normal(0,sp*self.noise_ratio);'                        
                         +'vec=self._fixed_point-np.array(self._model.robot_position[0:3:2]);'
                         +'self._model.robot_rotation[0] = 90+np.degrees( np.arctan2( vec[1], vec[0] )  )'
                         for x in range(0,2*self._xzrange+1) for z in range(0,2*self._xzrange+1)

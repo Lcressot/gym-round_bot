@@ -14,7 +14,7 @@ import os
     This file allows to build worlds
 """
 
-def _build_rb1_default_world(model, width=20, hwalls=5, dwalls=1,
+def _build_rb1_default_world(model, width=45, hwalls=4, dwalls=1,
                     texture_bricks='/textures/texture_test.png',
                     texture_robot='/textures/robot.png',
                     texture_visualisation='/textures/visualisation.png',
@@ -72,7 +72,7 @@ def _build_rb1_default_world(model, width=20, hwalls=5, dwalls=1,
 
 
 
-def build_rb1_world(model, width=20, hwalls=5, dwalls=1, wall_reward=-1, goal_reward=1):
+def build_rb1_world(model, width=45, hwalls=4, dwalls=1, wall_reward=-1, goal_reward=1):
     """
     Builds the rb1 world
     """    
@@ -104,7 +104,7 @@ def build_rb1_world(model, width=20, hwalls=5, dwalls=1, wall_reward=-1, goal_re
 
 
 
-def build_rb1_1wall_world(model, width=20, hwalls=2, dwalls=2, wall_reward=-1, goal_reward=1):
+def build_rb1_1wall_world(model, width=45, hwalls=2, dwalls=2, wall_reward=-1, goal_reward=1):
     """
     Builds a simple rectangle planar world with walls around, and 1 wall in the middle
     Return : world information
