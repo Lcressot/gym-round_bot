@@ -33,14 +33,22 @@ class PygletWindow(pyglet.window.Window):
     def __init__(self, model, global_pov=None, perspective=True, interactive=False, focal=65.0, *args, **kwargs):
         super(PygletWindow, self).__init__(*args, **kwargs)
 
-         # Global point of view : if None, view is subjective
-        self.global_pov = global_pov
-        if not global_pov:
+        # Global point of view : if None, view is subjective. If True, automatic computing
+        if global_pov==True:
+            # compute global_pov automatically
+            self.ortho_width = model.world_info['width']/2
+            global_pov = (0, self.ortho_width/np.tan(np.radians(focal/2.0)), 0)
+
+        elif global_pov: # if not True but not None
+            self.ortho_width = global_pov[1]*np.tan(np.radians(focal/2.0)) 
+
+        else: # if None
             if not perspective:
                 print('Warning : no global_pov provided, setting perspective to True')
                 perspective = True
-        else:
-            self.ortho_width = self.global_pov[1]*np.tan(np.radians(focal/2.0)) 
+
+        self.global_pov = global_pov
+
         
         # perspective or orthogonal projection
         self.perspective = perspective
@@ -180,7 +188,7 @@ class PygletWindow(pyglet.window.Window):
             gluPerspective(self.focal, width / float(height), 0.1, 60.0)
         else :
             # if not perspective, make orthogonal projection given the global_pov            
-            glOrtho(self.ortho_width, -self.ortho_width, self.ortho_width, -self.ortho_width ,0.1, 60.0)
+            glOrtho(self.ortho_width, -self.ortho_width, self.ortho_width, -self.ortho_width ,0.1, self.global_pov[1]+5)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         if self.global_pov:

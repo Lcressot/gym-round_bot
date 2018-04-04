@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     secwindow = pygletWindow.SecondaryWindow(
         model,
-        global_pov=(0,20,0),
+        global_pov=True,
         #global_pov=None,
         perspective=False,        
         width=winsize[0],
