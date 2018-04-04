@@ -35,13 +35,15 @@ class Block(object):
 
     def __init__(self, components, texture, block_type, visible=True, ghost=False, collision_reward=0.0):
         """
-        components : (x,y,z,w,h,d,rx,ry,rz) tuple of components for initialisation
-        texture : list of len 3
+        Parameters
+        ----------
+        - components : (x,y,z,w,h,d,rx,ry,rz) tuple of components for initialisation
+        - texture : list of len 3
                   The coordinates of the texture squares. Use `tex_coords()` to generate.       
-        block_type : type of the block
-        visible : True if the block is visible. Collision will be detected even if not visible
-        ghost : True if block can be gone by, collision will still be detected
-        collision_reward : the reward returned at collision
+        - block_type : type of the block
+        - visible : True if the block is visible. Collision will be detected even if not visible
+        - ghost : True if block can be gone by, collision will still be detected
+        - collision_reward : the reward returned at collision
         """
         if not block_type in {'robot','brick','start','reward'}:
             raise Exception('Unknown block type : ' + block_type + ' for Block object initialisation')
@@ -196,9 +198,17 @@ class Model(object):
 
     def __init__(self, world='rb1', random_start_pos=True, random_start_rot=False):
         """
+
         Class for round bot model. This class should play the model role of MVC structure,
         and should not deal with the rendering and the windowing (see class PygletWindow)
         or the controlling (see class RoundBotEnv)
+
+        Parameters 
+        ----------
+        - world (string) : the name of the world to load. Worlds are defined in module round_bot_worlds
+        - random_start_pos (Bool) : wether the robot position is randomly sampled inside world's starting areas at reset or not.
+        - random_start_rot (Bool) : wether the robot rotation is randomly sampled at reset or not.
+
         """
 
         # reference to windows
@@ -245,9 +255,10 @@ class Model(object):
         self.windows.add(window)
         
     def reset(self):
-        # Current x, y, z position in the world, specified with floats. Note
-        # that, perhaps unlike in math class, the y-axis is the vertical axis.
-
+        """
+        Current x, y, z position in the world, specified with floats. Note
+        that, perhaps unlike in math class, the y-axis is the vertical axis.
+        """
         if self.random_start_pos:           
             start_area = random.choice( list(self.start_areas) )
             # sample x and z cooridinates
@@ -351,12 +362,13 @@ class Model(object):
     #     return (dx, dy, dz)
 
     def get_motion_vector(self):
-        """ Returns the current motion vector indicating the velocity of the
+        """
+        Returns the current motion vector indicating the velocity of the
         player.
 
         Returns
         -------
-        vector : tuple of len 3
+        - vector : tuple of len 3
             Tuple containing the velocity in x, y, and z respectively.
 
         """
@@ -398,11 +410,12 @@ class Model(object):
         self.robot_rotation = [ x, y ]
 
     def update(self, dt):
-        """ This is where mostof the motion logic lives
+        """
+        This is where most of the motion logic lives
 
         Parameters
         ----------
-        dt : float
+        - dt : float
             The change in time since the last call.
         """
         # walking
@@ -436,11 +449,11 @@ class Model(object):
 
         Parameter
         --------
-        new_position : new position of robot to check
+        - new_position : new position of robot to check
 
         Returns
         -------
-        Bool : collided
+        - Bool : collided
         """
         
         # iterate over blocks and check for collision :

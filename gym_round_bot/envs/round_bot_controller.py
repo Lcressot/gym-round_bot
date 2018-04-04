@@ -15,10 +15,19 @@ from gym import spaces
 """
     
 class Controller(object):
-    def __init__(self, controllerType, xzrange, thetarange, model=None, int_actions=False, noise_ratio=0.1):
+    def __init__(self, controllerType, xzrange, thetarange, model=None, int_actions=False, noise_ratio=0):
         """
-            Abstract class for controllers : i.e actions to code exectution mappings
-            int_actions : bool for taking int actions
+        Abstract class for controllers : controllers are here mappings from actions to model's code execution
+        
+        Parameters
+        ----------
+        - controllerType (string) : describe the controller
+        - xzrange (int) : x,z speed multiplication factors
+        - thetarange (int) : dtheta multiplication factors
+        - model : model controlled by the controller
+        - int_actions : wether provided actions are of type int
+        - noise_ratio : ratio to compute additive gaussian noise standard deviation from action's speed
+        
         """
         self._model = model # can be set after initialization
         self._xzrange = xzrange
@@ -112,7 +121,7 @@ class Controller(object):
 class Theta_Controller(Controller):
     """ This class controls the robot with 2*thetarange dtheta rotations and xzrange fixed speed forward/bacwkard move
     """
-    def __init__(self, model, dtheta, speed, int_actions=int, xzrange=2, thetarange=2, noise_ratio=0.1):
+    def __init__(self, model, dtheta, speed, int_actions=int, xzrange=2, thetarange=2, noise_ratio=0):
         super(Theta_Controller,self).__init__('Theta tuple2',model=model, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
         self.dtheta = dtheta
         self._initial_speed = speed
@@ -143,7 +152,7 @@ class Theta_Controller(Controller):
 class Theta2_Controller(Theta_Controller):
     """ This class controls the robot like Theta but cannot go backwards
     """
-    def __init__(self, model, dtheta, xzrange=1, thetarange=1, speed=10.0, int_actions=False, noise_ratio=0.1):
+    def __init__(self, model, dtheta, xzrange=1, thetarange=1, speed=10.0, int_actions=False, noise_ratio=0):
         super(Theta2_Controller,self).__init__(model, dtheta=dtheta, speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)        
         
     def _init(self):
@@ -161,7 +170,7 @@ class XZ_Controller(Controller):
     """
     This class controls the robot to move on (oXZ) plan, always looking in the same direction
     """
-    def __init__(self, model, speed, xzrange=2, thetarange=2, int_actions=False, noise_ratio=0.1):
+    def __init__(self, model, speed, xzrange=2, thetarange=2, int_actions=False, noise_ratio=0):
         super(XZ_Controller,self).__init__('XZ tuple2', model=model, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
         self._initial_speed = speed
         self.action_meaning = '[x, z] 2-tuple coding for x and z between -xzrange and +xzrange'
@@ -190,7 +199,7 @@ class XZ_Controller_Fixed(XZ_Controller):
     """
     This class controls the robot to move on (oXZ) plan, but always looking in to the same point P
     """
-    def __init__(self, model, speed, xzrange=2, thetarange=2, int_actions=False, fixed_point=[0,0], noise_ratio=0.1):
+    def __init__(self, model, speed, xzrange=2, thetarange=2, int_actions=False, fixed_point=[0,0], noise_ratio=0):
         super(XZ_Controller_Fixed,self).__init__(model=model, speed=speed, xzrange=xzrange, thetarange=thetarange, int_actions=int_actions, noise_ratio=noise_ratio)
         self._fixed_point = fixed_point
     
@@ -203,7 +212,7 @@ class XZ_Controller_Fixed(XZ_Controller):
                         for x in range(0,2*self._xzrange+1) for z in range(0,2*self._xzrange+1)
                         }
 
-def make(name, speed=5, dtheta=7.0, xzrange=1, thetarange=1, int_actions=False, model=None, fixed_point=[0,0],noise_ratio=0.1):
+def make(name, speed=5, dtheta=7.0, xzrange=1, thetarange=1, int_actions=False, model=None, fixed_point=[0,0],noise_ratio=0):
     """
     Functions for making controller objects
     """

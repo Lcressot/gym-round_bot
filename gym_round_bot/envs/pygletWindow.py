@@ -33,6 +33,26 @@ class PygletWindow(pyglet.window.Window):
     def __init__(self, model, global_pov=None, perspective=True, interactive=False, focal=65.0, *args, **kwargs):
         super(PygletWindow, self).__init__(*args, **kwargs)
 
+        """
+        Parameters
+        ----------
+        - model : 
+            model linked to the window
+        - global_pov : Tuple(int, int, int) or Bool 
+            Global point of view. If None, view is subjective.
+            If True, automatic computing. Else set with Tuple(int, int, int)
+        - perspective : Bool
+            camera projection mode
+        - interactive : Bool
+            wether user can interact with window or not (use : take control of the robot for debug)
+        - focal : float
+            camera projective focal length
+        - *args : Tuple
+            args of parent Class pyglet.window.Window
+        - **kwargs : Dict
+            kwargs of parent Class pyglet.window.Window
+        """
+
         # Global point of view : if None, view is subjective. If True, automatic computing
         if global_pov==True:
             # compute global_pov automatically
@@ -268,10 +288,16 @@ class PygletWindow(pyglet.window.Window):
 
     def multiview_render(self, xzangles, as_line=True):
         """
-        xzangles : list of angles representing subjective view rotation in plane xOz (positives to negatives)
-        as_line : Boolean for returning a line shaped image
+        Parameters
+        ----------
+        - xzangles : List(float)
+            list of angles representing subjective view rotation in plane xOz (positives to negatives)
+        - as_line : Bool
+            Wheter to return a line shaped image or not
         
-        Returns a simple fusion of subjective views with given angles, used to widen the field of view
+        Returns
+        -------
+        A simple fusion of subjective views with given angles, used to widen the field of view
 
         Note : this function doesn't perform any model updates ! It must be done before
         """        
@@ -308,6 +334,11 @@ class MainWindow(PygletWindow):
     """
 
     def __init__(self, model, global_pov=None, perspective=True, interactive=False, focal=65.0, *args, **kwargs):
+        """
+        Parameters
+        ----------
+        see parent Class PygletWindow __init__ parameters
+        """
         super(MainWindow, self).__init__(model, global_pov, perspective, interactive, focal, *args, **kwargs)
 
         # set of windows following this one
@@ -320,9 +351,9 @@ class MainWindow(PygletWindow):
         return
         
 
-    def start(self):#, callback=None, ticks_per_sec=20):
+    def start(self):
         """
-            Starts window thread and set a callback on given function
+        Starts window thread and set a callback on given function
         """
         # schedule calls on 
         # if callback:
@@ -336,9 +367,9 @@ class MainWindow(PygletWindow):
 
         Parameters
         ----------
-        dt : float
+        - dt : float
             The change in time since the last call.
-        m :  subdisivions of step
+        - m :  subdisivions of step
 
         """
         # only main window can call for model update
@@ -378,22 +409,22 @@ class MainWindow(PygletWindow):
 
 
     def on_mouse_press(self, x, y, button, modifiers):
-    #     """ Called when a mouse button is pressed. See pyglet docs for button
-    #     amd modifier mappings.
+        """
+        Called when a mouse button is pressed. See pyglet docs for button amd modifier mappings.
 
-    #     Parameters
-    #     ----------
-    #     x, y : int
-    #         The coordinates of the mouse click. Always center of the screen if
-    #         the mouse is captured.
-    #     button : int
-    #         Number representing mouse button that was clicked. 1 = left button,
-    #         4 = right button.
-    #     modifiers : int
-    #         Number representing any modifying keys that were pressed when the
-    #         mouse button was clicked.
+        Parameters
+        ----------
+        - x, y (int):
+            The coordinates of the mouse click. Always center of the screen if
+            the mouse is captured.
+        - button (int) :
+            Number representing mouse button that was clicked. 1 = left button,
+            4 = right button.
+        - modifiers (int) :
+            Number representing any modifying keys that were pressed when the
+            mouse button was clicked.
 
-    #     """
+        """
         if not self.interactive or not self.threaded:
             return
         else:
@@ -404,10 +435,10 @@ class MainWindow(PygletWindow):
 
         Parameters
         ----------
-        x, y : int
+        - x, y (int) :
             The coordinates of the mouse click. Always center of the screen if
             the mouse is captured.
-        dx, dy : float
+        - dx, dy (float) :
             The movement of the mouse.
 
         """

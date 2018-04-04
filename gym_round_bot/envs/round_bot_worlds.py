@@ -22,12 +22,23 @@ def _build_rb1_default_world(model, width=45, hwalls=4, dwalls=1,
                     ):
     """
     Builds a simple rectangle planar world with walls around
-    Return : world information
 
-    # width : width of the world
-    # hwalls is heigh of walls    
-    # dwalls is depth of walls
+    Parameters
+    ----------
+    - width : int
+        width of the world
+    - hwalls : int
+        heigh of walls    
+    - dwalls: int
+        depth of walls
+    - texture_bricks, texture_robot, texture_visualisation : string
+        paths for texture image of bricks, robot and visualisation
+    - wall_reward : float
+        reward for wall collision
 
+    Returns
+    -------
+    world information
     """
     # TODO : better import would be global and without "from" but doesn't work for the moment
     from gym_round_bot.envs import round_bot_model 
@@ -107,7 +118,6 @@ def build_rb1_world(model, width=45, hwalls=4, dwalls=1, wall_reward=-1, goal_re
 def build_rb1_1wall_world(model, width=45, hwalls=2, dwalls=2, wall_reward=-1, goal_reward=1):
     """
     Builds a simple rectangle planar world with walls around, and 1 wall in the middle
-    Return : world information
     """
     ## first build default world
     texture_paths, world_info = _build_rb1_default_world(model,width=width, hwalls=hwalls, dwalls=dwalls, wall_reward=wall_reward)

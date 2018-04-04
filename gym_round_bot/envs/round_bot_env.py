@@ -173,7 +173,7 @@ class RoundBotEnv(gym.Env):
         # build secondary observation window if asked
         if metadata['winsize']:
             self.monitor_window = pygletWindow.SecondaryWindow(self.model,
-                                                    global_pov = (0,20,0),
+                                                    global_pov = True,
                                                     perspective = False,
                                                     width=metadata['winsize'][0],
                                                     height=metadata['winsize'][1],

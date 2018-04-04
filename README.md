@@ -11,8 +11,8 @@ The 3D model of the simulation (no OpenGl) which loads the world's points and mo
 pygletWindow.py
 
 + A class inherited from python Pyglet library for rendering 3D scenes (given by the model) with OpenGL. Interaction with user is possible (to control the model's robot) if the window is set to visible and interactive. If the window is visible and interactive, control the robot for debugging your world or have fun with tab (to enter control mode), and ZSQD AE and mouse for direction and rotation.
-+ Set the view to subjective with global_pov=None or set it to global with for instance global_pov=(0,40,0)
-+ If you set global_pov, you can set perspective to False to render in orthogonal mode
++ Set the view to subjective with global_pov=None or set it to global with for instance global_pov=(0,40,0). Use global_pov=True for automatic global_pov computing.
++ If you set global_pov, you can set perspective to False to render in orthogonal mode.
 + Use a MainWindow for rendering and optionnaly a SecondaryWindow object for monitoring the training/testing
 
 ### Worlds :
@@ -88,3 +88,64 @@ while(True):
 	# render to screen if needed
 	env.render()
 ```
+
+# Development
+
+Please use this documentation format to document the new functions (and change the old which are not conform):
+```Python
+
+def function(param_1, .. param_n):
+
+    """
+    function concise description
+
+    Parameters (if any)
+    ----------
+    - param_1 : param_1_type
+    	description of param_1
+    
+    ...
+
+    - param_n : param_n_type
+    	description of param_1
+
+    Returns (if any)
+    -------
+    return_type : return description
+
+    Exceptions (if any)
+    ----------
+    - exception_type :
+    	description of exception
+
+    Restrictions (if any)
+    ------------
+    - restriction :
+    	description of restriction of function use
+
+    Side Effects (if any)
+    ------------
+    - side effect :
+    	description of side effect
+    """
+```
+Example :
+```Python
+
+def fibonacci(n):
+
+    """
+    Computes fibonacci sequence
+
+    Parameters
+    ----------
+    - n : int
+    	size of fibonacci sequence to compute
+
+    Returns 
+    -------
+    List(int) : Fibonnaci sequence of length n
+
+    """
+```
+Please also use this format to document new modules and classes.
