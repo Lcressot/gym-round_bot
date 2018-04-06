@@ -196,7 +196,7 @@ class Cube(Block):
 
 class Model(object):
 
-    def __init__(self, world='rb1', random_start_pos=True, random_start_rot=False):
+    def __init__(self, world='rb1', texture='minecraft', random_start_pos=True, random_start_rot=False):
         """
 
         Class for round bot model. This class should play the model role of MVC structure,
@@ -236,7 +236,7 @@ class Model(object):
         self.start_position, self.start_rotation, self.start_strafe = None,None,None
 
         # load world        
-        self.load_world(world)
+        self.load_world(world, texture)
 
         self.flying, self.collided, self.current_reward = None, None, None
 
@@ -482,14 +482,14 @@ class Model(object):
         return False
 
 
-    def load_world(self, world):
+    def load_world(self, world, texture):
         """ Loads the world passed as string parameter
 
         """
         if world == 'rb1':
-            texture_paths, world_info = round_bot_worlds.build_rb1_world(self)
+            texture_paths, world_info = round_bot_worlds.build_rb1_world(self, texture)
         elif world == 'rb1_1wall':
-            texture_paths, world_info = round_bot_worlds.build_rb1_1wall_world(self)
+            texture_paths, world_info = round_bot_worlds.build_rb1_1wall_world(self, texture)
         else:
             raise(Exception('Error: unknown world : ' + world))
 

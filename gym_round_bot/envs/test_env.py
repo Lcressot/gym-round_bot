@@ -26,6 +26,7 @@ controller = rbc.make('Theta2',speed=5,dtheta=15, xzrange=1, thetarange=1) # the
 # set env metadata
 round_bot_env.set_metadata(
         world=world,
+        texture='minecraft'
         obssize=obssize,
         winsize=winsize,
         controller=controller,

@@ -29,6 +29,7 @@ class RoundBotEnv(gym.Env):
         """        
         self.viewer = None
         self.world = None        
+        self.texture = None        
         self.model = None
         self.window = None
         self.observation_space = None
@@ -50,6 +51,13 @@ class RoundBotEnv(gym.Env):
     def compatible_worlds(self):        
         return {'rb1', # rectangle set, first person view, reward in top left corner
                 'rb1_1wall', # rectangle set, first person view, reward in top left corner, middle blocks
+                }
+
+    @property
+    def compatible_textures(self):        
+        return {'minecraft', # minecraft game-like textures
+                'uniform', # uniform colors, perceptual aliasing !
+                'minecraft+', # minecraft game-like textures with other additional antialiasing elements
                 }
 
     @property
@@ -125,6 +133,8 @@ class RoundBotEnv(gym.Env):
         Loads a world into environnement with metadata vars
 
         Parameters used in metadata  for loading :
+        - world : the world name to be loaded
+        - texture : the texture name to be set on world's walls
         - obssize : the dimensions of the observations (reshaped from window render), if None, no reshape
         - winsize : the dimensions of the observation window (if None, no observation window)
         - controller : the controller of the robot
@@ -139,12 +149,16 @@ class RoundBotEnv(gym.Env):
         """
         metadata = RoundBotEnv.metadata
         if not metadata['world'] in self.compatible_worlds:
-            raise(Exception('Error: unknown or uncompatible world \'' + world + '\' for environnement round_bot'))
-           ## shared settings
+            raise(Exception('Error: unknown or uncompatible world \'' + metadata['world'] + '\' for environnement round_bot'))
+        if not metadata['texture'] in self.compatible_textures:
+            raise(Exception('Error: unknown or uncompatible texture \'' + metadata['texture'] + '\' for environnement round_bot'))
+        
+        ## shared settings
         self.world = metadata['world']
+        self.texture = metadata['texture']
         self.random_start = metadata['random_start']
         random_start_rot = ('Theta' in metadata['controller'].controllerType)
-        self.model = round_bot_model.Model(metadata['world'], random_start_pos=self.random_start, random_start_rot=random_start_rot)
+        self.model = round_bot_model.Model(world=metadata['world'], random_start_pos=self.random_start, random_start_rot=random_start_rot, texture=metadata['texture'])
         self.obssize = metadata['obssize']
         self.crash_stop = metadata['crash_stop']
         self.reward_stop = metadata['reward_stop']
@@ -199,6 +213,7 @@ class RoundBotEnv(gym.Env):
 
 
 def set_metadata(world='rb1',
+                texture='minecraft',
                 controller=round_bot_controller.make(name='Theta',dtheta=20,speed=10,int_actions=False,xzrange=2,thetarange=2),
                 obssize=[16,16],
                 winsize=None,
@@ -214,6 +229,7 @@ def set_metadata(world='rb1',
     """ static module method for setting loading variables before call to gym.make
     """
     RoundBotEnv.metadata['world'] = world
+    RoundBotEnv.metadata['texture'] = texture
     RoundBotEnv.metadata['controller'] = controller
     RoundBotEnv.metadata['obssize'] = obssize
     RoundBotEnv.metadata['winsize'] = winsize

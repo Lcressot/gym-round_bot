@@ -14,17 +14,47 @@ import os
     This file allows to build worlds
 """
 
-def _build_rb1_default_world(model, width=45, hwalls=4, dwalls=1,
-                    texture_bricks='/textures/texture_test.png',
-                    texture_robot='/textures/robot.png',
-                    texture_visualisation='/textures/visualisation.png',
-                    wall_reward=-1,
-                    ):
+def _texture_path(texture_bricks_name):
+    """
+    Parameter
+    ---------
+    texture_bricks_name : str
+        name of the world main texture 
+
+    Return
+    ------
+    texture_path: str
+        path corresponding to the texture_bricks_name
+
+    Raises
+    ------
+    ValueError
+        raised if texture_bricks_name is unkwnonw
+    """
+    if texture_bricks_name == 'minecraft':
+        return '/textures/texture_minecraft.png'
+    elif texture_bricks_name == 'minecraft+':
+        return '/textures/texture_minecraft+.png'
+    elif texture_bricks_name == 'colours':
+        return '/textures/texture_colours.png'
+    else :
+        raise ValueError('Unknown texture name '+ texture_bricks_name + ' in loading world')
+
+
+def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwalls=1,                    
+                            texture_robot='/textures/robot.png',
+                            texture_visualisation='/textures/visualisation.png',
+                            wall_reward=-1,
+                            ):
     """
     Builds a simple rectangle planar world with walls around
 
     Parameters
     ----------
+    - model : round_bot_model.Model
+        model to load world in
+    - texture_bricks_name : str
+        name of the texture for the bricks
     - width : int
         width of the world
     - hwalls : int
@@ -40,6 +70,8 @@ def _build_rb1_default_world(model, width=45, hwalls=4, dwalls=1,
     -------
     world information
     """
+    texture_bricks = _texture_path(texture_bricks_name)
+    
     # TODO : better import would be global and without "from" but doesn't work for the moment
     from gym_round_bot.envs import round_bot_model 
     # create textures coordinates
@@ -83,12 +115,12 @@ def _build_rb1_default_world(model, width=45, hwalls=4, dwalls=1,
 
 
 
-def build_rb1_world(model, width=45, hwalls=4, dwalls=1, wall_reward=-1, goal_reward=1):
+def build_rb1_world(model, texture, width=20, hwalls=4, dwalls=1, wall_reward=-1, goal_reward=10):
     """
     Builds the rb1 world
     """    
     ## first build default world
-    texture_paths, world_info = _build_rb1_default_world(model,width=width, hwalls=hwalls, dwalls=dwalls, wall_reward=wall_reward)
+    texture_paths, world_info = _build_rb1_default_world(model, texture, width=width, hwalls=hwalls, dwalls=dwalls, wall_reward=wall_reward)
 
     ## then add specs
     from gym_round_bot.envs import round_bot_model
@@ -115,12 +147,12 @@ def build_rb1_world(model, width=45, hwalls=4, dwalls=1, wall_reward=-1, goal_re
 
 
 
-def build_rb1_1wall_world(model, width=45, hwalls=2, dwalls=2, wall_reward=-1, goal_reward=1):
+def build_rb1_1wall_world(model, texture, width=20, hwalls=2, dwalls=2, wall_reward=-1, goal_reward=10):
     """
     Builds a simple rectangle planar world with walls around, and 1 wall in the middle
     """
     ## first build default world
-    texture_paths, world_info = _build_rb1_default_world(model,width=width, hwalls=hwalls, dwalls=dwalls, wall_reward=wall_reward)
+    texture_paths, world_info = _build_rb1_default_world(model, texture, width=width, hwalls=hwalls, dwalls=dwalls, wall_reward=wall_reward)
 
     ## then add specs
     from gym_round_bot.envs import round_bot_model

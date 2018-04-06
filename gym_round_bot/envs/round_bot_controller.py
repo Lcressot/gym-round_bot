@@ -212,11 +212,12 @@ class XZ_Controller_Fixed(XZ_Controller):
                         for x in range(0,2*self._xzrange+1) for z in range(0,2*self._xzrange+1)
                         }
 
-def make(name, speed=5, dtheta=7.0, xzrange=1, thetarange=1, int_actions=False, model=None, fixed_point=[0,0],noise_ratio=0):
+def make(name, speed=5, dtheta=7.0, xzrange=1, thetarange=1, int_actions=False, model=None, fixed_point=[0,0],noise_ratio=0.0):
     """
     Functions for making controller objects
     """
     compatible_controllers = {'Theta, Theta2, XZ, XZF'}
+    noise_ratio = float(noise_ratio)
 
     if name=='Theta':
         return Theta_Controller(model=model, dtheta=dtheta,speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
