@@ -49,6 +49,17 @@ cd gym-round_bot
 pip3 install -e .
 ```
 
+### Bug encountered on ubuntu when working with multiple environments: 
+```bash
+Error in `python3': malloc(): memory corruption:
+```
+To solve it:
+```bash
+sudo apt-get install libtcmalloc-minimal4
+export LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4"
+```
+
+
 # Use
 
 Here is a simple code for using the environment (cf test_env.py ):
