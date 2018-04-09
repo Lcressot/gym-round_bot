@@ -226,6 +226,7 @@ class PygletWindow(pyglet.window.Window):
         """ Called by pyglet to draw the canvas.
 
         """
+        self.switch_to() # set opengl context to this window
         self.clear()
         self.set_3d()
         glColor3d(1, 1, 1)

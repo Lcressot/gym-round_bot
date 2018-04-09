@@ -4,6 +4,8 @@
 """ Cressot Loic
     ISIR CNRS/UPMC
     02/2018
+
+    Small script for testing and understanding the model and windows (no gym env involved here)
 """ 
 
 from __future__ import division
@@ -20,7 +22,7 @@ if __name__ == '__main__':
     #world = 'rb1_1wall'
     world = 'rb1'
     winsize=[400,400]
-    model = round_bot_model.Model(world,'minecraft')
+    model = round_bot_model.Model(world,'colours')
     window = pygletWindow.MainWindow(
     	model,
 		#global_pov=(0,20,0),

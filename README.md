@@ -95,7 +95,6 @@ while(True):
 + add pytest tests
 + save used controller in main_agent_vs_environnement, then load it when necessary instead of rebuilding it
 + Cannot close window when it not interactive. It should be closable.
-+ Main window doesn't correctly render when secondary window is on.
 
 ## Code documentation
 Please use this documentation format to document the new functions (and change the old which are not conform):

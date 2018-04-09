@@ -48,7 +48,10 @@ class Controller(object):
     
     @model.setter
     def model(self, model):
-        self._model = model
+        if self._model: # can't assign same controller for several model
+            raise Exception('Cannot assign same controller to different models, please create a new controller.')
+        else: # model must be None here
+            self._model = model
 
     @property
     def num_actions(self):
