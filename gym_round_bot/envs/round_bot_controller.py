@@ -162,7 +162,9 @@ class Theta2_Controller(Theta_Controller):
         """ Private initialisation of Theta2_Controller
         """
         self.action_meaning = '[s, dth] 2-tuple coding for speed between 0 and +initial_speed and dtheta between -dt and dt'
-        self._actions = { (s,d) : 'self._model.strafe[0]='+str(np.sign(-s))+';'
+        self._actions = { (s,d) : 'self._model.strafe[0]='+str(0 if s-self._xzrange==0 else np.sign(s-self._xzrange))+';'
+                                    +'sp=self._initial_speed*'+str(abs(s-self._xzrange))+';'
+                                    +'self._model.walking_speed= sp + np.random.normal(0,sp*self.noise_ratio);'
                                     +'dth='+str((d-self._thetarange)*self.dtheta)+';'
                                     +'self._model.change_robot_rotation(dth+np.random.normal(0,abs(dth)*self.noise_ratio),0);'
                                     for s in range(0,self._xzrange+1) for d in range(0,2*self._thetarange+1) }
@@ -226,7 +228,7 @@ def make(name, speed=5, dtheta=7.0, xzrange=1, thetarange=1, int_actions=False, 
         return Theta_Controller(model=model, dtheta=dtheta,speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
 
     elif name=='Theta2':
-        return Theta2_Controller(model=model, dtheta=dtheta,speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
+        return Theta2_Controller(model=model, dtheta=dtheta, speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
 
     elif name=='XZ':        
         return XZ_Controller(model=model, speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
