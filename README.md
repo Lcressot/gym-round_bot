@@ -20,8 +20,8 @@ round_bot_worlds.py
 
 This module defines functions for loading/building simulated worlds : each function loads/builds a different world. Later, this module could be replaced by a function for writting/reading worlds information in files.
 
-### Main_model_test
-main_model_test.py
+### Test model
+test_model.py
 
 This script shows how to run a simple simulation (without Open AI Gym) simply by constructing a model and a visible interactive window.
 
@@ -34,6 +34,11 @@ This module defines a class for controlling the robot of a model. Given an actio
 round_bot_env.py
 
 This module defines the OpenAI gym compatible environment using a model and a window (in this case the window is only used for rendering and is non interactive nor visible, and has not its main thread. You can set it to visible but it slows down computations by a factor 10)
+
+### Test env
+test_env.py
+
+This script provides a simple code for running an round bot gym environment
 
 
 # Installation

@@ -227,6 +227,7 @@ class Model(object):
 
         self.ticks_per_sec = 60
 
+        # default speed values
         self.walking_speed = 10
         self.initial_walking = 10
         self.flying_speed = 15
@@ -234,6 +235,8 @@ class Model(object):
         self.world_info = None
         self.texture_paths = None # used for rendering with window
         self.start_position, self.start_rotation, self.start_strafe = None,None,None
+        # maximum absolute possible reward in model, used for normalization
+        self.max_reward=0.0
 
         # load world        
         self.load_world(world, texture)
@@ -310,6 +313,8 @@ class Model(object):
         elif block_type=='reward':            
             self.bricks.add( block ) # add reward blocks to bricks to detect collisions
 
+        # update max_reward value
+        self.max_reward = max(self.max_reward, abs(block.collision_reward))
 
     def remove_block(self, block):
         """ Remove the block

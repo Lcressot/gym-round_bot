@@ -40,6 +40,8 @@ class RoundBotEnv(gym.Env):
         self.monitor_window = None
         self.crash_stop=None
         self.reward_stop=None
+        self.normalize_observations=None
+        self.normalize_rewards=None
         self._load() # load with loading_vars variables
 
     @property
@@ -92,6 +94,12 @@ class RoundBotEnv(gym.Env):
         done = (done or reward < 0) if self.crash_stop else done
         done = (done or reward > 0) if self.reward_stop else done
 
+        # normalize observations if asked
+        if self.normalize_observations:
+            self.current_observation = self.current_observation*2.0/255.0 - 1.0 # rescale from uint8 to [-1,1] float
+        # normalize observations if asked
+        if self.normalize_rewards:
+            reward = reward/self.model.max_reward # normalize values in [-1,1] float range
         # no info
         info={}
         return self.current_observation, reward, done, {}
@@ -165,7 +173,9 @@ class RoundBotEnv(gym.Env):
 
         # save controller and plug it to model :
         self.controller = metadata['controller']
-        self.controller.model = self.model        
+        self.controller.model = self.model
+        self.normalize_rewards = metadata['normalize_rewards']     
+        self.normalize_observations = metadata['normalize_observations']     
 
         shape = self.obssize
         self.obs_dim = shape[0]*shape[1]*3
@@ -225,6 +235,8 @@ def set_metadata(world='rb1',
                 crash_stop=False,
                 reward_stop=False,
                 random_start=True,
+                normalize_observations=False,
+                normalize_rewards=False,
                 ):
     """ static module method for setting loading variables before call to gym.make
     """
@@ -241,6 +253,9 @@ def set_metadata(world='rb1',
     RoundBotEnv.metadata['crash_stop'] = crash_stop
     RoundBotEnv.metadata['reward_stop'] = reward_stop
     RoundBotEnv.metadata['random_start'] = random_start
+    RoundBotEnv.metadata['normalize_observations'] = normalize_observations
+    RoundBotEnv.metadata['normalize_rewards'] = normalize_rewards
+
     
 
 set_metadata() # loading with default values

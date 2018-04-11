@@ -8,11 +8,6 @@
     Small script for testing and understanding the model and windows (no gym env involved here)
 """ 
 
-from __future__ import division
-
-import sys
-
-#import round_bot_py
 import round_bot_model
 import pygletWindow
 
