@@ -97,6 +97,9 @@ class RoundBotEnv(gym.Env):
         # normalize observations if asked
         if self.normalize_observations:
             self.current_observation = self.current_observation*2.0/255.0 - 1.0 # rescale from uint8 to [-1,1] float
+        # transform observations if asked :
+        if self.observation_transformation:
+            self.current_observation = self.observation_transformation(self.current_observation)
         # normalize observations if asked
         if self.normalize_rewards:
             reward = reward/self.model.max_reward # normalize values in [-1,1] float range
@@ -114,6 +117,13 @@ class RoundBotEnv(gym.Env):
         """
         self.model.reset()
         self.current_observation = self.window.get_image(reshape=True)#get image as a numpy line
+
+        # normalize observations if asked
+        if self.normalize_observations:
+            self.current_observation = self.current_observation*2.0/255.0 - 1.0 # rescale from uint8 to [-1,1] float
+        # transform observations if asked :
+        if self.observation_transformation:
+            self.current_observation = self.observation_transformation(self.current_observation)
       
         return self.current_observation
         
@@ -176,6 +186,7 @@ class RoundBotEnv(gym.Env):
         self.controller.model = self.model
         self.normalize_rewards = metadata['normalize_rewards']     
         self.normalize_observations = metadata['normalize_observations']     
+        self.observation_transformation = metadata['observation_transformation']     
 
         shape = self.obssize
         self.obs_dim = shape[0]*shape[1]*3
@@ -237,6 +248,7 @@ def set_metadata(world='rb1',
                 random_start=True,
                 normalize_observations=False,
                 normalize_rewards=False,
+                observation_transformation = None,
                 ):
     """ static module method for setting loading variables before call to gym.make
     """
@@ -255,6 +267,7 @@ def set_metadata(world='rb1',
     RoundBotEnv.metadata['random_start'] = random_start
     RoundBotEnv.metadata['normalize_observations'] = normalize_observations
     RoundBotEnv.metadata['normalize_rewards'] = normalize_rewards
+    RoundBotEnv.metadata['observation_transformation'] = observation_transformation
 
     
 
