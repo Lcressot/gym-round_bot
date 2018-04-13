@@ -231,6 +231,39 @@ class RoundBotEnv(gym.Env):
         if self.monitor_window:
             self.monitor_window.message = message
 
+    def add_monitor_window(self, height, width):
+        """
+        adds a monitor window if there are none yet
+        """
+        if not (height > 0 and width > 0):
+            raise Exception('unvalid dimensions for monitor window')
+        if not self.monitor_window:
+            self.monitor_window = pygletWindow.SecondaryWindow(
+                                        self.model,
+                                        global_pov = True,
+                                        perspective = False,
+                                        width=height,
+                                        height=width,
+                                        caption='Observation window '+ self.world,
+                                        resizable=False,
+                                        visible=True,
+                                        )           
+            # plug monitor_window to window
+            self.window.add_follower(self.monitor_window)
+        else:
+            raise Warning('a monitor window has already been added !')
+
+    def delete_monitor_window(self):
+        """
+        deletes the monitor window
+        """
+        if not self.monitor_window:
+            raise Warning('no monitor window to delete')
+        else:
+            self.window.remove_follower(self.monitor_window)
+            self.monitor_window.close()
+            del self.monitor_window
+            self.monitor_window = None
 
 
 def set_metadata(world='rb1',

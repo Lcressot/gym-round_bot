@@ -393,6 +393,15 @@ class MainWindow(PygletWindow):
         self.followers.add(secondary_window)
         secondary_window.follow(self)
 
+    def remove_follower(self, secondary_window):
+        """
+        removes a following window
+        """
+        if secondary_window not in self.followers:
+            raise Exception('the provided window was not part of the main window following windows')
+        else:
+            self.followers.remove(secondary_window)
+
     def _show_block(self, block):
         """
             Private Boolean function for deciding whether to show a block or not 
