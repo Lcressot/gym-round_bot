@@ -40,6 +40,8 @@ class RoundBotEnv(gym.Env):
         self.monitor_window = None
         self.crash_stop=None
         self.reward_stop=None
+        self.reward_count_stop=None
+        self.reward_count=0.0
         self.normalize_observations=None
         self.normalize_rewards=None
         self._load() # load with loading_vars variables
@@ -87,12 +89,11 @@ class RoundBotEnv(gym.Env):
             self.current_observation = self.window.multiview_render(self.multiview, as_line=False)
 
         # get reward :
-        reward = self.model.current_reward              
+        reward = self.model.current_reward
+        # update self.reward_count
+        self.reward_count += reward
         # check if done
-        # stop if crash_stop stop specified and crashed ( in a wall )
-        done = False
-        done = (done or reward < 0) if self.crash_stop else done
-        done = (done or reward > 0) if self.reward_stop else done
+        done = (self.crash_stop and reward < 0) or (self.reward_stop and reward > 0) or (self.reward_count_stop and reward < self.reward_count_stop)
 
         # normalize observations if asked
         if self.normalize_observations:
@@ -116,6 +117,7 @@ class RoundBotEnv(gym.Env):
         observation : the initial observation of the space. (Initial reward is assumed to be 0.)
         """
         self.model.reset()
+        self.reward_count=0.0
         self.current_observation = self.window.get_image(reshape=True)#get image as a numpy line
 
         # normalize observations if asked
@@ -150,20 +152,8 @@ class RoundBotEnv(gym.Env):
         """
         Loads a world into environnement with metadata vars
 
-        Parameters used in metadata  for loading :
-        - world : the world name to be loaded
-        - texture : the texture name to be set on world's walls
-        - obssize : the dimensions of the observations (reshaped from window render), if None, no reshape
-        - winsize : the dimensions of the observation window (if None, no observation window)
-        - controller : the controller of the robot
-        - global_pov : a tuple vector of global point of view
-        - perspective : Bool for normal perspective. False is orthogonal perspective
-        - visible
-        - multiview : list of angles for multi-view rendering. The renders will be fusioned into one image
-        - focal : the camera focal (<180°)
-        - crash_stop = (Bool) Stop when crashing in a wall with negative reward (for speeding dqn learning for instance)
-        - reward_stop = (Bool) Stop when reaching reward
-        - random_start = (Bool) randomly start from start positions or not
+        Parameters used in metadata for loading :
+            -> see in load_metada method
         """
         metadata = RoundBotEnv.metadata
         if not metadata['world'] in self.compatible_worlds:
@@ -179,6 +169,7 @@ class RoundBotEnv(gym.Env):
         self.model = round_bot_model.Model(world=metadata['world'], random_start_pos=self.random_start, random_start_rot=random_start_rot, texture=metadata['texture'])
         self.obssize = metadata['obssize']
         self.crash_stop = metadata['crash_stop']
+        self.reward_count_stop = metadata['reward_count_stop']
         self.reward_stop = metadata['reward_stop']
 
         # save controller and plug it to model :
@@ -278,12 +269,47 @@ def set_metadata(world='rb1',
                 focal=65.0,
                 crash_stop=False,
                 reward_stop=False,
+                reward_count_stop = -10,
                 random_start=True,
                 normalize_observations=False,
                 normalize_rewards=False,
                 observation_transformation = None,
                 ):
     """ static module method for setting loading variables before call to gym.make
+
+        parameters :
+        -----------
+        - world : str
+            name of the world to load
+        - texture : str
+            name of texture to set to world brick blocks
+        - controller : round_bot_Controller
+            controller object to use for mapping from actions to robot control
+        - obssize / winsize :
+            observation's / monitor windows's size tuple
+        - global_pov : Tuple(float,float,float) or Bool or None
+            global point of view tuple. set True for automatic computing and None if none
+        - perspective : Bool        
+            
+        - visible : Bool
+        - multiview : List(float)
+            list of angles for multi-view rendering. The renders will be fusioned into one image.
+        - focal : float (<180°)
+            the camera focal
+        - crash_stop :
+            Wether to stop when crashing in a wall with negative reward (for speeding dqn learning for instance)            
+        - reward_count_stop: int or False
+            If not False, stop when the sum of rewards (before normalization) reaches this value.
+        - reward_stop : Bool
+            Wether to stop when reaching positive reward            
+        - random_start : Bool
+            randomly start from start positions or not
+        - normalize_observations : Bool
+            rescale observations from (int)[0:255] range to (float)[-1:1] with X -> X * 2.0/255 - 1.0
+        - normalize_rewards : Bool
+            rescale rewards to (float)[-1:1] range by dividing rewards by world's highest abs reward value
+        - observation_transformation : function
+            apply observation_transformation function to observations after normalization
     """
     RoundBotEnv.metadata['world'] = world
     RoundBotEnv.metadata['texture'] = texture
@@ -291,11 +317,12 @@ def set_metadata(world='rb1',
     RoundBotEnv.metadata['obssize'] = obssize
     RoundBotEnv.metadata['winsize'] = winsize
     RoundBotEnv.metadata['global_pov'] = global_pov
-    RoundBotEnv.metadata['perspective'] = perspective
+    RoundBotEnv.metadata['perspective'] = perspective # 
     RoundBotEnv.metadata['visible'] = visible
     RoundBotEnv.metadata['multiview'] = multiview
     RoundBotEnv.metadata['focal'] = focal
     RoundBotEnv.metadata['crash_stop'] = crash_stop
+    RoundBotEnv.metadata['reward_count_stop'] = reward_count_stop
     RoundBotEnv.metadata['reward_stop'] = reward_stop
     RoundBotEnv.metadata['random_start'] = random_start
     RoundBotEnv.metadata['normalize_observations'] = normalize_observations
