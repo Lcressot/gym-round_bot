@@ -46,6 +46,15 @@ class RoundBotEnv(gym.Env):
         self.normalize_rewards=None
         self._load() # load with loading_vars variables
 
+    def __del__(self):
+        """
+        Cleans the env object before env deletion        
+        """
+        if self.monitor_window:
+            self.delete_monitor_window()
+        if self.window:
+            self.window.close()
+
     @property
     def action_space(self):
         # self.action_space is self.controller.action_space

@@ -21,12 +21,18 @@ class Controller(object):
         
         Parameters
         ----------
-        - controllerType (string) : describe the controller
-        - xzrange (int) : x,z speed multiplication factors
-        - thetarange (int) : dtheta multiplication factors
-        - model : model controlled by the controller
-        - int_actions : wether provided actions are of type int
-        - noise_ratio : ratio to compute additive gaussian noise standard deviation from action's speed
+        - controllerType : string
+            describe the controller
+        - xzrange : int
+            x,z speed multiplication factors
+        - thetarange : int
+            dtheta multiplication factors
+        - model : round_bot_model
+            model controlled by the controller
+        - int_actions : Bool
+            wether provided actions are of type int
+        - noise_ratio : float
+            ratio to compute additive gaussian noise standard deviation from action's speed
         
         """
         self._model = model # can be set after initialization
@@ -142,6 +148,8 @@ class Theta_Controller(Controller):
                                     +'self._model.change_robot_rotation(dth+np.random.normal(0,abs(dth)*self.noise_ratio),0);'
                                     for s in range(0,2*self._xzrange+1) for d in range(0,2*self._thetarange+1) }
         self._action_space = spaces.MultiDiscrete([2*self._xzrange+1,2*self._thetarange+1])
+        # set missing MultiDiscrete parameter n
+        self._action_space.n = self.num_actions
 
     @property
     def speed(self, s):
@@ -169,6 +177,8 @@ class Theta2_Controller(Theta_Controller):
                                     +'self._model.change_robot_rotation(dth+np.random.normal(0,abs(dth)*self.noise_ratio),0);'
                                     for s in range(0,self._xzrange+1) for d in range(0,2*self._thetarange+1) }
         self._action_space = spaces.MultiDiscrete([1+self._xzrange,2*self._thetarange+1])
+        # set missing MultiDiscrete parameter n
+        self._action_space.n = self.num_actions
 
 
 class XZ_Controller(Controller):
@@ -181,10 +191,11 @@ class XZ_Controller(Controller):
         self.action_meaning = '[x, z] 2-tuple coding for x and z between -xzrange and +xzrange'
         self._init()
         self._action_space = spaces.MultiDiscrete([2*xzrange+1,2*xzrange+1])
+        # set missing MultiDiscrete parameter n
+        self._action_space.n = self.num_actions
         self._reversed_actions_mapping = self.reverse_actions_mapping # build reversed action mapping
         
     def _init(self):
-        print('self.noise_ratio',self.noise_ratio)
         self._actions = { (x,z) : 'self._model.strafe='+str([x-self._xzrange,z-self._xzrange])+';'
                         +'sp=self._initial_speed*'+str(np.sqrt((x-self._xzrange)**2+(z-self._xzrange)**2))+';'
                         +'self._model.walking_speed = sp + np.random.normal(0,sp*self.noise_ratio);'
@@ -207,6 +218,8 @@ class XZ_Controller_Fixed(XZ_Controller):
     def __init__(self, model, speed, xzrange=2, thetarange=2, int_actions=False, fixed_point=[0,0], noise_ratio=0):
         super(XZ_Controller_Fixed,self).__init__(model=model, speed=speed, xzrange=xzrange, thetarange=thetarange, int_actions=int_actions, noise_ratio=noise_ratio)
         self._fixed_point = fixed_point
+        # set missing MultiDiscrete parameter n
+        self._action_space.n = self.num_actions
     
     def _init(self):
         self._actions = { (x,z) : 'self._model.strafe='+str([x-self._xzrange,z-self._xzrange])+';'
@@ -238,5 +251,3 @@ def make(name, speed=5, dtheta=7.0, xzrange=1, thetarange=1, int_actions=False, 
 
     else :
         raise Exception('unknown or uncompatible controller name \'' + name + '\'. Compatible controllers are : '+str(compatible_controllers))
-
-
