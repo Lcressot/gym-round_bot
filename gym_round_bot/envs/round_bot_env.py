@@ -104,7 +104,9 @@ class RoundBotEnv(gym.Env):
         # update self._reward_count
         self._reward_count += reward
         # check if done
-        done = (self._crash_stop and reward < 0) or (self._reward_stop and reward > 0) or (self._reward_count_stop and self._reward_count <= self._reward_count_stop)
+        done = ((self._crash_stop and reward < 0) or
+               (self._reward_stop and reward > 0) or
+               (self._reward_count_stop and self._reward_count <= self._reward_count_stop))
         
         # normalize rewards if asked
         if self._normalize_rewards:
@@ -166,7 +168,10 @@ class RoundBotEnv(gym.Env):
         self._texture = metadata['texture']
         self.random_start = metadata['random_start']
         random_start_rot = ('Theta' in metadata['controller'].controllerType)
-        self._model = round_bot_model.Model(world=metadata['world'], random_start_pos=self.random_start, random_start_rot=random_start_rot, texture=metadata['texture'])
+        self._model = round_bot_model.Model(world=metadata['world'],
+                                            random_start_pos=self.random_start,
+                                            random_start_rot=random_start_rot,
+                                            texture=metadata['texture'])
         self.obssize = metadata['obssize']
         self._crash_stop = metadata['crash_stop']
         self._reward_count_stop = metadata['reward_count_stop']
@@ -222,8 +227,9 @@ class RoundBotEnv(gym.Env):
 
     def _build_observation_getter(self):
         """
-        Builds the function for getting observation, given initiliazation parameters : 
-        self._position_observations , self._normalize_observations, and self._position_observations
+        Builds the function for getting observation, given following initiliazation parameters : 
+            self._position_observations , self._normalize_observations, and self._position_observations
+        This way of doing allows clarity and fast processing of step function by avoiding calls to if statements and lambda functions
         """
         if not self._position_observations :            
             to_eval = 'self._window.get_image()'
