@@ -97,7 +97,7 @@ class RoundBotEnv(gym.Env):
             self._window.update(0.1) # update with 0.1 second intervall
        
         # get observation
-        self.current_observation = self._get_observation()
+        self._current_observation = self._get_observation()
 
         # get reward :
         reward = self._model.current_reward
@@ -127,7 +127,7 @@ class RoundBotEnv(gym.Env):
         self._reward_count=0.0
         
         # get observation
-        self.current_observation = self._get_observation()
+        self._current_observation = self._get_observation()
       
         return self._current_observation
         
@@ -238,9 +238,10 @@ class RoundBotEnv(gym.Env):
         
         if self._normalize_observations:
             if not self._position_observations:
-                to_eval += '*2.0/255.0 - 1.0'
+                to_eval += '*2.0/255.0 - 1.0' # normalize from int [0:255] range to float [-1:1] range
             else:
-                to_eval += '/' + str(self._model.world_info['witdh'])
+                w=self._model.world_info['width']
+                to_eval += '/' + str([w,w,w,360.0,360.0,360.0]) # normalize position with w and rotation with 360
 
         if self._observation_transformation:
             to_eval = 'self._observation_transformation(' + to_eval + ')'

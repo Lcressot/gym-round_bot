@@ -22,16 +22,16 @@ world = 'rb1' # the world to load
 obssize=[300,300] # the size of observations (rendering window)
 winsize=[300,300] # the size of monitoring window (None if not wanted)
 
-controller = rbc.make('Theta2',speed=5,dtheta=15, xzrange=1, thetarange=1,noise_ratio=0.1) # the robot controller                
+controller = rbc.make('Theta2',speed=5,dtheta=15, xzrange=1, thetarange=1,noise_ratio=0.0) # the robot controller                
 # set env metadata
 round_bot_env.set_metadata(
         world=world,
         texture='minecraft',
         obssize=obssize,
-        winsize=winsize,
+        #winsize=winsize,
         controller=controller,
-        normalize_rewards=True,
-        position_observations=False,
+        normalize_rewards=False,
+        position_observations=True,
         normalize_observations=True,
         observation_transformation = lambda X:X,
    )
@@ -44,4 +44,5 @@ env.reset()
 while(True):
     ob, reward, done, _ = env.step(tuple(controller.action_space.sample()))
     # render to screen if needed
-    env.render()
+    print(ob)
+    #env.render()

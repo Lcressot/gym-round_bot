@@ -180,9 +180,9 @@ class Block(object):
         Rx,Ry,Rz = rotation_matrices(rx,ry,rz)        
         R = np.matmul( Rx, np.matmul(Ry,Rz) )
         self._vertices = np.transpose(  np.dot(R, np.transpose(self._vertices))  )
-        self.rx += rx
-        self.ry += ry
-        self.rz += rz    
+        self.rx = (self.rx+rx)%360.0
+        self.ry = (self.ry+ry)%360.0
+        self.rz = (self.rz+rz)%360.0
 
     def translate_and_rotate_to(self,x_off, y_off, z_off, rx, ry, rz):
         """
@@ -439,7 +439,7 @@ class Model(object):
         """
         x, y = self.robot_rotation
         # add dx dy and set to [-180 180]
-        x,y = (x+dx +180)%360 -180, (y+dy +180)%360 -180
+        x,y = (x+dx +180.0)%360.0 -180.0, (y+dy +180.0)%360.0 -180.0
         self.robot_rotation = [ x, y ]
 
     def change_robot_position(self,dx,dy,dz):
