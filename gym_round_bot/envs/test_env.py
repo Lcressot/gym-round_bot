@@ -32,6 +32,8 @@ round_bot_env.set_metadata(
         controller=controller,
         normalize_rewards=True,
         position_observations=False,
+        normalize_observations=True,
+        observation_transformation = lambda X:X,
    )
 # create env 
 env = gym.make('RoundBot-v0')

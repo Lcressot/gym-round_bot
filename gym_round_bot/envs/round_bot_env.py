@@ -27,40 +27,40 @@ class RoundBotEnv(gym.Env):
         """
         Inits the attributes to None.        
         """        
-        self.viewer = None
-        self.world = None        
-        self.texture = None        
-        self.model = None
-        self.window = None
-        self.observation_space = None
-        self.current_observation = None
-        self.controller = None        
-        self.multiview = None
+        self._world = None        
+        self._texture = None        
+        self._model = None
+        self._window = None
+        self._observation_space = None
+        self._current_observation = None
+        self._controller = None        
+        self._multiview = None
         # self.action_space -> property
-        self.monitor_window = None
-        self.crash_stop=None
-        self.reward_stop=None
-        self.reward_count_stop=None
-        self.reward_count=0.0
-        self.normalize_observations=None
-        self.normalize_rewards=None
-        self.observation_transformation=None
-        self.position_observations=None
+        self._monitor_window = None
+        self._crash_stop = None
+        self._reward_stop = None
+        self._reward_count_stop = None
+        self._reward_count = 0.0
+        self._normalize_observations = None
+        self._normalize_rewards = None
+        self._observation_transformation = None
+        self._position_observations = None
+        self._get_observation = None # function to get current observation (which transforms and reshapes it if asked)
         self._load() # load with loading_vars variables
 
     def __del__(self):
         """
         Cleans the env object before env deletion        
         """
-        if self.monitor_window:
+        if self._monitor_window:
             self.delete_monitor_window()
-        if self.window:
-            self.window.close()
+        if self._window:
+            self._window.close()
 
     @property
     def action_space(self):
-        # self.action_space is self.controller.action_space
-        return self.controller.action_space
+        # self.action_space is self._controller.action_space
+        return self._controller.action_space
 
     @property
     def compatible_worlds(self):        
@@ -77,52 +77,41 @@ class RoundBotEnv(gym.Env):
 
     @property
     def num_actions(self):
-        return self.controller.num_actions
+        return self._controller.num_actions
     
     @property
     def actions_mapping(self):
-        return self.controller.actions_mapping
+        return self._controller.actions_mapping
 
     def step(self, action):
         """
         Perform one step
         """
         # perform action
-        self.controller.step(action)
+        self._controller.step(action)
         
         # update model and window
-        if not self.position_observations :
-            if not self.multiview:
-                self.window.step(0.1) # update with 0.1 second intervall
-                # get observation
-                self.current_observation = self.window.get_image(reshape=True)
-            else:
-                self.window.update(0.1) # update with 0.1 second intervall
-                self.current_observation = self.window.multiview_render(self.multiview, as_line=False)
-        else: # observations are arrays of positions of mobable blocks
-            self.window.step(0.1) # update with 0.1 second intervall
-            # get observation
-            self.current_observation = self.model.position_observation()
+        if not self._multiview:
+            self._window.step(0.1) # update with 0.1 second intervall               
+        else:
+            self._window.update(0.1) # update with 0.1 second intervall
+       
+        # get observation
+        self.current_observation = self._get_observation()
 
         # get reward :
-        reward = self.model.current_reward
-        # update self.reward_count
-        self.reward_count += reward
+        reward = self._model.current_reward
+        # update self._reward_count
+        self._reward_count += reward
         # check if done
-        done = (self.crash_stop and reward < 0) or (self.reward_stop and reward > 0) or (self.reward_count_stop and self.reward_count <= self.reward_count_stop)
-
-        # normalize observations if asked
-        if self.normalize_observations:
-            self.current_observation = self.current_observation*2.0/255.0 - 1.0 # rescale from uint8 to [-1,1] float
-        # transform observations if asked :
-        if self.observation_transformation:
-            self.current_observation = self.observation_transformation(self.current_observation)
-        # normalize observations if asked
-        if self.normalize_rewards:
-            reward = reward/self.model.max_reward # normalize values in [-1,1] float range
+        done = (self._crash_stop and reward < 0) or (self._reward_stop and reward > 0) or (self._reward_count_stop and self._reward_count <= self._reward_count_stop)
+        
+        # normalize rewards if asked
+        if self._normalize_rewards:
+            reward = reward/self._model.max_reward # normalize values in [-1,1] float range
         # no info
         info={}
-        return self.current_observation, reward, done, {}
+        return self._current_observation, reward, done, {}
         
 
     def reset(self):
@@ -132,33 +121,25 @@ class RoundBotEnv(gym.Env):
         -------
         observation : the initial observation of the space. (Initial reward is assumed to be 0.)
         """
-        self.model.reset()
-        self.reward_count=0.0
-        if not self.position_observations:
-            self.current_observation = self.window.get_image(reshape=True)#get image as a numpy line
-        else:
-            self.current_observation = self.model.position_observation()
-
-        # normalize observations if asked
-        if self.normalize_observations:
-            self.current_observation = self.current_observation*2.0/255.0 - 1.0 # rescale from uint8 to [-1,1] float
-        # transform observations if asked :
-        if self.observation_transformation:
-            self.current_observation = self.observation_transformation(self.current_observation)
+        self._model.reset()
+        self._reward_count=0.0
+        
+        # get observation
+        self.current_observation = self._get_observation()
       
-        return self.current_observation
+        return self._current_observation
         
 
     def render(self, mode='human', close=False):
 
         if mode == 'rgb_array':
             # reshape as line
-            return self.current_observation
+            return self._current_observation
         elif mode == 'human':
             # this slows down rendering with a factor 10 !
             # TODO : show current observation on screen (potentially fusionned image, and not only last render !)
-            if not self.window.visible:
-                self.window.set_visible(True)
+            if not self._window.visible:
+                self._window.set_visible(True)
         else: 
             raise Exception('Unknown render mode: '+mode)
 
@@ -181,66 +162,91 @@ class RoundBotEnv(gym.Env):
             raise(Exception('Error: unknown or uncompatible texture \'' + metadata['texture'] + '\' for environnement round_bot'))
         
         ## shared settings
-        self.world = metadata['world']
-        self.texture = metadata['texture']
+        self._world = metadata['world']
+        self._texture = metadata['texture']
         self.random_start = metadata['random_start']
         random_start_rot = ('Theta' in metadata['controller'].controllerType)
-        self.model = round_bot_model.Model(world=metadata['world'], random_start_pos=self.random_start, random_start_rot=random_start_rot, texture=metadata['texture'])
+        self._model = round_bot_model.Model(world=metadata['world'], random_start_pos=self.random_start, random_start_rot=random_start_rot, texture=metadata['texture'])
         self.obssize = metadata['obssize']
-        self.crash_stop = metadata['crash_stop']
-        self.reward_count_stop = metadata['reward_count_stop']
-        self.reward_stop = metadata['reward_stop']
+        self._crash_stop = metadata['crash_stop']
+        self._reward_count_stop = metadata['reward_count_stop']
+        self._reward_stop = metadata['reward_stop']
 
         # save controller and plug it to model :
-        self.controller = metadata['controller']
-        self.controller.model = self.model
-        self.normalize_rewards = metadata['normalize_rewards']     
-        self.normalize_observations = metadata['normalize_observations']     
-        self.observation_transformation = metadata['observation_transformation']     
-        self.position_observations = metadata['position_observations']
+        self._controller = metadata['controller']
+        self._controller.model = self._model
+        self._normalize_rewards = metadata['normalize_rewards']     
+        self._normalize_observations = metadata['normalize_observations']     
+        self._observation_transformation = metadata['observation_transformation']     
+        self._position_observations = metadata['position_observations']
 
         shape = self.obssize
         self.obs_dim = shape[0]*shape[1]*3
 
 
         # build main window
-        self.window = pygletWindow.MainWindow(  self.model,
+        self._window = pygletWindow.MainWindow(  self._model,
                                                 global_pov=metadata['global_pov'],
                                                 perspective = metadata['perspective'],
                                                 interactive=False,
                                                 focal=metadata['focal'],
                                                 width=metadata['obssize'][0],
                                                 height=metadata['obssize'][1],
-                                                caption='Round bot in '+self.world+' world',
+                                                caption='Round bot in '+self._world+' world',
                                                 resizable=False,
                                                 visible=metadata['visible']
                                                 )
 
         # build secondary observation window if asked
         if metadata['winsize']:
-            self.monitor_window = pygletWindow.SecondaryWindow(self.model,
+            self._monitor_window = pygletWindow.SecondaryWindow(self._model,
                                                     global_pov = True,
                                                     perspective = False,
                                                     width=metadata['winsize'][0],
                                                     height=metadata['winsize'][1],
-                                                    caption='Observation window '+ self.world,
+                                                    caption='Observation window '+ self._world,
                                                     resizable=False,
                                                     visible=True,
                                                     )           
             # plug monitor_window to window
-            self.window.add_follower(self.monitor_window)
+            self._window.add_follower(self._monitor_window)
 
         # observation are RGB images of rendered world (as line arrays)
-        self.observation_space = spaces.Box(low=0, high=255, shape=[1, metadata['obssize'][0]*metadata['obssize'][1]*3],dtype=np.uint8)
+        self._observation_space = spaces.Box(low=0, high=255, shape=[1, metadata['obssize'][0]*metadata['obssize'][1]*3],dtype=np.uint8)
 
-        self.multiview = metadata['multiview'] # if not None, observations will be fusion of subjective view with given relative xOz angles
+        self._multiview = metadata['multiview'] # if not None, observations will be fusion of subjective view with given relative xOz angles
+
+        ## build self._get_observation function, which gets current observation (which transforms and reshapes it if asked)
+        # observation getter
+        self._get_observation = self._build_observation_getter()
+
+    def _build_observation_getter(self):
+        """
+        Builds the function for getting observation, given initiliazation parameters : 
+        self._position_observations , self._normalize_observations, and self._position_observations
+        """
+        if not self._position_observations :            
+            to_eval = 'self._window.get_image()'
+        else: # observations are arrays of positions of mobable blocks           
+            to_eval = 'self._model.position_observation()'
+        
+        if self._normalize_observations:
+            if not self._position_observations:
+                to_eval += '*2.0/255.0 - 1.0'
+            else:
+                to_eval += '/' + str(self._model.world_info['witdh'])
+
+        if self._observation_transformation:
+            to_eval = 'self._observation_transformation(' + to_eval + ')'
+        to_eval = 'lambda : ' + to_eval
+        return eval(to_eval,{'self':self}) # pass self as variable
 
     def message(self, message):
         """
         Get message from training and use it if possible
         """
-        if self.monitor_window:
-            self.monitor_window.message = message
+        if self._monitor_window:
+            self._monitor_window.message = message
 
     def add_monitor_window(self, height, width):
         """
@@ -248,19 +254,19 @@ class RoundBotEnv(gym.Env):
         """
         if not (height > 0 and width > 0):
             raise Exception('unvalid dimensions for monitor window')
-        if not self.monitor_window:
-            self.monitor_window = pygletWindow.SecondaryWindow(
-                                        self.model,
+        if not self._monitor_window:
+            self._monitor_window = pygletWindow.SecondaryWindow(
+                                        self._model,
                                         global_pov = True,
                                         perspective = False,
                                         width=height,
                                         height=width,
-                                        caption='Observation window '+ self.world,
+                                        caption='Observation window '+ self._world,
                                         resizable=False,
                                         visible=True,
                                         )           
             # plug monitor_window to window
-            self.window.add_follower(self.monitor_window)
+            self._window.add_follower(self._monitor_window)
         else:
             raise Warning('a monitor window has already been added !')
 
@@ -268,13 +274,13 @@ class RoundBotEnv(gym.Env):
         """
         deletes the monitor window
         """
-        if not self.monitor_window:
+        if not self._monitor_window:
             raise Warning('no monitor window to delete')
         else:
-            self.window.remove_follower(self.monitor_window)
-            self.monitor_window.close()
-            del self.monitor_window
-            self.monitor_window = None
+            self._window.remove_follower(self._monitor_window)
+            self._monitor_window.close()
+            del self._monitor_window
+            self._monitor_window = None
 
 
 def set_metadata(world='rb1',
