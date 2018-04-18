@@ -108,14 +108,14 @@ while(True):
 # Development
 
 ## TODO
-# DEV
+### DEV
 + save used controller in main_agent_vs_environnement, then load it when necessary instead of rebuilding it
 + add continuous action possibility
 + add other movable object that can be pushed by the robot, or doors that can open
 + add buttons object than triggers events when pushed (collided)
 + add pytest tests
 
-# BUGS
+### BUGS
 + Cannot close window when it not interactive. It should be closable.
 + The robot y rotation in free flying mode for debug is not correct (not very important) see function PygletWindow.on_mouse_motion
 
