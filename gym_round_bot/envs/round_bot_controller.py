@@ -21,18 +21,12 @@ class Controller(object):
         
         Parameters
         ----------
-        - controllerType : string
-            describe the controller
-        - xzrange : int
-            x,z speed multiplication factors
-        - thetarange : int
-            dtheta multiplication factors
-        - model : round_bot_model
-            model controlled by the controller
-        - int_actions : Bool
-            wether provided actions are of type int
-        - noise_ratio : float
-            ratio to compute additive gaussian noise standard deviation from action's speed
+        - controllerType : (string) Describe the controller
+        - xzrange : (int) x,z speed multiplication factors
+        - thetarange : (int) Dtheta multiplication factors
+        - model : (round_bot_model) Model controlled by the controller
+        - int_actions : (Bool) Wether provided actions are of type int
+        - noise_ratio : (float) Ratio to compute additive gaussian noise standard deviation from action's speed
         
         """
         self._model = model # can be set after initialization

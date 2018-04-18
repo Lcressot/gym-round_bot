@@ -44,6 +44,8 @@ class RoundBotEnv(gym.Env):
         self.reward_count=0.0
         self.normalize_observations=None
         self.normalize_rewards=None
+        self.observation_transformation=None
+        self.position_observations=None
         self._load() # load with loading_vars variables
 
     def __del__(self):
@@ -89,20 +91,25 @@ class RoundBotEnv(gym.Env):
         self.controller.step(action)
         
         # update model and window
-        if not self.multiview:
-            self.window.step(0.1) # update with 1 second intervall
+        if not self.position_observations :
+            if not self.multiview:
+                self.window.step(0.1) # update with 0.1 second intervall
+                # get observation
+                self.current_observation = self.window.get_image(reshape=True)
+            else:
+                self.window.update(0.1) # update with 0.1 second intervall
+                self.current_observation = self.window.multiview_render(self.multiview, as_line=False)
+        else: # observations are arrays of positions of mobable blocks
+            self.window.step(0.1) # update with 0.1 second intervall
             # get observation
-            self.current_observation = self.window.get_image(reshape=True)
-        else:
-            self.window.update(0.1) # update with 1 second intervall
-            self.current_observation = self.window.multiview_render(self.multiview, as_line=False)
+            self.current_observation = self.model.position_observation()
 
         # get reward :
         reward = self.model.current_reward
         # update self.reward_count
         self.reward_count += reward
         # check if done
-        done = (self.crash_stop and reward < 0) or (self.reward_stop and reward > 0) or (self.reward_count_stop and reward < self.reward_count_stop)
+        done = (self.crash_stop and reward < 0) or (self.reward_stop and reward > 0) or (self.reward_count_stop and self.reward_count <= self.reward_count_stop)
 
         # normalize observations if asked
         if self.normalize_observations:
@@ -127,7 +134,10 @@ class RoundBotEnv(gym.Env):
         """
         self.model.reset()
         self.reward_count=0.0
-        self.current_observation = self.window.get_image(reshape=True)#get image as a numpy line
+        if not self.position_observations:
+            self.current_observation = self.window.get_image(reshape=True)#get image as a numpy line
+        else:
+            self.current_observation = self.model.position_observation()
 
         # normalize observations if asked
         if self.normalize_observations:
@@ -187,6 +197,7 @@ class RoundBotEnv(gym.Env):
         self.normalize_rewards = metadata['normalize_rewards']     
         self.normalize_observations = metadata['normalize_observations']     
         self.observation_transformation = metadata['observation_transformation']     
+        self.position_observations = metadata['position_observations']
 
         shape = self.obssize
         self.obs_dim = shape[0]*shape[1]*3
@@ -283,42 +294,31 @@ def set_metadata(world='rb1',
                 normalize_observations=False,
                 normalize_rewards=False,
                 observation_transformation = None,
+                position_observations = False,
                 ):
     """ static module method for setting loading variables before call to gym.make
 
         parameters :
         -----------
-        - world : str
-            name of the world to load
-        - texture : str
-            name of texture to set to world brick blocks
-        - controller : round_bot_Controller
-            controller object to use for mapping from actions to robot control
-        - obssize / winsize :
-            observation's / monitor windows's size tuple
-        - global_pov : Tuple(float,float,float) or Bool or None
-            global point of view tuple. set True for automatic computing and None if none
-        - perspective : Bool        
-            
-        - visible : Bool
-        - multiview : List(float)
-            list of angles for multi-view rendering. The renders will be fusioned into one image.
-        - focal : float (<180°)
-            the camera focal
-        - crash_stop :
-            Wether to stop when crashing in a wall with negative reward (for speeding dqn learning for instance)            
-        - reward_count_stop: int or False
-            If not False, stop when the sum of rewards (before normalization) reaches this value.
-        - reward_stop : Bool
-            Wether to stop when reaching positive reward            
-        - random_start : Bool
-            randomly start from start positions or not
-        - normalize_observations : Bool
-            rescale observations from (int)[0:255] range to (float)[-1:1] with X -> X * 2.0/255 - 1.0
-        - normalize_rewards : Bool
-            rescale rewards to (float)[-1:1] range by dividing rewards by world's highest abs reward value
-        - observation_transformation : function
-            apply observation_transformation function to observations after normalization
+        - world : (str) name of the world to load
+        - texture : (str) name of texture to set to world brick blocks
+        - controller: (round_bot_Controller) controller object to use for mapping from actions to robot control
+        - obssize / winsize : (tuple(int)) observation's / monitor windows's size tuple
+        - global_pov : (Tuple(float,float,float) or Bool or None) global point of view tuple.
+            Set True for automatic computing and None if none
+        - perspective : (Bool) If True, perspective is projective, else it is orthogonal
+        - visible : (Bool) If True the main window will be shown (slows down rendering)
+        - multiview : List(float) List of angles for multi-view rendering. The renders will be fusioned into one image.
+        - focal : float (<180°) The camera focal
+        - crash_stop : (Bool) Wether to stop when crashing in a wall with negative reward (for speeding dqn learning for instance)            
+        - reward_count_stop: (int or False) If not False, stop when the sum of rewards (before normalization) reaches this value.
+        - reward_stop : (Bool) Wether to stop when reaching positive reward            
+        - random_start : (Bool) Randomly start from start positions or not
+        - normalize_observations : (Bool) Rescale observations from (int)[0:255] range to (float)[-1:1] with X -> X * 2.0/255 -1.0
+        - normalize_rewards : (Bool) Rescale rewards to (float)[-1:1] range by dividing rewards by world's highest abs reward value
+        - observation_transformation : (function) apply observation_transformation function to observations after normalization
+        - position_observations: (Bool) observations are not images (np.array([w,h,c])) but [X, Y, Z, rx, ry, rz] np.arrays of 
+            every moving blocks in the scene
     """
     RoundBotEnv.metadata['world'] = world
     RoundBotEnv.metadata['texture'] = texture
@@ -337,6 +337,7 @@ def set_metadata(world='rb1',
     RoundBotEnv.metadata['normalize_observations'] = normalize_observations
     RoundBotEnv.metadata['normalize_rewards'] = normalize_rewards
     RoundBotEnv.metadata['observation_transformation'] = observation_transformation
+    RoundBotEnv.metadata['position_observations'] = position_observations
 
     
 

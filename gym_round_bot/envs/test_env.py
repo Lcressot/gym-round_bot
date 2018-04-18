@@ -31,6 +31,7 @@ round_bot_env.set_metadata(
         winsize=winsize,
         controller=controller,
         normalize_rewards=True,
+        position_observations=False,
    )
 # create env 
 env = gym.make('RoundBot-v0')

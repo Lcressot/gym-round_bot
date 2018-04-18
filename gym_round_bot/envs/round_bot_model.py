@@ -33,17 +33,17 @@ def rotation_matrices(rx,ry,rz):
 
 class Block(object):
 
-    def __init__(self, components, texture, block_type, visible=True, ghost=False, collision_reward=0.0):
+    def __init__(self, components, texture, block_type, visible=True, ghost=False, collision_reward=0.0, movable=False):
         """
         Parameters
         ----------
-        - components : (x,y,z,w,h,d,rx,ry,rz) tuple of components for initialisation
-        - texture : list of len 3
-                  The coordinates of the texture squares. Use `tex_coords()` to generate.       
-        - block_type : type of the block
-        - visible : True if the block is visible. Collision will be detected even if not visible
-        - ghost : True if block can be gone by, collision will still be detected
-        - collision_reward : the reward returned at collision
+        - components : (tuple(float) len 9) (x,y,z,w,h,d,rx,ry,rz) tuple of components for initialisation
+        - texture : (list(float) len 3) The coordinates of the texture squares. Use `tex_coords()` to generate.       
+        - block_type : (str) type of the block
+        - visible : (Bool) True if the block is visible. Collision will be detected even if not visible
+        - ghost : (Bool) True if block can be gone by, collision will still be detected
+        - collision_reward : (float) the reward returned at collision
+        - movable : (Bool) Wether the block can be moved
         """
         if not block_type in {'robot','brick','start','reward'}:
             raise Exception('Unknown block type : ' + block_type + ' for Block object initialisation')
@@ -61,6 +61,10 @@ class Block(object):
             visible=False # start are invisible
             ghost=True # start are ghost, cannot be collided
 
+        elif block_type == 'robot':
+            movable=True
+
+        self.movable = True # set to movable during initialisation
         self.x, self.y, self.z, self.w, self.h, self.d, self.rx, self.ry, self.rz = components
         self._make_block(*components)
         self.texture = texture        
@@ -68,7 +72,8 @@ class Block(object):
         self.visible = visible
         self.isGhost = ghost
         # return reward when collided
-        self.collision_reward=collision_reward
+        self.collision_reward = collision_reward
+        self.movable = movable
 
     @property
     def components(self):
@@ -80,7 +85,13 @@ class Block(object):
 
     @position.setter
     def position(self,position):
+        if not self.movable:
+            raise Exception('Cannot set new position to not movable Block')
         self.x, self.y, self.z = position
+
+    @property
+    def rotation(self):
+        return (self.rx, self.ry, self.rz)
 
     @property
     def vertices(self):
@@ -143,6 +154,8 @@ class Block(object):
     def translate(self,dx,dy,dz):
         """Translates vertices of offset vector
         """
+        if not self.movable:
+            raise Exception('Cannot translate not movable Block')
         self._vertices += np.array([dx,dy,dz])
         self.x += dx
         self.y += dy
@@ -151,6 +164,8 @@ class Block(object):
     def translateTo(self,x,y,z):
         """Translates all vertices to center them on x,y,z
         """
+        if not self.movable:
+            raise Exception('Cannot translate not movable Block')
         self.translate(x-self.x,y-self.y,z-self.z)
         self.x = x
         self.y = y
@@ -160,6 +175,8 @@ class Block(object):
         """Rotate vertices around x, y, z axis
             WARNING : block must be centered around origin, if not rx,ry and rz will become wrong values
         """
+        if not self.movable:
+            raise Exception('Cannot rotate not movable Block')
         Rx,Ry,Rz = rotation_matrices(rx,ry,rz)        
         R = np.matmul( Rx, np.matmul(Ry,Rz) )
         self._vertices = np.transpose(  np.dot(R, np.transpose(self._vertices))  )
@@ -171,6 +188,8 @@ class Block(object):
         """
         Translate and rotate to given values (absolute and not relative transforms)
         """
+        if not self.movable:
+            raise Exception('Cannot set new position to not movable Block')
         self._make_block(x_off, y_off, z_off, self.w, self.h, self.d, rx, ry, rz)
         self.x, self.y, self.z = x_off, y_off, z_off
         
@@ -216,6 +235,9 @@ class Model(object):
         
         # A set of all blocks
         self.bricks = set()
+
+        # A set of movable blocks
+        self.movable = set()
 
         # set of starting areas:
         self.start_areas  = set()
@@ -313,6 +335,9 @@ class Model(object):
         elif block_type=='reward':            
             self.bricks.add( block ) # add reward blocks to bricks to detect collisions
 
+        if block.movable:
+            self.movable.add(block)
+
         # update max_reward value
         self.max_reward = max(self.max_reward, abs(block.collision_reward))
 
@@ -320,6 +345,9 @@ class Model(object):
         """ Remove the block
         """        
         self.hide_block(block)
+
+        if block.movable:
+            self.movable.remove(block)
             
         if not block==self.robot_block:
             self.bricks.remove(block)
@@ -414,14 +442,20 @@ class Model(object):
         x,y = (x+dx +180)%360 -180, (y+dy +180)%360 -180
         self.robot_rotation = [ x, y ]
 
+    def change_robot_position(self,dx,dy,dz):
+        """ Change robot position (translate it)
+        """
+        x,y,z = self.robot_position
+        self.robot_position = [ x+dx, y+dy, z+dz ]
+
+
     def update(self, dt):
         """
         This is where most of the motion logic lives
 
         Parameters
         ----------
-        - dt : float
-            The change in time since the last call.
+        - dt (float): The change in time since the last call.
         """
         # walking
         speed = self.walking_speed if not self.flying else self.flying_speed
@@ -458,7 +492,7 @@ class Model(object):
 
         Returns
         -------
-        - Bool : collided
+        - (Bool) collided
         """
         
         # iterate over blocks and check for collision :
@@ -505,5 +539,15 @@ class Model(object):
         self.start_rotation = (self.robot_block.ry, self.robot_block.rx)
         self.start_strafe = [0.0,0.0] # start with a null strafe
             
+    def position_observation(self):
+        """
+        returns
+        -------
+        np.array : array of arrays of every position and rotation of movable blocks ( no need to compute non movable )
+        """
+        arrays=[]
+        for b in self.movable:
+            arrays.append(list(b.position)+list(b.rotation))
+        return np.array(arrays)
 
 

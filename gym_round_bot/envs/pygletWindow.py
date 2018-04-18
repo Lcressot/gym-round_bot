@@ -36,21 +36,14 @@ class PygletWindow(pyglet.window.Window):
         """
         Parameters
         ----------
-        - model : 
-            model linked to the window
-        - global_pov : Tuple(int, int, int) or Bool 
-            Global point of view. If None, view is subjective.
+        - model : (Round_bot_model.Model) model linked to the window
+        - global_pov : (Tuple(int, int, int) or Bool) Global point of view. If None, view is subjective.
             If True, automatic computing. Else set with Tuple(int, int, int)
-        - perspective : Bool
-            camera projection mode
-        - interactive : Bool
-            wether user can interact with window or not (use : take control of the robot for debug)
-        - focal : float
-            camera projective focal length
-        - *args : Tuple
-            args of parent Class pyglet.window.Window
-        - **kwargs : Dict
-            kwargs of parent Class pyglet.window.Window
+        - perspective : (Bool) camera projection mode
+        - interactive : (Bool) wether user can interact with window or not (use : take control of the robot for debug)
+        - focal : (float) camera projective focal length
+        - *args : Tuple args of parent Class pyglet.window.Window
+        - **kwargs : Dict kwargs of parent Class pyglet.window.Window
         """
 
         # Global point of view : if None, view is subjective. If True, automatic computing
@@ -291,10 +284,8 @@ class PygletWindow(pyglet.window.Window):
         """
         Parameters
         ----------
-        - xzangles : List(float)
-            list of angles representing subjective view rotation in plane xOz (positives to negatives)
-        - as_line : Bool
-            Wheter to return a line shaped image or not
+        - xzangles : List(float) list of angles representing subjective view rotation in plane xOz (positives to negatives)
+        - as_line : (Bool) Wheter to return a line shaped image or not
         
         Returns
         -------
@@ -368,9 +359,8 @@ class MainWindow(PygletWindow):
 
         Parameters
         ----------
-        - dt : float
-            The change in time since the last call.
-        - m :  subdisivions of step
+        - dt : (float) The change in time since the last call.
+        - m : (int) subdisivions of step
 
         """
         # only main window can call for model update
@@ -424,16 +414,9 @@ class MainWindow(PygletWindow):
 
         Parameters
         ----------
-        - x, y (int):
-            The coordinates of the mouse click. Always center of the screen if
-            the mouse is captured.
-        - button (int) :
-            Number representing mouse button that was clicked. 1 = left button,
-            4 = right button.
-        - modifiers (int) :
-            Number representing any modifying keys that were pressed when the
-            mouse button was clicked.
-
+        - x, y : (int) The coordinates of the mouse click. Always center of the screen if the mouse is captured.
+        - button : (int) Number representing mouse button that was clicked. 1 = left button, 4 = right button.
+        - modifiers : (int) Number representing any modifying keys that were pressed when the mouse button was clicked.
         """
         if not self.interactive or not self.threaded:
             return
@@ -445,19 +428,14 @@ class MainWindow(PygletWindow):
 
         Parameters
         ----------
-        - x, y (int) :
-            The coordinates of the mouse click. Always center of the screen if
-            the mouse is captured.
-        - dx, dy (float) :
-            The movement of the mouse.
-
+        - x, y : (int) The coordinates of the mouse click. Always center of the screen if the mouse is captured.
+        - dx, dy : (float) The movement of the mouse.
         """
+        # TODO : correct the y rotation to a mixed y,z rotation
         if self.exclusive and self.model.flying:
             m = 0.15
-            x, y = self.model.robot_rotation
-            x, y = x + dx * m, y + dy * m
-            y = max(-90, min(90, y)) if not self.global_pov else 0.0
-            self.model.robot_rotation = (x, y)
+            self.model.change_robot_rotation(dx * m, dy * m)
+            
 
     def on_key_press(self, symbol, modifiers):
         """ Called when the player presses a key. See pyglet docs for key
@@ -465,10 +443,8 @@ class MainWindow(PygletWindow):
 
         Parameters
         ----------
-        symbol : int
-            Number representing the key that was pressed.
-        modifiers : int
-            Number representing any modifying keys that were pressed.
+        - symbol : (int) Number representing the key that was pressed.
+        - modifiers : (int) Number representing any modifying keys that were pressed.
 
         """
         # return if window is not interactive
@@ -487,7 +463,7 @@ class MainWindow(PygletWindow):
             elif symbol == key.E:
                 self.model.change_robot_rotation(10,0)
             elif symbol == key.A:
-                self.model.change_robot_rotation(-10,0)            
+                self.model.change_robot_rotation(-10,0)
         
         elif symbol == key.TAB:
             if not self.model.flying:
@@ -507,11 +483,8 @@ class MainWindow(PygletWindow):
 
         Parameters
         ----------
-        symbol : int
-            Number representing the key that was pressed.
-        modifiers : int
-            Number representing any modifying keys that were pressed.
-
+        - symbol : (int) Number representing the key that was pressed.
+        - modifiers : (int) Number representing any modifying keys that were pressed.
         """
         # return if window is not interactive
         if not self.interactive or not self.threaded:

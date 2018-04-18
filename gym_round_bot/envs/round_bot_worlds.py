@@ -23,13 +23,11 @@ def _texture_path(texture_bricks_name):
 
     Return
     ------
-    texture_path: str
-        path corresponding to the texture_bricks_name
+    texture_path: (str) path corresponding to the texture_bricks_name
 
     Raises
     ------
-    ValueError
-        raised if texture_bricks_name is unkwnonw
+    ValueError : raised if texture_bricks_name is unkwnonw
     """
     if texture_bricks_name == 'minecraft':
         return '/textures/texture_minecraft.png'
@@ -51,20 +49,14 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
 
     Parameters
     ----------
-    - model : round_bot_model.Model
-        model to load world in
-    - texture_bricks_name : str
-        name of the texture for the bricks
-    - width : int
-        width of the world
-    - hwalls : int
-        heigh of walls    
-    - dwalls: int
-        depth of walls
-    - texture_bricks, texture_robot, texture_visualisation : string
+    - model : (round_bot_model.Model) model to load world in
+    - texture_bricks_name : (str) name of the texture for the bricks
+    - width : (int) width of the world
+    - hwalls : (int) heigh of walls    
+    - dwalls: (int) depth of walls
+    - texture_bricks, texture_robot, texture_visualisation : (string)
         paths for texture image of bricks, robot and visualisation
-    - wall_reward : float
-        reward for wall collision
+    - wall_reward : (float) reward for wall collision
 
     Returns
     -------
@@ -115,7 +107,7 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
 
 
 
-def build_rb1_world(model, texture, width=20, hwalls=4, dwalls=1, wall_reward=-1, goal_reward=10):
+def build_rb1_world(model, texture, width=20, hwalls=4, dwalls=1, wall_reward=-1, goal_reward=1):
     """
     Builds the rb1 world
     """    
@@ -147,7 +139,7 @@ def build_rb1_world(model, texture, width=20, hwalls=4, dwalls=1, wall_reward=-1
 
 
 
-def build_rb1_1wall_world(model, texture, width=20, hwalls=2, dwalls=2, wall_reward=-1, goal_reward=10):
+def build_rb1_1wall_world(model, texture, width=20, hwalls=2, dwalls=2, wall_reward=-1, goal_reward=1):
     """
     Builds a simple rectangle planar world with walls around, and 1 wall in the middle
     """
