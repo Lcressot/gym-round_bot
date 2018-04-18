@@ -108,9 +108,16 @@ while(True):
 # Development
 
 ## TODO
-+ add pytest tests
+# DEV
 + save used controller in main_agent_vs_environnement, then load it when necessary instead of rebuilding it
++ add continuous action possibility
++ add other movable object that can be pushed by the robot, or doors that can open
++ add buttons object than triggers events when pushed (collided)
++ add pytest tests
+
+# BUGS
 + Cannot close window when it not interactive. It should be closable.
++ The robot y rotation in free flying mode for debug is not correct (not very important) see function PygletWindow.on_mouse_motion
 
 ## Code documentation
 Please use this documentation format to document the new functions (and change the old which are not conform):
@@ -123,13 +130,11 @@ def function(param_1, .. param_n):
 
     Parameters (if any)
     ----------
-    - param_1 : param_1_type
-    	description of param_1
+    - param_1 : (param_1_type) description of param_1
     
     ...
 
-    - param_n : param_n_type
-    	description of param_1
+    - param_n : (param_n_type) description of param_1
 
     Returns (if any)
     -------
@@ -137,18 +142,15 @@ def function(param_1, .. param_n):
 
     Exceptions (if any)
     ----------
-    - exception_type :
-    	description of exception
+    - exception_type : description of exception
 
     Restrictions (if any)
     ------------
-    - restriction :
-    	description of restriction of function use
+    - restriction : description of restriction of function use
 
     Side Effects (if any)
     ------------
-    - side effect :
-    	description of side effect
+    - side effect : description of side effect
     """
 ```
 Example :
@@ -161,8 +163,7 @@ def fibonacci(n):
 
     Parameters
     ----------
-    - n : int
-    	size of fibonacci sequence to compute
+    - n : (int) size of fibonacci sequence to compute
 
     Returns 
     -------
