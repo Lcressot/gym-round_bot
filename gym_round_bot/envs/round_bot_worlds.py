@@ -107,7 +107,7 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
 
 
 
-def build_rb1_world(model, texture, width=20, hwalls=4, dwalls=1, wall_reward=-1, goal_reward=1):
+def build_rb1_world(model, texture, width=20, hwalls=4, dwalls=1, wall_reward=-1, goal_reward=10):
     """
     Builds the rb1 world
     """    
@@ -139,7 +139,7 @@ def build_rb1_world(model, texture, width=20, hwalls=4, dwalls=1, wall_reward=-1
 
 
 
-def build_rb1_1wall_world(model, texture, width=20, hwalls=2, dwalls=2, wall_reward=-1, goal_reward=1):
+def build_rb1_1wall_world(model, texture, width=20, hwalls=2, dwalls=2, wall_reward=-1, goal_reward=10):
     """
     Builds a simple rectangle planar world with walls around, and 1 wall in the middle
     """

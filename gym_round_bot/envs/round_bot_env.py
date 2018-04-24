@@ -106,7 +106,7 @@ class RoundBotEnv(gym.Env):
         # check if done
         done = ((self._crash_stop and reward < 0) or
                (self._reward_stop and reward > 0) or
-               (self._reward_count_stop and self._reward_count <= self._reward_count_stop))
+               (self._reward_count_stop and self._reward_count <= self._reward_count_stop))        
         
         # normalize rewards if asked
         if self._normalize_rewards:
@@ -302,7 +302,7 @@ def set_metadata(world='rb1',
                 focal=65.0,
                 crash_stop=False,
                 reward_stop=False,
-                reward_count_stop = -10,
+                reward_count_stop = False,
                 random_start=True,
                 normalize_observations=False,
                 normalize_rewards=False,
