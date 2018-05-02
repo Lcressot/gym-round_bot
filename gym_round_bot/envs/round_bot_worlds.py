@@ -4,15 +4,14 @@
 """ Cressot Loic
     ISIR CNRS/UPMC
     02/2018
+
+    This file allows to build worlds
+    TODO : replace this file by a .json loader and code worlds in .json
 """ 
 
 # WARNING : don't (from round_bot_py import round_bot_model) here to avoid mutual imports !
 
 import os
-
-"""
-    This file allows to build worlds
-"""
 
 def _texture_path(texture_bricks_name):
     """

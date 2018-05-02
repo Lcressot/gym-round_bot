@@ -64,7 +64,7 @@ class Block(object):
         elif block_type == 'robot':
             movable=True
 
-        self.movable = True # set to movable during initialisation
+        self.movable = True # need to set to movable during initialisation
         self.x, self.y, self.z, self.w, self.h, self.d, self.rx, self.ry, self.rz = components
         self._make_block(*components)
         self.texture = texture        
@@ -110,22 +110,22 @@ class Block(object):
         # then rotate it along x, y, z axis
         self.rotate(rx,ry,rz)
         # finally translate it of x_off, y_off, z_off
-        self.translateTo(x_off,y_off,z_off)
+        self.translate(x_off,y_off,z_off)
 
     @staticmethod
-    def block_vertices(w, h, d):
-        """ Return a np array of the vertices of the block centered on origin with no rotation,
+    def block_vertices(w, h, d, x=0.0, y=0.0, z=0.0):
+        """ Return a np array of the vertices of the block centered on (x,y,z) with no rotation,
             and with size w d h
             Note : y axis is up-down, (x,z) is the ground plane
         """
         w2=w/2.0; h2=h/2.0; d2=d/2.0
         return np.array([
-            [0.0-w2,0.0+h2,0.0-d2],[0.0-w2,0.0+h2,0.0+d2],[0.0+w2,0.0+h2,0.0+d2],[0.0+w2,0.0+h2,0.0-d2],  # top
-            [0.0-w2,0.0-h2,0.0-d2],[0.0+w2,0.0-h2,0.0-d2],[0.0+w2,0.0-h2,0.0+d2],[0.0-w2,0.0-h2,0.0+d2],  # bottom
-            [0.0-w2,0.0-h2,0.0-d2],[0.0-w2,0.0-h2,0.0+d2],[0.0-w2,0.0+h2,0.0+d2],[0.0-w2,0.0+h2,0.0-d2],  # left
-            [0.0+w2,0.0-h2,0.0+d2],[0.0+w2,0.0-h2,0.0-d2],[0.0+w2,0.0+h2,0.0-d2],[0.0+w2,0.0+h2,0.0+d2],  # right
-            [0.0-w2,0.0-h2,0.0+d2],[0.0+w2,0.0-h2,0.0+d2],[0.0+w2,0.0+h2,0.0+d2],[0.0-w2,0.0+h2,0.0+d2],  # front
-            [0.0+w2,0.0-h2,0.0-d2],[0.0-w2,0.0-h2,0.0-d2],[0.0-w2,0.0+h2,0.0-d2],[0.0+w2,0.0+h2,0.0-d2]   # back
+            [x-w2, y+h2, z-d2], [x-w2, y+h2, z+d2], [x+w2, y+h2, z+d2], [x+w2, y+h2, z-d2],   # top
+            [x-w2, y-h2, z-d2], [x+w2, y-h2, z-d2], [x+w2, y-h2, z+d2], [x-w2, y-h2, z+d2],   # bottom
+            [x-w2, y-h2, z-d2], [x-w2, y-h2, z+d2], [x-w2, y+h2, z+d2], [x-w2, y+h2, z-d2],   # left
+            [x+w2, y-h2, z+d2], [x+w2, y-h2, z-d2], [x+w2, y+h2, z-d2], [x+w2, y+h2, z+d2],   # right
+            [x-w2, y-h2, z+d2], [x+w2, y-h2, z+d2], [x+w2, y+h2, z+d2], [x-w2, y+h2, z+d2],   # front
+            [x+w2, y-h2, z-d2], [x-w2, y-h2, z-d2], [x-w2, y+h2, z-d2], [x+w2, y+h2, z-d2]    # back
             ])
 
     @staticmethod
@@ -191,7 +191,7 @@ class Block(object):
         if not self.movable:
             raise Exception('Cannot set new position to not movable Block')
         self._make_block(x_off, y_off, z_off, self.w, self.h, self.d, rx, ry, rz)
-        self.x, self.y, self.z = x_off, y_off, z_off
+        #self.x, self.y, self.z = x_off, y_off, z_off
         
 
 
@@ -224,7 +224,8 @@ class Model(object):
 
         Parameters 
         ----------
-        - world (string) : the name of the world to load. Worlds are defined in module round_bot_worlds
+        - world (str) : the name of the world to load. Worlds are defined in module round_bot_worlds
+        - texture (str) : the name of the texture to be applied on blocks
         - random_start_pos (Bool) : wether the robot position is randomly sampled inside world's starting areas at reset or not.
         - random_start_rot (Bool) : wether the robot rotation is randomly sampled at reset or not.
 
@@ -473,7 +474,6 @@ class Model(object):
         if not self.collided:
             self.robot_position = new_position
 
-    
         # update robot's block
         # but don't add it in shown dict because this block is not show in all windows using the model      
         rx,ry = self.robot_rotation

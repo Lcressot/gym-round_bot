@@ -28,7 +28,7 @@ round_bot_env.set_metadata(
         world=world,
         texture='minecraft',
         obssize=obssize,
-        #winsize=winsize,
+        winsize=winsize,
         controller=controller,
         normalize_rewards=False,
         position_observations=True,
@@ -44,5 +44,4 @@ env.reset()
 while(True):
     ob, reward, done, _ = env.step(tuple(controller.action_space.sample()))
     # render to screen if needed
-    print(ob)
-    #env.render()
+    env.render()
