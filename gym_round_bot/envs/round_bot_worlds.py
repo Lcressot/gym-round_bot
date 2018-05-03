@@ -90,13 +90,13 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
 
     # Build wall blocks with negative reward on collision
     #back wall
-    model.add_block( (0, hwalls/2, -n, wwalls, hwalls, dwalls, 0.0, 0.0, 0.0), STONE, collision_reward = wall_reward)
+    model.add_block( (0, hwalls/2, -n, wwalls, hwalls, dwalls, 0.0, 0.0, 0.0), STONE, block_type='brick', collision_reward = wall_reward)
     #front wall
-    model.add_block( (0, hwalls/2, n, wwalls, hwalls, dwalls, 0.0, 0.0, 0.0), BRICK, collision_reward = wall_reward)
+    model.add_block( (0, hwalls/2, n, wwalls, hwalls, dwalls, 0.0, 0.0, 0.0), BRICK, block_type='brick', collision_reward = wall_reward)
     #left wall
-    model.add_block( (-n, hwalls/2, 0, dwalls, hwalls, wwalls, 0.0, 0.0, 0.0), SAND, collision_reward = wall_reward)
+    model.add_block( (-n, hwalls/2, 0, dwalls, hwalls, wwalls, 0.0, 0.0, 0.0), SAND, block_type='brick', collision_reward = wall_reward)
     #right wall
-    model.add_block( (n, hwalls/2, 0, dwalls, hwalls, wwalls, 0.0, 0.0, 0.0), MUD, collision_reward = wall_reward)    
+    model.add_block( (n, hwalls/2, 0, dwalls, hwalls, wwalls, 0.0, 0.0, 0.0), MUD, block_type='brick', collision_reward = wall_reward)    
 
     world_info = {  'width' : 2*n,
                     'depth' : 2*n,
@@ -161,7 +161,7 @@ def build_rb1_1wall_world(model, texture, width=20, hwalls=2, dwalls=2, wall_rew
     bot_height = 1
     
     # middle wall
-    model.add_block( (n/2, hwalls/2, -n/4, wwalls/2, hwalls, dwalls, 0.0, 0.0, 0.0), SAND, collision_reward = -1)
+    model.add_block( (n/2, hwalls/2, -n/4, wwalls/2, hwalls, dwalls, 0.0, 0.0, 0.0), SAND, block_type='brick', collision_reward = -1)
 
     # Build reward block in the corner
     model.add_block( (n-(wr/2+dwalls/2), bot_height/2.0, -n+(wr/2+dwalls/2), wr, bot_height/3.0, wr, 0.0, 0.0, 0.0), REWARD, block_type='reward', collision_reward = 1)

@@ -110,6 +110,7 @@ while(True):
 ## TODO
 ### DEV
 + save used controller in main_agent_vs_environnement, then load it when necessary instead of rebuilding it
++ rectify strange rotation parametrization of robot_block in model (ry,rx) -> (rx,ry)
 + add continuous action possibility
 + add other movable object that can be pushed by the robot, or doors that can open
 + add buttons object than triggers events when pushed (collided)

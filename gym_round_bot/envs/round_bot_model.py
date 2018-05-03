@@ -14,7 +14,7 @@ from gym_round_bot.envs import round_bot_worlds
 import numpy as np
 
 """
-    This file defines the environnement's Model
+    This file defines the environnement's Model (also Block class)
 """
 
 def rotation_matrices(rx,ry,rz):
@@ -32,93 +32,91 @@ def rotation_matrices(rx,ry,rz):
 
 
 class Block(object):
-
-    def __init__(self, components, texture, block_type, visible=True, ghost=False, collision_reward=0.0, movable=False):
+    """
+    Parent class for block objects
+    """
+    def __init__(self, position, rotation, dimensions, texture, visible=True, ghost=False, collision_reward=0.0, movable=False):
         """
         Parameters
         ----------
-        - components : (tuple(float) len 9) (x,y,z,w,h,d,rx,ry,rz) tuple of components for initialisation
-        - texture : (list(float) len 3) The coordinates of the texture squares. Use `tex_coords()` to generate.       
-        - block_type : (str) type of the block
+        - position : (np.array) x,y,z position of center
+        - rotation : (np.array) rx,ry,rz rotation of vertices in absolute axis
+        - dimensions : (np.array) dimensions of block (depending on its type)
+        - texture : (list(float)) The coordinates of the texture squares. Use `tex_coords()` to generate.       
         - visible : (Bool) True if the block is visible. Collision will be detected even if not visible
         - ghost : (Bool) True if block can be gone by, collision will still be detected
         - collision_reward : (float) the reward returned at collision
-        - movable : (Bool) Wether the block can be moved
         """
-        if not block_type in {'robot','brick','start','reward'}:
-            raise Exception('Unknown block type : ' + block_type + ' for Block object initialisation')
-
-        if block_type == 'start':
-            # start blocks are used to create starting areas for the robot when model.reset() is called
-            # the robot appears a random coordinate inside random a randomly selected start block
-            visible=False # start are invisible
-            ghost=True # start are ghost, cannot be collided
-
-        elif block_type == 'reward':
-            # reward blocks are used to give +- reward to the robot when crossed, they are
-            # in fact the same as bricks with visible=False and ghost=True but can also be shown
-            # in secondary windows for obervations
-            visible=False # start are invisible
-            ghost=True # start are ghost, cannot be collided
-
-        elif block_type == 'robot':
-            movable=True
-
-        self.movable = True # need to set to movable during initialisation
-        self.x, self.y, self.z, self.w, self.h, self.d, self.rx, self.ry, self.rz = components
-        self._make_block(*components)
+        self.movable = True # needed for allowing initialization moves
+        self._make_block(position, dimensions, rotation) # sets self._position, self._dimensions, self._rotation
+        self.movable = movable # now set self.movable to its value
         self.texture = texture        
-        self.block_type = block_type
         self.visible = visible
         self.isGhost = ghost
         # return reward when collided
         self.collision_reward = collision_reward
-        self.movable = movable
+        self._init() # custom initilization
 
-    @property
-    def components(self):
-        return self.x, self.y, self.z, self.w, self.h, self.d, self.rx, self.ry, self.rz
+    def _init(self):
+        self.block_type = 'block'
 
     @property
     def position(self):
-        return (self.x, self.y, self.z)
-
-    @position.setter
-    def position(self,position):
-        if not self.movable:
-            raise Exception('Cannot set new position to not movable Block')
-        self.x, self.y, self.z = position
-
+        return self._position
+    @property
+    def x(self):
+        return self._position[0]
+    @property
+    def y(self):
+        return self._position[1]
+    @property
+    def z(self):
+        return self._position[2]
+      
     @property
     def rotation(self):
-        return (self.rx, self.ry, self.rz)
+        return self._rotation
+    @property
+    def rx(self):
+        return self._rotation[0]
+    @property
+    def ry(self):
+        return self._rotation[1]        
+    @property
+    def rz(self):
+        return self._rotation[2]
 
+    @property
+    def dimensions(self):
+        return self._dimensions
+    @property
+    def w(self):
+        return self._dimensions[0]
+    @property
+    def h(self):
+        return self._dimensions[1]
+    @property
+    def d(self):
+        return self._dimensions[2]
+
+    @property
+    def components(self):
+        return self._position, self._dimensions, self._rotation, 
+   
     @property
     def vertices(self):
         """ Return vertices as python list of coordinates
         """
         return self._vertices.flatten().tolist()[0]
-    
-    def _make_block(self, x_off, y_off, z_off, w, h, d, rx=0, ry=0, rz=0):
-        """ Return a np array of the vertices of the cube at position x_off, y_off, z_off
-            with size w d h and rotation rx ry rz around x y z axis.
-            Note : y axis is up-down, (x,z) is the ground plane
-        """
-        self.x, self.y, self.z = 0.0, 0.0, 0.0
-        # first create a block centered around (0,0,0)
-        self._vertices = self.block_vertices(w,h,d)
-        # then rotate it along x, y, z axis
-        self.rotate(rx,ry,rz)
-        # finally translate it of x_off, y_off, z_off
-        self.translate(x_off,y_off,z_off)
 
     @staticmethod
-    def block_vertices(w, h, d, x=0.0, y=0.0, z=0.0):
+    def block_vertices(dimensions, position=np.zeros(3)):
         """ Return a np array of the vertices of the block centered on (x,y,z) with no rotation,
             and with size w d h
             Note : y axis is up-down, (x,z) is the ground plane
         """
-        w2=w/2.0; h2=h/2.0; d2=d/2.0
+        w2=dimensions[0]/2.0; h2=dimensions[1]/2.0; d2=dimensions[2]/2.0
+        x=position[0]; y=position[1]; z=position[2]
         return np.array([
             [x-w2, y+h2, z-d2], [x-w2, y+h2, z+d2], [x+w2, y+h2, z+d2], [x+w2, y+h2, z-d2],   # top
             [x-w2, y-h2, z-d2], [x+w2, y-h2, z-d2], [x+w2, y-h2, z+d2], [x-w2, y-h2, z+d2],   # bottom
@@ -127,6 +125,21 @@ class Block(object):
             [x-w2, y-h2, z+d2], [x+w2, y-h2, z+d2], [x+w2, y+h2, z+d2], [x-w2, y+h2, z+d2],   # front
             [x+w2, y-h2, z-d2], [x-w2, y-h2, z-d2], [x-w2, y+h2, z-d2], [x+w2, y+h2, z-d2]    # back
             ])
+
+    def _make_block(self, position, dimensions, rotation=np.zeros(3)):
+        """ Return a np array of the vertices of the cube at position x_off, y_off, z_off
+            with size w d h and rotation rx ry rz around x y z axis.
+            Note : y axis is up-down, (x,z) is the ground plane
+        """
+        self._position = np.zeros(3)
+        # first create a block centered around (0,0,0)
+        self._dimensions = dimensions
+        self._vertices = self.block_vertices(dimensions)
+        # then rotate it along x, y, z axis
+        self._rotation = rotation
+        self.rotate(rotation)
+        # finally translate it of x_off, y_off, z_off
+        self.translate(position)
 
     @staticmethod
     def tex_coord(x, y, n=4):
@@ -151,58 +164,54 @@ class Block(object):
         result.extend(side * 4)
         return result
     
-    def translate(self,dx,dy,dz):
-        """Translates vertices of offset vector
+    def translate(self,vector):
+        """Translates vertices of vector
         """
         if not self.movable:
             raise Exception('Cannot translate not movable Block')
-        self._vertices += np.array([dx,dy,dz])
-        self.x += dx
-        self.y += dy
-        self.z += dz
+        self._vertices += vector
+        self._position += vector
 
-    def translateTo(self,x,y,z):
-        """Translates all vertices to center them on x,y,z
+    def translateTo(self,position):
+        """Translates all vertices to center them on position
         """
         if not self.movable:
             raise Exception('Cannot translate not movable Block')
-        self.translate(x-self.x,y-self.y,z-self.z)
-        self.x = x
-        self.y = y
-        self.z = z
+        self.translate( position - self.position )
 
-    def rotate(self,rx,ry,rz):
+    def rotate(self,rotation):
         """Rotate vertices around x, y, z axis
             WARNING : block must be centered around origin, if not rx,ry and rz will become wrong values
         """
         if not self.movable:
             raise Exception('Cannot rotate not movable Block')
-        Rx,Ry,Rz = rotation_matrices(rx,ry,rz)        
+        Rx,Ry,Rz = rotation_matrices(*self.rotation)        
         R = np.matmul( Rx, np.matmul(Ry,Rz) )
         self._vertices = np.transpose(  np.dot(R, np.transpose(self._vertices))  )
-        self.rx = (self.rx+rx)%360.0
-        self.ry = (self.ry+ry)%360.0
-        self.rz = (self.rz+rz)%360.0
+        self._rotation = (self.rotation+rotation)%360.0
 
-    def translate_and_rotate_to(self,x_off, y_off, z_off, rx, ry, rz):
+    def translate_and_rotate_to(self,offset_position, rotation):
         """
         Translate and rotate to given values (absolute and not relative transforms)
         """
         if not self.movable:
             raise Exception('Cannot set new position to not movable Block')
-        self._make_block(x_off, y_off, z_off, self.w, self.h, self.d, rx, ry, rz)
-        #self.x, self.y, self.z = x_off, y_off, z_off
+        self._make_block(offset_position, self.dimensions, rotation) # easier to recreate vertices form scratch
         
 
 
-
-
 class Cube(Block):
-
-    def __init__(self,components,texture,block_type):
-
-        x,y,z,w,rx,ry,rz = components
-        super(Cube,self).__init__( (x,y,z,w,w,w,rx,ry,rz),texture,block_type)
+    """
+    Cubic block (dimensions are the same)
+    """
+    def __init__(self,position, rotation, size, texture, visible, ghost, collision_reward, movable=False):
+        """
+        parameters:
+        ----------
+        - size (int)
+        """
+        self.size = size
+        super(Cube,self).__init__( position, rotation, np.ones(3)*size, texture, visible, ghost, collision_reward, movable=False)
 
     def cube_vertices(x_off, y_off, z_off, w, rx=0, ry=0, rz=0):
         """ Return the vertices of the cube at position x, y, z with size w.
@@ -211,8 +220,80 @@ class Cube(Block):
         return self.block_vertices(x_off, y_off, z_off, w, w, w, rx, ry, rz) 
 
 
+class FlatBlock(Block):
+    """
+    Class for flat blocks, i.e with a 0 depth
+    """
+
+    def __init__(self,position, rotation, dimensions, texture, visible, ghost, collision_reward, movable=False):
+        """
+        parameters:
+        ----------
+        - dimensions (np.array(float) of len 2)
+        """
+        assert(len(dimensions)==2)
+        super(FlatBlock,self).__init__( position, rotation, dimensions, texture, visible, ghost, collision_reward, movable=False)
+
+    def _init(self):
+        self.block_type = 'flat'
+
+    @staticmethod
+    def block_vertices(dimensions, position=np.zeros(3)):
+        """ Return a np array of the vertices of the block centered on (x,y,z) with no rotation,
+            and with size w h
+            Note : y axis is up-down, (x,z) is the ground plane
+        """
+        w2=dimensions[0]/2.0; h2=dimensions[1]/2.0;
+        x=position[0]; y=position[1]; z=position[2]
+        return np.array([ [x-w2, y+h2, z], [x+w2, y+h2, z], [x-w2, y-h2, z], [x+w2, y-h2, z] ])
+
+    @staticmethod
+    def tex_coords(face):
+        """ Return a list of the texture squares for the only face ot eh Flat Block.
+        """
+        return Block.tex_coord(*face)
+   
+class BrickBlock(Block):
+    """
+    BrickBlock are visible, not ghost blocks
+    """
+    def __init__(self, position, rotation, dimensions, texture, collision_reward=0.0):
+        super(BrickBlock,self).__init__(position, rotation, dimensions, texture, visible=True, ghost=False, collision_reward=collision_reward, movable=True)
+    def _init(self):
+        self.block_type = 'brick'     
+
+class RobotBlock(Block):
+    """
+    RobotBlock are movable blocks
+    """
+    def __init__(self, position, rotation, dimensions, texture, visible=True, ghost=False, collision_reward=0.0):
+        super(RobotBlock,self).__init__(position, rotation, dimensions, texture, visible, ghost, collision_reward=collision_reward, movable=True)
+    def _init(self):
+        self.block_type = 'robot'
+
+class StartBlock(Block):
+    """
+    StartBlock are not visible and ghost, but are visible in secondary windows
+    """
+    def __init__(self, position, rotation, dimensions, texture, collision_reward=0.0, movable=False):
+        super(StartBlock,self).__init__(position, rotation, dimensions, texture, visible=False, ghost=True, collision_reward=collision_reward, movable=True)
+
+    def _init(self):
+        self.block_type = 'start'
+
+class RewardBlock(Block):
+    """
+    RewardBlock are not visible and ghost blocks
+    """
+    def __init__(self, position, rotation, dimensions, texture, collision_reward=0.0, movable=False):
+        super(RewardBlock,self).__init__(position, rotation, dimensions, texture, visible=False, ghost=True, collision_reward=collision_reward, movable=True)
+    
+    def _init(self):
+        self.block_type = 'reward'
 
 
+##########################################################################################################################
+##########################################################################################################################
 class Model(object):
 
     def __init__(self, world='rb1', texture='minecraft', random_start_pos=True, random_start_rot=False):
@@ -325,15 +406,28 @@ class Model(object):
         Parameters
         ----------
         same as Block.__init__        
-        """
-        block = Block( components, texture, block_type, visible, ghost, collision_reward )
+        """        
+        if len(components)==9:
+            position = np.array(list(components[0:3]))
+            dimensions = np.array(list(components[3:6]))
+            rotation = np.array(list(components[6:9]))
+        elif len(components)==3:
+            position, dimensions, rotation = components
+            position = np.array(position)
+            dimensions = np.array(position)
+            rotation = np.array(position)
+
         if block_type=='brick':
+            block = BrickBlock( position, rotation, dimensions, texture, collision_reward )
             self.bricks.add( block )
         elif block_type=='robot':
+            block = RobotBlock( position, rotation, dimensions, texture, collision_reward )
             self.robot_block = block
         elif block_type=='start':
+            block = StartBlock( position, rotation, dimensions, texture, collision_reward )
             self.start_areas.add(block)
-        elif block_type=='reward':            
+        elif block_type=='reward':
+            block = RewardBlock( position, rotation, dimensions, texture, collision_reward )
             self.bricks.add( block ) # add reward blocks to bricks to detect collisions
 
         if block.movable:
@@ -478,7 +572,8 @@ class Model(object):
         # but don't add it in shown dict because this block is not show in all windows using the model      
         rx,ry = self.robot_rotation
         x, y, z = self.robot_position
-        self.robot_block.translate_and_rotate_to(x,y,z,-ry,-rx,0.0)
+        # TODO : rectify this strange rotation parametrization
+        self.robot_block.translate_and_rotate_to( np.array([x,y,z]), np.array([-ry,-rx,0.0]) )
 
 
     def collide(self, new_position):
@@ -501,14 +596,14 @@ class Model(object):
         # TODO : optimize with walls and floors (x2) or with quadtree
         x,y,z = new_position
         self.current_reward=0.0
-        robot_width = self.robot_block.w
-        robot_height = self.robot_block.h
+        robot_width, robot_height, robot_depth  = self.robot_block.dimensions
         for brick in self.bricks:
             xcol,ycol,zcol = False,False,False
-            xb,yb,zb,w,h,d,_,_,_ = brick.components
+            xb,yb,zb = brick.position
+            w,h,d = brick.dimensions
             if abs(x-xb) <  (w+robot_width)/2.0:
                 xcol = True
-            if abs(z-zb) <  (d+robot_width)/2.0:
+            if abs(z-zb) <  (d+robot_depth)/2.0:
                 zcol = True
             if abs(y-yb) <  (h+robot_height)/2.0 :
                 ycol = True
@@ -535,8 +630,9 @@ class Model(object):
         self.world_info = world_info
         self.texture_paths = texture_paths
         self.start_position = self.robot_block.position
+        rx,ry,_ = self.robot_block.rotation
         # Note: ry,rx -> x,y cause x is (Oxz) wheras rx is rotation around x, same for y and ry
-        self.start_rotation = (self.robot_block.ry, self.robot_block.rx)
+        self.start_rotation = (ry,rx)
         self.start_strafe = [0.0,0.0] # start with a null strafe
             
     def position_observation(self):

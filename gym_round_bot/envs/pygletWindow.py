@@ -32,7 +32,6 @@ class PygletWindow(pyglet.window.Window):
 
     def __init__(self, model, global_pov=None, perspective=True, interactive=False, focal=65.0, *args, **kwargs):
         super(PygletWindow, self).__init__(*args, **kwargs)
-
         """
         Parameters
         ----------
@@ -90,7 +89,6 @@ class PygletWindow(pyglet.window.Window):
         self.texture_groups['brick'] = TextureGroup(image.load(self.model.texture_paths['brick']).get_texture())
         self.texture_groups['robot'] = TextureGroup(image.load(self.model.texture_paths['robot']).get_texture())
 
-
         # add this window pointer to model
         self.model.add_window(self)
 
@@ -118,7 +116,7 @@ class PygletWindow(pyglet.window.Window):
 
         self._update(dt)
         # update robot if global_pov
-        if self.global_pov:
+        if self.global_pov:            
             rb=self.model.robot_block
             self.shown[rb].vertices = rb.vertices
 
@@ -580,5 +578,5 @@ class SecondaryWindow(PygletWindow):
             Private Boolean function for deciding whether to show a block or not 
         """ 
         # show visible blocks and also invisible start and rewards
-        return True if block.visible or block.block_type=='start' or block.block_type=='reward' else False
+        return True if block.visible or block.block_type=='robot' or block.block_type=='start' or block.block_type=='reward' else False
 
