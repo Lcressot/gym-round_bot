@@ -35,9 +35,9 @@ class Block(object):
     """
     Parent class for block objects
     """
-    def __init__(self, position, dimensions, rotation, texture, visible=True, crossable=False, collision_reward=0.0, movable=False):
+    def __init__(self, position, dimensions, rotation, texture, visible=True, crossable=False, collision_reward=0.0, movable=False, linked_block=None):
         """
-        Parameters
+        Parameters: 
         ----------
         - position : (np.array) x,y,z position of center
         - dimensions : (np.array) dimensions of block (depending on its type)
@@ -46,6 +46,8 @@ class Block(object):
         - visible : (Bool) True if the block is visible. Collision will be detected even if not visible
         - crossable : (Bool) True if block can be gone by, collision will still be detected
         - collision_reward : (float) the reward returned at collision
+        - linked_block (Block) : a block to follow if any, the bounding box position relative to the linked block will stay constant
+            TODO : improve update to take account of linked_block rotations too
         """
         self.movable = True # needed for allowing initialization moves
         self._make_block(np.array(position), np.array(dimensions), np.array(rotation)) # sets self._position, self._dimensions, self._rotation
@@ -55,10 +57,20 @@ class Block(object):
         self.crossable = crossable
         # return reward when collided
         self.collision_reward = collision_reward
+
+        self._linked_block = linked_block
+        self._relative_position = self._position - linked_block._position if linked_block else None
+
         self._init() # custom initialization
 
     def _init(self):
         self.block_type = 'block'
+
+    def update_to_relative_position(self):
+        """ update the block's position to its relative position to its linked_block if any
+        """
+        if self._linked_block:
+           self._position = self._linked_block._position + self._relative_position
 
     # Properties are to be used externally to the class because they are computationally more costfull than direct call to _attributes
     @property
@@ -229,16 +241,11 @@ class FlatBlock(Block):
     """
     Class for flat blocks, i.e with a 0 depth. It has only 4 vertices and 1 face (instead of 8 vertices and 6 faces)
     """
-    def __init__(self,position, dimensions, rotation, texture, visible=True, crossable=False, collision_reward=0.0, movable=False):
-        """
-        parameters:
-        ----------
-        - dimensions (np.array(float) of len 2)
-        """
-        assert(len(dimensions)==2)
-        super(FlatBlock,self).__init__( position, dimensions, rotation.append(0), texture, visible, crossable, collision_reward, movable=movable)
-
     def _init(self):
+        if not sum(dimensions==0.0)==1:
+            raise Exception('FlatBlock must have exactly one null dimension')
+        # cut texture list to size one if it has been set to longer
+        self.texture = [self.texture[0]]
         self.block_type = 'flat'
 
     @staticmethod
@@ -247,9 +254,16 @@ class FlatBlock(Block):
             and with size w h
             Note : y axis is up-down, (x,z) is the ground plane
         """
-        w2,h2,_=dimensions/2.0
+        w2,h2,d2=dimensions/2.0
         x,y,z=position
-        return np.array([ [x-w2, y+h2, z], [x+w2, y+h2, z], [x-w2, y-h2, z], [x+w2, y-h2, z] ])
+        if w2==0.0:
+            return np.array([ [x, y+h2, z+d2], [x, y+h2, z+d2], [x, y-h2, z-d2], [x, y-h2, z-d2] ])
+        elif h2==0.0:
+            return np.array([ [x-w2, y, z+d2], [x+w2, y, z+d2], [x-w2, y, z-d2], [x+w2, y, z-d2] ])
+        elif d2==0.0:
+            return np.array([ [x-w2, y+h2, z], [x+w2, y+h2, z], [x-w2, y-h2, z], [x+w2, y-h2, z] ])
+        else:
+            raise Exception('FlatBlock should have exactly one null dimension')
 
     @staticmethod
     def tex_coords(face):
@@ -260,9 +274,10 @@ class FlatBlock(Block):
 class BoundingBoxBlock(Block):
     """ BoundingBoxBlock are invisible, and crossable
     """
-    def __init__(self, position, dimensions, rotation, collision_reward=0.0, movable=False):
+    def __init__(self, position, dimensions, rotation, collision_reward=0.0, movable=False, linked_block=None):
+
         super(BoundingBoxBlock,self).__init__(position, dimensions, rotation, texture=None,
-                                              visible=False, crossable=True, collision_reward=collision_reward, movable=True)
+                                              visible=False, crossable=True, collision_reward=collision_reward, movable=True, linked_block=linked_block)
     def _init(self):
         self.block_type = 'boundingBox'
 
@@ -356,6 +371,15 @@ class DistractorBlock(Block):
             # if no collision, validate new position
             self.position = new_position
         
+class FlatDistractorBlock(DistractorBlock, FlatBlock):
+    """ child class FlatBlock and DistractorBlock
+    """
+    def __init__(self, boundingBox, dimensions, rotation, texture, collision_reward=0.0, speed=1.0, change_dir_frequency=0.01):
+        assert(len(dimensions)==2)
+        dimensions.append(0.0)
+        super(FlatDistractorBlock,self).__init__(boundingBox=boundingBox, dimensions=dimensions, rotation=rotation,
+                                                 texture=texture, collision_reward=collision_reward, speed=speed,
+                                                 change_dir_frequency=change_dir_frequency)
 
 ##########################################################################################################################
 ##########################################################################################################################
@@ -462,9 +486,13 @@ class Model(object):
     def add_block(self, components, texture=None, block_type='brick', visible=True, crossable=False, collision_reward=0.0, boundingBox=None, speed=1.):
         """ Add a block to the model depending on its type
 
-        Parameters
-        ----------
-        same as Block.__init__        
+        Parameters :     
+        -----------   
+        - same as Block.__init__     
+
+        Returns:
+        -------
+        - the added block
         """        
         if len(components)==9:
             position = np.array(list(components[0:3]))
@@ -492,6 +520,10 @@ class Model(object):
             block = DistractorBlock( boundingBox=boundingBox, dimensions=dimensions, rotation=rotation,
                                       texture=texture, collision_reward=collision_reward, speed=speed) # warning no position for this block !
             self.distractors.add(block)
+        elif block_type == 'flat_distractor':
+            block = DistractorBlock( boundingBox=boundingBox, dimensions=dimensions, rotation=rotation,
+                                      texture=texture, collision_reward=collision_reward, speed=speed) # warning no position for this block !
+            self.distractors.add(block)
 
         if block.movable:
             self.movable_blocks.add(block)
@@ -500,7 +532,9 @@ class Model(object):
             self.visible_blocks.add(block)
 
         # update max_reward value
-        self.max_reward = max(self.max_reward, abs(block.collision_reward))        
+        self.max_reward = max(self.max_reward, abs(block.collision_reward))
+
+        return block       
 
     def remove_block(self, block):
         """ Remove the block

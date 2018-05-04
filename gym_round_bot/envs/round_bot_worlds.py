@@ -86,12 +86,12 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
                      'visualisation':visualisation_texture_path }   
 
     # Build gound block
-    model.add_block( (0, -3, 0, 2*n, 6, 2*n, 0.0, 0.0, 0.0), GRASS, block_type='brick')
+    ground_block = model.add_block( (0, -3, 0, 2*n, 6, 2*n, 0.0, 0.0, 0.0), GRASS, block_type='brick')
 
-    # distractor test block
-    wbb = round_bot_model.BoundingBoxBlock( (0, n/2, 0), (2*n, n, 2*n), (0.0, 0.0, 0.0) )
-    model.add_block( components=(0, 0, 0, 2*1.0, 1.0, 2*1.0, 0.0, 0.0, 0.0),
-                     texture=SAND, block_type='distractor', boundingBox = wbb, speed=0.4)    
+     # distractor test block
+    wbb = round_bot_model.BoundingBoxBlock( (0, 0.1, 0), (2*n, 0, 2*n), (0.0, 0.0, 0.0), linked_block=ground_block)
+    model.add_block( components=(0, 0, 0, 2*1.0, 0.0, 2*1.0, 0.0, 0.0, 0.0),
+                     texture=SAND, block_type='flat_distractor', boundingBox = wbb, speed=0.4)    
 
     # Build wall blocks with negative reward on collision
     #back wall
