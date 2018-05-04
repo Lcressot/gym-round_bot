@@ -86,17 +86,26 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
                      'visualisation':visualisation_texture_path }   
 
     # Build gound block
-    model.add_block( (0, -3, 0, 2*n, 6, 2*n, 0.0, 0.0, 0.0), GRASS)
+    model.add_block( (0, -3, 0, 2*n, 6, 2*n, 0.0, 0.0, 0.0), GRASS, block_type='brick')
+
+    # distractor test block
+    wbb = round_bot_model.BoundingBoxBlock( (0, n/2, 0), (2*n, n, 2*n), (0.0, 0.0, 0.0) )
+    model.add_block( components=(0, 0, 0, 2*1.0, 1.0, 2*1.0, 0.0, 0.0, 0.0),
+                     texture=SAND, block_type='distractor', boundingBox = wbb, speed=0.4)    
 
     # Build wall blocks with negative reward on collision
     #back wall
-    model.add_block( (0, hwalls/2, -n, wwalls, hwalls, dwalls, 0.0, 0.0, 0.0), STONE, block_type='brick', collision_reward = wall_reward)
+    model.add_block( (0, hwalls/2, -n, wwalls, hwalls, dwalls, 0.0, 0.0, 0.0),
+                     texture=STONE, block_type='brick', collision_reward = wall_reward)
     #front wall
-    model.add_block( (0, hwalls/2, n, wwalls, hwalls, dwalls, 0.0, 0.0, 0.0), BRICK, block_type='brick', collision_reward = wall_reward)
+    model.add_block( (0, hwalls/2, n, wwalls, hwalls, dwalls, 0.0, 0.0, 0.0),
+                     texture=BRICK, block_type='brick', collision_reward = wall_reward)
     #left wall
-    model.add_block( (-n, hwalls/2, 0, dwalls, hwalls, wwalls, 0.0, 0.0, 0.0), SAND, block_type='brick', collision_reward = wall_reward)
+    model.add_block( (-n, hwalls/2, 0, dwalls, hwalls, wwalls, 0.0, 0.0, 0.0),
+                     texture=SAND, block_type='brick', collision_reward = wall_reward)
     #right wall
-    model.add_block( (n, hwalls/2, 0, dwalls, hwalls, wwalls, 0.0, 0.0, 0.0), MUD, block_type='brick', collision_reward = wall_reward)    
+    model.add_block( (n, hwalls/2, 0, dwalls, hwalls, wwalls, 0.0, 0.0, 0.0),
+                     texture=MUD, block_type='brick', collision_reward = wall_reward)    
 
     world_info = {  'width' : 2*n,
                     'depth' : 2*n,
@@ -128,11 +137,14 @@ def build_rb1_world(model, texture, width=20, hwalls=4, dwalls=1, wall_reward=-1
     bot_height = 1
 
     # Build reward block in the corner
-    model.add_block( (n-(wr/2+dwalls/2), bot_height/2.0, -n+(wr/2+dwalls/2), wr, bot_height/3.0, wr, 0.0, 0.0, 0.0), REWARD, block_type='reward', collision_reward = goal_reward)
+    model.add_block( (n-(wr/2+dwalls/2), bot_height/2.0, -n+(wr/2+dwalls/2), wr, bot_height/3.0, wr, 0.0, 0.0, 0.0),
+                     texture=REWARD, block_type='reward', collision_reward = goal_reward)
     # Build robot block, set initial height to bot_heigh/2 + small offset to avoid ground collision
-    model.add_block( (0, bot_height/2.0+0.1, 0, 2*bot_diameter, bot_height, 2*bot_diameter, 0.0, 0.0, 0.0), BOT, block_type='robot')
+    model.add_block( (0, bot_height/2.0+0.1, 0, 2*bot_diameter, bot_height, 2*bot_diameter, 0.0, 0.0, 0.0),
+                     texture=BOT, block_type='robot')
     # add starting areas (the height=0 of block does not matter here, only area of (hwalls-2*dwalls)^2)
-    model.add_block( (0, bot_height/2.0+0.1, 0, wwalls-2*dwalls, 0.1, wwalls-2*dwalls, 0.0, 0.0, 0.0), START, block_type='start')
+    model.add_block( (0, bot_height/2.0+0.1, 0, wwalls-2*dwalls, 0.1, wwalls-2*dwalls, 0.0, 0.0, 0.0),
+                     texture=START, block_type='start')
 
     return texture_paths, world_info
 
@@ -164,12 +176,16 @@ def build_rb1_1wall_world(model, texture, width=20, hwalls=2, dwalls=2, wall_rew
     model.add_block( (n/2, hwalls/2, -n/4, wwalls/2, hwalls, dwalls, 0.0, 0.0, 0.0), SAND, block_type='brick', collision_reward = -1)
 
     # Build reward block in the corner
-    model.add_block( (n-(wr/2+dwalls/2), bot_height/2.0, -n+(wr/2+dwalls/2), wr, bot_height/3.0, wr, 0.0, 0.0, 0.0), REWARD, block_type='reward', collision_reward = 1)
+    model.add_block( (n-(wr/2+dwalls/2), bot_height/2.0, -n+(wr/2+dwalls/2), wr, bot_height/3.0, wr, 0.0, 0.0, 0.0),
+                     texture=REWARD, block_type='reward', collision_reward = 1)
     # Build robot block, set initial height to bot_heigh/2 + small offset to avoid ground collision
-    model.add_block( (0, bot_height/2.0+0.1, 0, 2*bot_diameter, bot_height, 2*bot_diameter, 0.0, 0.0, 0.0), BOT, block_type='robot')
+    model.add_block( (0, bot_height/2.0+0.1, 0, 2*bot_diameter, bot_height, 2*bot_diameter, 0.0, 0.0, 0.0),
+                     texture=BOT, block_type='robot')
     # add starting areas (the height=0 of block does not matter here, only area of (hwalls-2*dwalls)^2)
-    model.add_block( (0, bot_height/2.0+0.1, (wwalls-2*dwalls)/4, wwalls-2*dwalls, 0.1, (wwalls-2*dwalls)/2, 0.0, 0.0, 0.0), START, block_type='start')
-    model.add_block( ( -(wwalls-2*dwalls)/4, bot_height/2.0+0.1, -(wwalls-2*dwalls)/4, (wwalls-2*dwalls)/2, 0.1, (wwalls-2*dwalls)/2, 0.0, 0.0, 0.0), START, block_type='start')
+    model.add_block( (0, bot_height/2.0+0.1, (wwalls-2*dwalls)/4, wwalls-2*dwalls, 0.1, (wwalls-2*dwalls)/2, 0.0, 0.0, 0.0),
+                     texture=START, block_type='start')
+    model.add_block( ( -(wwalls-2*dwalls)/4, bot_height/2.0+0.1, -(wwalls-2*dwalls)/4, (wwalls-2*dwalls)/2, 0.1, (wwalls-2*dwalls)/2, 0.0, 0.0, 0.0),
+                     texture=START, block_type='start')
 
 
     return texture_paths, world_info

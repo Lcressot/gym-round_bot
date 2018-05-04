@@ -88,6 +88,7 @@ class PygletWindow(pyglet.window.Window):
         self.texture_groups = dict()
         self.texture_groups['brick'] = TextureGroup(image.load(self.model.texture_paths['brick']).get_texture())
         self.texture_groups['robot'] = TextureGroup(image.load(self.model.texture_paths['robot']).get_texture())
+        self.texture_groups['distractor'] = TextureGroup(image.load(self.model.texture_paths['brick']).get_texture())
 
         # add this window pointer to model
         self.model.add_window(self)
@@ -96,10 +97,7 @@ class PygletWindow(pyglet.window.Window):
         self._init()
 
         # show all blocks
-        self.model.show_all_bricks(self)
-
-        if self.global_pov: # if global_pov, show robot's block
-            self.show_block(self.model.robot_block)
+        self.model.show_visible_blocks(self)
 
         # set up opengl
         self.setup_gl()
@@ -115,10 +113,12 @@ class PygletWindow(pyglet.window.Window):
     def update(self, dt):
 
         self._update(dt)
-        # update robot if global_pov
-        if self.global_pov:            
-            rb=self.model.robot_block
-            self.shown[rb].vertices = rb.vertices
+        # try update on all movable blocks
+        for block in self.model.movable_blocks:
+            try:
+                self.shown[block].vertices = block.vertices        
+            except:
+                pass
 
     def step(self, dt):
         """
@@ -394,8 +394,11 @@ class MainWindow(PygletWindow):
         """
             Private Boolean function for deciding whether to show a block or not 
         """ 
-        # only show visible blocks
-        return block.visible
+        # only show visible blocks except robot
+        if not self.global_pov and block.block_type=='robot':
+            return False
+        else:
+            return block.visible 
 
     def set_exclusive_mouse(self, exclusive):
         """ If `exclusive` is True, the game will capture the mouse, if False
@@ -578,5 +581,5 @@ class SecondaryWindow(PygletWindow):
             Private Boolean function for deciding whether to show a block or not 
         """ 
         # show visible blocks and also invisible start and rewards
-        return True if block.visible or block.block_type=='robot' or block.block_type=='start' or block.block_type=='reward' else False
+        return True if block.visible or block.block_type in ['start','reward'] else False
 
