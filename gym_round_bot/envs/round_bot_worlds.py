@@ -73,7 +73,7 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
     SAND = round_bot_model.Block.tex_coords((1, 1), (1, 1), (1, 1))
     BRICK = round_bot_model.Block.tex_coords((2, 0), (2, 0), (2, 0))
     STONE = round_bot_model.Block.tex_coords((2, 1), (2, 1), (2, 1))
-    DISTRACTORS = [ round_bot_model.Block.tex_coords(t,t,t) for t in [(0,0),(0,1),(0,2),(1,0),(1,1),(1,2)] ]
+    DISTRACTORS = [ round_bot_model.Block.tex_coords(t,t,t) for t in [(0,0),(1,0),(2,0),(0,1),(1,1),(2,1),(2,0)] ]
 
     # wwalls = width of walls
     wwalls = width
@@ -112,8 +112,11 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
     # add visual distractors on the groud and inner faces of walls if asked
     if distractors:
         # distractor ground block
+        size_wall_distractor = n
         ground_bb = round_bot_model.BoundingBoxBlock( (0, 0.1, 0), (2*n, 0, 2*n), (0.0, 0.0, 0.0), linked_block=ground_block)
-        model.add_block( components=(0, 0, 0, 2*1.0, 0.0, 2*1.0, 0.0, 0.0, 0.0),
+        model.add_block( components=(0, 0, 0, size_wall_distractor, 0.0, size_wall_distractor, 0.0, 0.0, 0.0),
+                         texture=DISTRACTORS[0], block_type='flat_distractor', boundingBox = ground_bb, speed=0.4)
+        model.add_block( components=(0, 0, 0, size_wall_distractor, 0.0, size_wall_distractor, 0.0, 0.0, 0.0),
                          texture=DISTRACTORS[0], block_type='flat_distractor', boundingBox = ground_bb, speed=0.4)
         # wall distractors :
         width_wall_distractors = wwalls/2
