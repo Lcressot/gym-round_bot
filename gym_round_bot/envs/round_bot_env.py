@@ -168,10 +168,13 @@ class RoundBotEnv(gym.Env):
         self._texture = metadata['texture']
         self.random_start = metadata['random_start']
         random_start_rot = ('Theta' in metadata['controller'].controllerType)
+        self._distractors = RoundBotEnv.metadata['distractors']
         self._model = round_bot_model.Model(world=metadata['world'],
                                             random_start_pos=self.random_start,
                                             random_start_rot=random_start_rot,
-                                            texture=metadata['texture'])
+                                            texture=metadata['texture'],
+                                            distractors=self._distractors,
+                                            )
         self.obssize = metadata['obssize']
         self._crash_stop = metadata['crash_stop']
         self._reward_count_stop = metadata['reward_count_stop']
@@ -308,6 +311,7 @@ def set_metadata(world='rb1',
                 normalize_rewards=False,
                 observation_transformation = None,
                 position_observations = False,
+                distractors = False,
                 ):
     """ static module method for setting loading variables before call to gym.make
 
@@ -332,6 +336,7 @@ def set_metadata(world='rb1',
         - observation_transformation : (function) apply observation_transformation function to observations after normalization
         - position_observations: (Bool) observations are not images (np.array([w,h,c])) but [X, Y, Z, rx, ry, rz] np.arrays of 
             every moving blocks in the scene
+        - distractors (Bool) : whether to add visual distractors on walls or not
     """
     RoundBotEnv.metadata['world'] = world
     RoundBotEnv.metadata['texture'] = texture
@@ -351,6 +356,7 @@ def set_metadata(world='rb1',
     RoundBotEnv.metadata['normalize_rewards'] = normalize_rewards
     RoundBotEnv.metadata['observation_transformation'] = observation_transformation
     RoundBotEnv.metadata['position_observations'] = position_observations
+    RoundBotEnv.metadata['distractors'] = distractors
 
     
 

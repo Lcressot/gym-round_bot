@@ -88,7 +88,7 @@ class PygletWindow(pyglet.window.Window):
         self.texture_groups = dict()
         self.texture_groups['brick'] = TextureGroup(image.load(self.model.texture_paths['brick']).get_texture())
         self.texture_groups['robot'] = TextureGroup(image.load(self.model.texture_paths['robot']).get_texture())
-        self.texture_groups['distractor'] = TextureGroup(image.load(self.model.texture_paths['brick']).get_texture())
+        self.texture_groups['distractor'] = TextureGroup(image.load(self.model.texture_paths['distractors']).get_texture())
 
         # add this window pointer to model
         self.model.add_window(self)
@@ -142,7 +142,8 @@ class PygletWindow(pyglet.window.Window):
         if self._show_block(block): # decide whether to show the block or not depending on the window
             self.shown[block] = self.batch.add(24, GL_QUADS, self.texture_groups[block.block_type],
                 ('v3f/static', block.vertices),
-                ('t2f/static', list(block.texture)))   
+                ('t2f/static', list(block.texture))
+                )   
 
     def _show_block(self, block):
         """

@@ -31,6 +31,11 @@ def rotation_matrices(rx,ry,rz):
     return Rx, Ry, Rz
 
 
+
+
+
+################################################################################################################################################
+################################################################################################################################################
 class Block(object):
     """
     Parent class for block objects
@@ -217,6 +222,7 @@ class Block(object):
         
 
 
+################################################################################################
 class Cube(Block):
     """
     Cubic block (dimensions are the same)
@@ -237,6 +243,7 @@ class Cube(Block):
         return self.block_vertices(x_off, y_off, z_off, w, w, w, rx, ry, rz) 
 
 
+################################################################################################
 class FlatBlock(Block):
     """
     Class for flat blocks, i.e with a 0 depth. It has only 4 vertices and 1 face (instead of 8 vertices and 6 faces)
@@ -247,30 +254,34 @@ class FlatBlock(Block):
         # cut texture list to size one if it has been set to longer
         self.texture = [self.texture[0]]
         self.block_type = 'flat'
+        # null dimension has eventually to be replaced by a small value for now
+        # TODO : allow really flat blocks (with one unique face)
+        dimensions[dimensions==0] = 0.05
 
-    @staticmethod
-    def block_vertices(dimensions, position=np.zeros(3)):
-        """ Return a np array of the vertices of the block centered on (x,y,z) with no rotation,
-            and with size w h
-            Note : y axis is up-down, (x,z) is the ground plane
-        """
-        w2,h2,d2=dimensions/2.0
-        x,y,z=position
-        if w2==0.0:
-            return np.array([ [x, y+h2, z+d2], [x, y+h2, z+d2], [x, y-h2, z-d2], [x, y-h2, z-d2] ])
-        elif h2==0.0:
-            return np.array([ [x-w2, y, z+d2], [x+w2, y, z+d2], [x-w2, y, z-d2], [x+w2, y, z-d2] ])
-        elif d2==0.0:
-            return np.array([ [x-w2, y+h2, z], [x+w2, y+h2, z], [x-w2, y-h2, z], [x+w2, y-h2, z] ])
-        else:
-            raise Exception('FlatBlock should have exactly one null dimension')
+    # @staticmethod
+    # def block_vertices(dimensions, position=np.zeros(3)):
+    #     """ Return a np array of the vertices of the block centered on (x,y,z) with no rotation,
+    #         and with size w h
+    #         Note : y axis is up-down, (x,z) is the ground plane
+    #     """
+    #     w2,h2,d2=dimensions/2.0
+    #     x,y,z=position
+    #     if w2==0.0:
+    #         return np.array([ [x, y+h2, z+d2], [x, y+h2, z+d2], [x, y-h2, z-d2], [x, y-h2, z-d2] ])
+    #     elif h2==0.0:
+    #         return np.array([ [x-w2, y, z+d2], [x+w2, y, z+d2], [x-w2, y, z-d2], [x+w2, y, z-d2] ])
+    #     elif d2==0.0:
+    #         return np.array([ [x-w2, y+h2, z], [x+w2, y+h2, z], [x-w2, y-h2, z], [x+w2, y-h2, z] ])
+    #     else:
+    #         raise Exception('FlatBlock should have exactly one null dimension')
 
-    @staticmethod
-    def tex_coords(face):
-        """ Return a list of the texture squares for the only face ot eh Flat Block.
-        """
-        return Block.tex_coord(*face)
-   
+    # @staticmethod
+    # def tex_coords(face):
+    #     """ Return a list of the texture squares for the only face ot eh Flat Block.
+    #     """
+    #     return Block.tex_coord(*face)
+
+################################################################################################   
 class BoundingBoxBlock(Block):
     """ BoundingBoxBlock are invisible, and crossable
     """
@@ -281,6 +292,7 @@ class BoundingBoxBlock(Block):
     def _init(self):
         self.block_type = 'boundingBox'
 
+################################################################################################
 class BrickBlock(Block):
     """ BrickBlock are visible, not crossable blocks
     """
@@ -290,6 +302,7 @@ class BrickBlock(Block):
     def _init(self):
         self.block_type = 'brick'     
 
+################################################################################################
 class RobotBlock(Block):
     """ RobotBlock are movable blocks, shown only when view is global (hidden in subjective view)
     """
@@ -299,6 +312,7 @@ class RobotBlock(Block):
     def _init(self):
         self.block_type = 'robot'
 
+################################################################################################
 class StartBlock(BoundingBoxBlock):
     """ StartBlock are not visible and crossable, but have a texture because they can be seen by secondary windows
     """
@@ -309,6 +323,7 @@ class StartBlock(BoundingBoxBlock):
     def _init(self):
         self.block_type = 'start'
 
+################################################################################################
 class RewardBlock(BoundingBoxBlock):
     """ RewardBlock are not visible and crossable blocks, but have a texture because they can be seen by secondary windows
     """
@@ -319,6 +334,7 @@ class RewardBlock(BoundingBoxBlock):
     def _init(self):
         self.block_type = 'reward'
 
+################################################################################################
 class DistractorBlock(Block):
     """ DistractorBlock are blocks that move around randomly to distract the observer. They are crossable, visible and movable.
         They can move within a given bounding box, bouncing against the walls and sometimes changing directions
@@ -370,22 +386,32 @@ class DistractorBlock(Block):
         else:
             # if no collision, validate new position
             self.position = new_position
-        
+
+################################################################################################        
 class FlatDistractorBlock(DistractorBlock, FlatBlock):
     """ child class FlatBlock and DistractorBlock
     """
     def __init__(self, boundingBox, dimensions, rotation, texture, collision_reward=0.0, speed=1.0, change_dir_frequency=0.01):
-        assert(len(dimensions)==2)
-        dimensions.append(0.0)
         super(FlatDistractorBlock,self).__init__(boundingBox=boundingBox, dimensions=dimensions, rotation=rotation,
                                                  texture=texture, collision_reward=collision_reward, speed=speed,
                                                  change_dir_frequency=change_dir_frequency)
 
-##########################################################################################################################
-##########################################################################################################################
+
+
+
+
+
+
+
+
+
+
+
+##################################################################################################################################################
+##################################################################################################################################################
 class Model(object):
 
-    def __init__(self, world='rb1', texture='minecraft', random_start_pos=True, random_start_rot=False):
+    def __init__(self, world='rb1', texture='minecraft', random_start_pos=True, random_start_rot=False, distractors=False):
         """
 
         Class for round bot model. This class should play the model role of MVC structure,
@@ -398,6 +424,7 @@ class Model(object):
         - texture (str) : the name of the texture to be applied on blocks
         - random_start_pos (Bool) : whether the robot position is randomly sampled inside world's starting areas at reset or not.
         - random_start_rot (Bool) : whether the robot rotation is randomly sampled at reset or not.
+        - distractors (Bool) : whether to add visual distractors on walls or not
         """
         # reference to windows
         self.windows = set()
@@ -428,7 +455,7 @@ class Model(object):
         # maximum absolute possible reward in model, used for normalization
         self.max_reward=0.0
         # load world        
-        self.load_world(world, texture)
+        self.load_world(world, texture, distractors)
         self.flying, self.collided, self.current_reward = None, None, None
         # reset first time
         self.reset()
@@ -459,7 +486,6 @@ class Model(object):
 
         else:
             self.robot_position = self.start_position
-
 
         # First element is rotation of the player in the x-z plane (ground
         # plane) measured from the z-axis down. The second is the rotation
@@ -521,7 +547,7 @@ class Model(object):
                                       texture=texture, collision_reward=collision_reward, speed=speed) # warning no position for this block !
             self.distractors.add(block)
         elif block_type == 'flat_distractor':
-            block = DistractorBlock( boundingBox=boundingBox, dimensions=dimensions, rotation=rotation,
+            block = FlatDistractorBlock( boundingBox=boundingBox, dimensions=dimensions, rotation=rotation,
                                       texture=texture, collision_reward=collision_reward, speed=speed) # warning no position for this block !
             self.distractors.add(block)
 
@@ -694,14 +720,13 @@ class Model(object):
         return False
 
 
-    def load_world(self, world, texture):
+    def load_world(self, world, texture, distractors):
         """ Loads the world passed as string parameter
-
         """
         if world == 'rb1':
-            texture_paths, world_info = round_bot_worlds.build_rb1_world(self, texture)
+            texture_paths, world_info = round_bot_worlds.build_rb1_world(self, texture=texture, distractors=distractors)
         elif world == 'rb1_1wall':
-            texture_paths, world_info = round_bot_worlds.build_rb1_1wall_world(self, texture)
+            texture_paths, world_info = round_bot_worlds.build_rb1_1wall_world(self, texture=texture, distractors=distractors)
         else:
             raise(Exception('Error: unknown world : ' + world))
 
