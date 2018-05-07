@@ -283,12 +283,13 @@ class FlatBlock(Block):
 
 ################################################################################################   
 class BoundingBoxBlock(Block):
-    """ BoundingBoxBlock are invisible, and crossable
+    """ BoundingBoxBlock are crossable
     """
-    def __init__(self, position, dimensions, rotation, collision_reward=0.0, movable=False, linked_block=None):
+    def __init__(self, position, dimensions, rotation, collision_reward=0.0, movable=False, linked_block=None, visible=False):
 
         super(BoundingBoxBlock,self).__init__(position, dimensions, rotation, texture=None,
-                                              visible=False, crossable=True, collision_reward=collision_reward, movable=True, linked_block=linked_block)
+                                              visible=visible, crossable=True, collision_reward=collision_reward,
+                                              movable=True, linked_block=linked_block)
     def _init(self):
         self.block_type = 'boundingBox'
 
@@ -314,10 +315,10 @@ class RobotBlock(Block):
 
 ################################################################################################
 class StartBlock(BoundingBoxBlock):
-    """ StartBlock are not visible and crossable, but have a texture because they can be seen by secondary windows
+    """ StartBlock are only visible in secondary windows and are crossable
     """
     def __init__(self, position, dimensions, rotation, texture, collision_reward=0.0, movable=False):
-        super(StartBlock,self).__init__(position, dimensions, rotation, collision_reward=0.0, movable=False)
+        super(StartBlock,self).__init__(position, dimensions, rotation, collision_reward=0.0, movable=False, visible=True)
         self.texture = texture
 
     def _init(self):
@@ -325,10 +326,10 @@ class StartBlock(BoundingBoxBlock):
 
 ################################################################################################
 class RewardBlock(BoundingBoxBlock):
-    """ RewardBlock are not visible and crossable blocks, but have a texture because they can be seen by secondary windows
+    """ RewardBlock are only visible in secondary windows and crossable blocks
     """
     def __init__(self, position, dimensions, rotation, texture, collision_reward=0.0, movable=False):
-        super(RewardBlock,self).__init__(position, dimensions, rotation, collision_reward=0.0, movable=False)
+        super(RewardBlock,self).__init__(position, dimensions, rotation, collision_reward=collision_reward, movable=False, visible=True)
         self.texture = texture
 
     def _init(self):
@@ -512,7 +513,7 @@ class Model(object):
     def add_block(self, components, texture=None, block_type='brick', visible=True, crossable=False, collision_reward=0.0, boundingBox=None, speed=1.):
         """ Add a block to the model depending on its type
 
-        Parameters :     
+        Parameters :
         -----------   
         - same as Block.__init__     
 
@@ -714,7 +715,7 @@ class Model(object):
             if all( np.abs(new_position - block.position) < (block.dimensions+self.robot_block.dimensions)/2.0 ):
                 # get block collision reward to be used in RL envs, then return True
                 self.current_reward += block.collision_reward
-                if not block.crossable: # detect collision only if block is not crossable
+                if not block.crossable: # detect collision only if block is not crossable, else only reward is updated
                     return True        
 
         return False

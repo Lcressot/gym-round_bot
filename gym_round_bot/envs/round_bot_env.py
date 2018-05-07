@@ -93,11 +93,13 @@ class RoundBotEnv(gym.Env):
         # update model and window
         if not self._multiview:
             self._window.step(0.1) # update with 0.1 second intervall               
+            # get observation
+            self._current_observation = self._get_observation()
         else:
             self._window.update(0.1) # update with 0.1 second intervall
+            # get observation
+            self._current_observation = self._window.multiview_render(self._multiview)
        
-        # get observation
-        self._current_observation = self._get_observation()
 
         # get reward :
         reward = self._model.current_reward

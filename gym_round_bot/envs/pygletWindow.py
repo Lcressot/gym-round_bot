@@ -279,7 +279,7 @@ class PygletWindow(pyglet.window.Window):
         #setup_fog()
         self.switch_to() # set opengl context to this window
 
-    def multiview_render(self, xzangles, as_line=True):
+    def multiview_render(self, xzangles, as_line=False):
         """
         Parameters
         ----------
@@ -293,8 +293,8 @@ class PygletWindow(pyglet.window.Window):
         Note : this function doesn't perform any model updates ! It must be done before
         """        
         nviews = len(xzangles)
-        multiview_rnd = np.zeros([self.height, self.width, 3])
-        w = self.width/nviews
+        multiview_rnd = np.zeros([self.height, self.width, 3], dtype=np.uint8)
+        w = int(self.width/nviews)
 
         for i,xzangle in enumerate(xzangles):
             # render view with this xzangle as xz offset angle
@@ -310,8 +310,9 @@ class PygletWindow(pyglet.window.Window):
             # resize it (streching)
             rnd = scipy.misc.imresize(rnd, (self.height,w,3)) # warning imresize take x,y and not w,h !
             # insert it in multiview_rnd
-            multiview_rnd[:,i*w:(i+1)*w,:] = 255-rnd # warning scipy has invert colors !            
-            
+            multiview_rnd[:,i*w:(i+1)*w,:] = rnd
+        # convert to uint8
+        #multiview_rnd = multiview_rnd.astype(np.uint8)
         return multiview_rnd if not as_line else np.reshape(multiview_rnd,[1,self.width*self.height*3])
 
 
@@ -395,8 +396,8 @@ class MainWindow(PygletWindow):
         """
             Private Boolean function for deciding whether to show a block or not 
         """ 
-        # only show visible blocks except robot
-        if not self.global_pov and block.block_type=='robot':
+        # only show visible blocks except robot, start and reward
+        if not self.global_pov and block.block_type in ['robot','start','reward']:
             return False
         else:
             return block.visible 
@@ -581,6 +582,6 @@ class SecondaryWindow(PygletWindow):
         """
             Private Boolean function for deciding whether to show a block or not 
         """ 
-        # show visible blocks and also invisible start and rewards
-        return True if block.visible or block.block_type in ['start','reward'] else False
+        # show visible blocks
+        return block.visible
 
