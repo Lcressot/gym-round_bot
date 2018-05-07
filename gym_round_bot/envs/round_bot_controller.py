@@ -12,6 +12,8 @@ from gym import spaces
 
 """
     This file defines the Controller class for controlling the robot
+    In this module, the speed value must be seen as the motor commanded speed,
+        and not tha actual speed (which can vary with collisions and friction)
 """
     
 class Controller(object):

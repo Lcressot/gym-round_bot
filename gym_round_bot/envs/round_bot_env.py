@@ -46,6 +46,8 @@ class RoundBotEnv(gym.Env):
         self._observation_transformation = None
         self._position_observations = None
         self._get_observation = None # function to get current observation (which transforms and reshapes it if asked)
+        self._sanboxes = None
+        self._distractors = None
         self._load() # load with loading_vars variables
 
     def __del__(self):
@@ -171,11 +173,13 @@ class RoundBotEnv(gym.Env):
         self.random_start = metadata['random_start']
         random_start_rot = ('Theta' in metadata['controller'].controllerType)
         self._distractors = RoundBotEnv.metadata['distractors']
+        self._sanboxes = RoundBotEnv.metadata['sanboxes']
         self._model = round_bot_model.Model(world=metadata['world'],
                                             random_start_pos=self.random_start,
                                             random_start_rot=random_start_rot,
                                             texture=metadata['texture'],
                                             distractors=self._distractors,
+                                            sandboxes=self._sandboxes,
                                             )
         self.obssize = metadata['obssize']
         self._crash_stop = metadata['crash_stop']
@@ -314,6 +318,7 @@ def set_metadata(world='rb1',
                 observation_transformation = None,
                 position_observations = False,
                 distractors = False,
+                sandboxes=False,
                 ):
     """ static module method for setting loading variables before call to gym.make
 
@@ -339,6 +344,7 @@ def set_metadata(world='rb1',
         - position_observations: (Bool) observations are not images (np.array([w,h,c])) but [X, Y, Z, rx, ry, rz] np.arrays of 
             every moving blocks in the scene
         - distractors (Bool) : whether to add visual distractors on walls or not
+        - sandboxes (Bool): whether to add sandboxes on the ground or not (slowing down the robot when crossed)
     """
     RoundBotEnv.metadata['world'] = world
     RoundBotEnv.metadata['texture'] = texture
@@ -359,6 +365,7 @@ def set_metadata(world='rb1',
     RoundBotEnv.metadata['observation_transformation'] = observation_transformation
     RoundBotEnv.metadata['position_observations'] = position_observations
     RoundBotEnv.metadata['distractors'] = distractors
+    RoundBotEnv.metadata['sandboxes'] = sandboxes
 
     
 

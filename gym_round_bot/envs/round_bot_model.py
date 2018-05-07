@@ -40,7 +40,7 @@ class Block(object):
     """
     Parent class for block objects
     """
-    def __init__(self, position, dimensions, rotation, texture, visible=True, crossable=False, collision_reward=0.0, movable=False, linked_block=None):
+    def __init__(self, position, dimensions, rotation, texture, visible=True, crossable=False, collision_reward=0.0, movable=False, linked_block=None, friction=1.0):
         """
         Parameters: 
         ----------
@@ -53,6 +53,7 @@ class Block(object):
         - collision_reward : (float) the reward returned at collision
         - linked_block (Block) : a block to follow if any, the bounding box position relative to the linked block will stay constant
             TODO : improve update to take account of linked_block rotations too
+        - friction : friction coefficient of block
         """
         self.movable = True # needed for allowing initialization moves
         self._make_block(np.array(position), np.array(dimensions), np.array(rotation)) # sets self._position, self._dimensions, self._rotation
@@ -60,6 +61,10 @@ class Block(object):
         self.texture = texture
         self.visible = visible
         self.crossable = crossable
+        if not friction > 0.0 and friction <= 1.0:
+            raise Exception('Block friction must be in range ]0,1] ')
+        self.friction = friction
+
         # return reward when collided
         self.collision_reward = collision_reward
 
@@ -398,9 +403,18 @@ class FlatDistractorBlock(DistractorBlock, FlatBlock):
                                                  change_dir_frequency=change_dir_frequency)
 
 
-
-
-
+class SandBoxBlock(FlatBlock):
+    """
+    SandBox Blocks are flat, crossable and have a low friction coeffifient
+    """
+    def __init__(self, position, dimensions, rotation, texture, collision_reward=0.0, movable=False, linked_block=None, friction=0.5, visible=True):
+        if friction == 1.0:
+            raise Exception('SandBoxBlock must have a friction < 1.0, i.e that slows down the robot')
+        super(SandBoxBlock, self).__init__(position=position, dimensions=dimensions, rotation=rotation, texture=texture,
+                                           visible=visible, crossable=True, collision_reward=collision_reward, movable=movable,
+                                           linked_block=linked_block, friction=friction)
+    def _init(self):
+        self.block_type = 'sandbox'
 
 
 
@@ -412,7 +426,7 @@ class FlatDistractorBlock(DistractorBlock, FlatBlock):
 ##################################################################################################################################################
 class Model(object):
 
-    def __init__(self, world='rb1', texture='minecraft', random_start_pos=True, random_start_rot=False, distractors=False):
+    def __init__(self, world='rb1', texture='minecraft', random_start_pos=True, random_start_rot=False, distractors=False, sandboxes=False):
         """
 
         Class for round bot model. This class should play the model role of MVC structure,
@@ -426,6 +440,7 @@ class Model(object):
         - random_start_pos (Bool) : whether the robot position is randomly sampled inside world's starting areas at reset or not.
         - random_start_rot (Bool) : whether the robot rotation is randomly sampled at reset or not.
         - distractors (Bool) : whether to add visual distractors on walls or not
+        - sandoxes (Bool) : whether to add visual distractors on walls or not
         """
         # reference to windows
         self.windows = set()
@@ -447,8 +462,9 @@ class Model(object):
         self.ticks_per_sec = 60
         # default speed values
         self.walking_speed = 10
-        self.initial_walking = 10
         self.flying_speed = 15
+        self.current_friction = 1.0 # friction of the current material on which the robot is standing (0 < friction <= 1)
+        # Note : this friction is a pourcentage of speed reduction, not a physical friction coefficient between two materials
         
         self.world_info = None
         self.texture_paths = None # used for rendering with window
@@ -456,7 +472,7 @@ class Model(object):
         # maximum absolute possible reward in model, used for normalization
         self.max_reward=0.0
         # load world        
-        self.load_world(world, texture, distractors)
+        self.load_world(world, texture, distractors, sandboxes)
         self.flying, self.collided, self.current_reward = None, None, None
         # reset first time
         self.reset()
@@ -506,6 +522,7 @@ class Model(object):
         # otherwise. The second element is -1 when moving left, 1 when moving
         # right, and 0 otherwise.
         self.strafe = self.start_strafe
+        self.current_friction = 1.0
 
         self.flying = False   
         self.collided = False     
@@ -540,6 +557,9 @@ class Model(object):
         elif block_type=='start':
             block = StartBlock( position=position, dimensions=dimensions, rotation=rotation, texture=texture, collision_reward=collision_reward )
             self.start_areas.add(block)
+        elif block_type=='sandbox':
+            block = SandBoxBlock( position=position, dimensions=dimensions, rotation=rotation, texture=texture, collision_reward=collision_reward )
+            self.collision_blocks.add(block)
         elif block_type=='reward':
             block = RewardBlock( position=position, dimensions=dimensions, rotation=rotation, texture=texture, collision_reward=collision_reward )
             self.collision_blocks.add( block ) # add reward blocks to collision_block to detect collisions
@@ -676,7 +696,7 @@ class Model(object):
         #### update robot position
         # walking
         speed = self.walking_speed if not self.flying else self.flying_speed
-        d = dt * speed # distance covered this tick.
+        d = dt * speed * self.current_friction # distance covered this tick.
         motion_vec = self.get_motion_vector()
         # New position in space, before accounting for gravity.
         motion_vec *= d
@@ -696,9 +716,9 @@ class Model(object):
 
 
     def collide(self, new_position):
-        """ Checks to see if the cylindric robot at the given new x,y,z
-        position with given diameter and height
-        is colliding with any blocks in the world.
+        """ Checks to see if the cylindric robot at the given new x,y,z position with given diameter and height
+                is colliding with any blocks in the world.
+            Also modify the current_friction value
         Parameter :
         ----------
         - new_position : new position of robot to check
@@ -711,23 +731,25 @@ class Model(object):
         # TODO : improve to integer diagonal walls
         # TODO : optimize with walls and floors (x2) or with quadtree
         self.current_reward=0.0
+        self.current_friction = 1.0
         for block in self.collision_blocks:
             if all( np.abs(new_position - block.position) < (block.dimensions+self.robot_block.dimensions)/2.0 ):
                 # get block collision reward to be used in RL envs, then return True
                 self.current_reward += block.collision_reward
+                self.current_friction = min(self.current_friction, block.friction)
                 if not block.crossable: # detect collision only if block is not crossable, else only reward is updated
                     return True        
 
         return False
 
 
-    def load_world(self, world, texture, distractors):
+    def load_world(self, world, texture, distractors, sandboxes):
         """ Loads the world passed as string parameter
         """
         if world == 'rb1':
-            texture_paths, world_info = round_bot_worlds.build_rb1_world(self, texture=texture, distractors=distractors)
+            texture_paths, world_info = round_bot_worlds.build_rb1_world(self, texture=texture, distractors=distractors, sandboxes=sandboxes)
         elif world == 'rb1_1wall':
-            texture_paths, world_info = round_bot_worlds.build_rb1_1wall_world(self, texture=texture, distractors=distractors)
+            texture_paths, world_info = round_bot_worlds.build_rb1_1wall_world(self, texture=texture, distractors=distractors, sandboxes=sandboxes)
         else:
             raise(Exception('Error: unknown world : ' + world))
 

@@ -45,6 +45,7 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
                             wall_reward=-1,
                             distractors=False,
                             distractors_speed=0.1,
+                            sandboxes=False,                        
                             ):
     """
     Builds a simple rectangle planar world with walls around
@@ -59,6 +60,9 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
     - texture_bricks, texture_robot, texture_visualisation : (string)
         paths for texture image of bricks, robot and visualisation
     - wall_reward : (float) reward for wall collision
+    - distractors (Bool) : add visual distractors on walls and ground
+    - distractors_speed (float) : speed of visual distractors displacement
+    - sandboxes (Bool) : add sandboxes ont the ground (slowing down the robot when crossed)
 
     Returns
     -------
@@ -110,8 +114,10 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
     right_wall_block = model.add_block( (n, hwalls/2, 0, dwalls, hwalls, wwalls, 0.0, 0.0, 0.0),
                      texture=MUD, block_type='brick', collision_reward = wall_reward)
 
-    # add visual distractors on the groud and inner faces of walls if asked
+    
     if distractors:
+        # add visual distractors on the groud and inner faces of walls if asked
+
         # distractor ground block
         size_wall_distractor = n
         ground_bb = round_bot_model.BoundingBoxBlock( (0, 0.1, 0), (2*n, 0, 2*n), (0.0, 0.0, 0.0), linked_block=ground_block)
@@ -139,6 +145,11 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
                          texture=DISTRACTORS[4], block_type='flat_distractor', boundingBox = right_wall_bb, speed=distractors_speed)
 
 
+    if sandboxes :
+        # add sandboxes ont the ground if asked (slowing down the robot when crossed)
+        model.add_block( (0, 0.3, 0, n/2, 0, n/2, 0.0, 0.0, 0.0), SAND, block_type='sandbox')
+
+
     world_info = {  'width' : 2*n,
                     'depth' : 2*n,
     }
@@ -147,7 +158,7 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
 
 
 
-def build_rb1_world(model, texture, width=20, hwalls=4, dwalls=1, wall_reward=-1, goal_reward=10, distractors=False, distractors_speed=0.1):
+def build_rb1_world(model, texture, width=20, hwalls=4, dwalls=1, wall_reward=-1, goal_reward=10, distractors=False, distractors_speed=0.5, sandboxes=False):
     """
     Builds the rb1 world
     """    
@@ -155,7 +166,8 @@ def build_rb1_world(model, texture, width=20, hwalls=4, dwalls=1, wall_reward=-1
     texture_paths, world_info = _build_rb1_default_world(model, texture, width=width, 
                                                         hwalls=hwalls, dwalls=dwalls,
                                                         wall_reward=wall_reward, distractors=distractors,
-                                                        distractors_speed=distractors_speed)
+                                                        distractors_speed=distractors_speed,
+                                                        sandboxes=sandboxes,)
 
     ## then add specs
     from gym_round_bot.envs import round_bot_model
@@ -185,7 +197,7 @@ def build_rb1_world(model, texture, width=20, hwalls=4, dwalls=1, wall_reward=-1
 
 
 
-def build_rb1_1wall_world(model, texture, width=20, hwalls=2, dwalls=2, wall_reward=-1, goal_reward=10, distractors=False,distractors_speed=0.1):
+def build_rb1_1wall_world(model, texture, width=20, hwalls=2, dwalls=2, wall_reward=-1, goal_reward=10, distractors=False,distractors_speed=0.1, sandboxes=False):
     """
     Builds a simple rectangle planar world with walls around, and 1 wall in the middle
     """
@@ -193,7 +205,8 @@ def build_rb1_1wall_world(model, texture, width=20, hwalls=2, dwalls=2, wall_rew
     texture_paths, world_info = _build_rb1_default_world(model, texture, width=width, 
                                                         hwalls=hwalls, dwalls=dwalls,
                                                         wall_reward=wall_reward, distractors=distractors,
-                                                        distractors_speed=distractors_speed)
+                                                        distractors_speed=distractors_speed,
+                                                        sandboxes=sandboxes),
 
     ## then add specs
     from gym_round_bot.envs import round_bot_model

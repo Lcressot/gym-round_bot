@@ -89,6 +89,7 @@ class PygletWindow(pyglet.window.Window):
         self.texture_groups['brick'] = TextureGroup(image.load(self.model.texture_paths['brick']).get_texture())
         self.texture_groups['robot'] = TextureGroup(image.load(self.model.texture_paths['robot']).get_texture())
         self.texture_groups['distractor'] = TextureGroup(image.load(self.model.texture_paths['distractors']).get_texture())
+        self.texture_groups['sandbox'] = TextureGroup(image.load(self.model.texture_paths['brick']).get_texture())
 
         # add this window pointer to model
         self.model.add_window(self)
