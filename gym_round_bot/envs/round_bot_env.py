@@ -17,6 +17,7 @@ from gym_round_bot.envs import round_bot_model
 from gym_round_bot.envs import round_bot_controller
 
 import numpy as np
+import copy
 
 
 class RoundBotEnv(gym.Env):
@@ -87,9 +88,9 @@ class RoundBotEnv(gym.Env):
 
     @property
     def ground_truth(self):
-        """ Returns currents ground truth, i.e robot position and rotation
+        """ Returns currents ground truth, i.e robot position and rotation. Warning : return copy and not the object
         """
-        return self._model.robot_position, self._model.robot_rotation
+        return copy.copy(self._model.robot_position), copy.copy(self._model.robot_rotation)
 
     def step(self, action):
         """
