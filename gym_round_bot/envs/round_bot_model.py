@@ -702,9 +702,10 @@ class Model(object):
         motion_vec *= d
         # collisions
         new_position = self.robot_position + motion_vec
-        self.collided = self.collide(new_position)
-        if not self.collided:
-            self.robot_position = new_position
+        
+        # compute new position and friction with collide
+        self.collided = self.collide(motion_vec)
+       
         # update robot's block
         rx,ry = self.robot_rotation
         # TODO : rectify this strange rotation parametrization
@@ -715,7 +716,7 @@ class Model(object):
             d.move_in_bounding_box()
 
 
-    def collide(self, new_position):
+    def collide(self, motion_vector):
         """ Checks to see if the cylindric robot at the given new x,y,z position with given diameter and height
                 is colliding with any blocks in the world.
             Also modify the current_friction value
@@ -724,23 +725,29 @@ class Model(object):
         - new_position : new position of robot to check
         Returns
         -------
-        - (Bool) collided
+        - (np.array) overlap vector if any, and last overlaping dimension(s), else None
         """
         # iterate over blocks and check for collision :
-        # TODO : improve collision result for sliding on walls
         # TODO : improve to integer diagonal walls
         # TODO : optimize with walls and floors (x2) or with quadtree
         self.current_reward=0.0
         self.current_friction = 1.0
+        collided=False
         for block in self.collision_blocks:
-            if all( np.abs(new_position - block.position) < (block.dimensions+self.robot_block.dimensions)/2.0 ):
+            new_overlap = (block.dimensions+self.robot_block.dimensions)/2.0 - np.abs(self.robot_position+motion_vector - block.position)
+            if all( new_overlap > 0):
                 # get block collision reward to be used in RL envs, then return True
                 self.current_reward += block.collision_reward
                 self.current_friction = min(self.current_friction, block.friction)
                 if not block.crossable: # detect collision only if block is not crossable, else only reward is updated
-                    return True        
-
-        return False
+                    # old overlap is needed to know on which dimensions the problematic overlapping has been done in the last move
+                    old_overlap = (block.dimensions+self.robot_block.dimensions)/2.0 - np.abs(self.robot_position - block.position)
+                    #  update motion_vector to cancel this collision
+                    motion_vector -= new_overlap * (old_overlap<0) * np.sign(motion_vector) *1.1
+                    collided = True
+                    self.current_friction=0.0 # minimum friction if collision is detected
+        self.robot_position += motion_vector # update
+        return collided
 
 
     def load_world(self, world, texture, distractors, sandboxes):

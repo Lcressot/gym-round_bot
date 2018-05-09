@@ -46,7 +46,7 @@ class RoundBotEnv(gym.Env):
         self._observation_transformation = None
         self._position_observations = None
         self._get_observation = None # function to get current observation (which transforms and reshapes it if asked)
-        self._sanboxes = None
+        self._sandboxes = None
         self._distractors = None
         self._load() # load with loading_vars variables
 
@@ -84,6 +84,12 @@ class RoundBotEnv(gym.Env):
     @property
     def actions_mapping(self):
         return self._controller.actions_mapping
+
+    @property
+    def ground_truth(self):
+        """ Returns currents ground truth, i.e robot position and rotation
+        """
+        return self._model.robot_position, self._model.robot_rotation
 
     def step(self, action):
         """
@@ -173,7 +179,7 @@ class RoundBotEnv(gym.Env):
         self.random_start = metadata['random_start']
         random_start_rot = ('Theta' in metadata['controller'].controllerType)
         self._distractors = RoundBotEnv.metadata['distractors']
-        self._sanboxes = RoundBotEnv.metadata['sanboxes']
+        self._sandboxes = RoundBotEnv.metadata['sandboxes']
         self._model = round_bot_model.Model(world=metadata['world'],
                                             random_start_pos=self.random_start,
                                             random_start_rot=random_start_rot,
