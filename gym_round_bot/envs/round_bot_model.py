@@ -736,10 +736,15 @@ class Model(object):
         for block in self.collision_blocks:
             new_overlap = (block.dimensions+self.robot_block.dimensions)/2.0 - np.abs(self.robot_position+motion_vector - block.position)
             if all( new_overlap > 0):
-                # get block collision reward to be used in RL envs, then return True
-                self.current_reward += block.collision_reward
+                # get block collision reward to be used in RL envs
+                if block.collision_reward < 0:
+                    self.current_reward = min(self.current_reward, block.collision_reward) # if negative reward is min 
+                elif self.current_reward>=0 : # negative beats positive
+                    self.current_reward += block.collision_reward # if positive, reward sums up
+                # update current friction ratio
                 self.current_friction = min(self.current_friction, block.friction)
-                if not block.crossable: # detect collision only if block is not crossable, else only reward is updated
+                # detect collision only if block is not crossable
+                if not block.crossable:
                     # old overlap is needed to know on which dimensions the problematic overlapping has been done in the last move
                     old_overlap = (block.dimensions+self.robot_block.dimensions)/2.0 - np.abs(self.robot_position - block.position)
                     #  update motion_vector to cancel this collision
