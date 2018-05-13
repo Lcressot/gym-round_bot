@@ -129,7 +129,7 @@ class PygletWindow(pyglet.window.Window):
         self.on_draw()       
         if self.visible: 
             self.dispatch_events() # slows down rendering with a factor 10 on OSX
-            self.flip()
+            # self.flip()
 
     def _update(self, dt):
         """

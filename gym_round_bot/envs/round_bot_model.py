@@ -696,14 +696,16 @@ class Model(object):
         #### update robot position
         # walking
         speed = self.walking_speed if not self.flying else self.flying_speed
-        d = dt * speed * self.current_friction # distance covered this tick.
-        motion_vec = self.get_motion_vector()
+        # d = dt * speed * self.current_friction # distance covered this tick.
+        # motion_vec = self.get_motion_vector()
         # New position in space, before accounting for gravity.
-        motion_vec *= d
+        # motion_vec *= d
+        motion_vec = np.array([speed[0],0.,speed[1]])
         # collisions
-        new_position = self.robot_position + motion_vec
+        new_position = [self.robot_position[0] + speed[0],0.6, self.robot_position[1] + speed[1]]
         
         # compute new position and friction with collide
+        # self.collided = self.collide(motion_vec)
         self.collided = self.collide(motion_vec)
        
         # update robot's block
@@ -715,6 +717,35 @@ class Model(object):
         for d in self.distractors:
             d.move_in_bounding_box()
 
+    def update_discrete(self, dt):
+        """
+        This is where most of the motion logic lives
+
+        Parameters
+        ----------
+        - dt (float): The change in time since the last call.
+        """
+        #### update robot position
+        # walking
+        speed = self.walking_speed if not self.flying else self.flying_speed
+        d = dt * speed * self.current_friction  # distance covered this tick.
+        motion_vec = self.get_motion_vector()
+        # New position in space, before accounting for gravity.
+        motion_vec *= d
+        # collisions
+        new_position = self.robot_position + motion_vec
+
+        # compute new position and friction with collide
+        self.collided = self.collide(motion_vec)
+
+        # update robot's block
+        rx, ry = self.robot_rotation
+        # TODO : rectify this strange rotation parametrization
+        self.robot_block.translate_and_rotate_to(self.robot_position, np.array([-ry, -rx, 0.0]))
+
+        #### update distractors
+        for d in self.distractors:
+            d.move_in_bounding_box()
 
     def collide(self, motion_vector):
         """ Checks to see if the cylindric robot at the given new x,y,z position with given diameter and height

@@ -218,6 +218,52 @@ class XZ_Controller(Controller):
         return self._model.walking_speed
 
 
+class XZcontinuous_Controller(Controller):
+    """
+    This class controls the robot to move on (oXZ) plan, always looking in the same direction
+    """
+
+    def __init__(self, model, speed, xzrange=2, thetarange=2, int_actions=False, noise_ratio=0):
+        super(XZcontinuous_Controller, self).__init__('XZ tuple2', model=model, int_actions=int_actions, xzrange=xzrange,
+                                            thetarange=thetarange, noise_ratio=noise_ratio)
+        self._initial_speed = np.array(speed)
+        self.action_meaning = '[x, z] 2-tuple coding for x and z between -xzrange and +xzrange'
+        self._init()
+        # self._action_space = spaces.MultiDiscrete([2 * xzrange + 1, 2 * xzrange + 1])
+        self.min_action = -xzrange
+        self.max_action = xzrange
+        self._action_space = spaces.Box(low=self.min_action, high=self.max_action, shape=(2,), dtype= np.float32)
+        # set missing MultiDiscrete parameter n
+        # self._action_space.n = self.num_actions
+        # self._reversed_actions_mapping = self.reverse_actions_mapping  # build reversed action mapping
+        self.power = 1.#15*1.e-4
+        self.friction = 5.e-2
+
+
+    def _init(self):
+        # self._actions = {(x, z) for x in range(0, 2 * self._xzrange + 1) for z in range(0, 2 * self._xzrange + 1)}
+        # self._model.walking_speed = self._initial_speed
+
+        # Modify act for cpntinuous
+        def act(x, z):
+            self._model.strafe = [x, z]
+            speed = self._model.walking_speed + np.array([x, z])
+            # speed = self._model.walking_speed + np.array([self.power * x, self.power * z])
+            # speed[np.absolute(speed) >5.e-2] = speed[np.absolute(speed) >5.e-2] - np.sign(self._model.walking_speed[np.absolute(speed) >5.e-2])*self.friction
+            # self._model.walking_speed = speed + np.random.normal(0, speed * self.noise_ratio)
+            self._model.walking_speed = speed
+
+        self._act = act
+
+    @property
+    def speed(self, s):
+        self._initial_speed = s
+
+    @property
+    def speed(self):
+        return self._model.walking_speed
+
+
 class XZ_Controller_Fixed(XZ_Controller):
     """
     This class controls the robot to move on (oXZ) plan, but always looking in to the same point P
@@ -253,6 +299,9 @@ def make(name, speed=5, dtheta=7.0, xzrange=1, thetarange=1, int_actions=False, 
 
     elif name=='XZ':        
         return XZ_Controller(model=model, speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
+
+    elif name=='XZcontinuous':
+        return XZcontinuous_Controller(model=model, speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
 
     elif name=='XZF':
         return XZ_Controller_Fixed(model=model, speed=speed, int_actions=int_actions, fixed_point=fixed_point, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)

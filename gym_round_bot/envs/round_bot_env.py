@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" Cressot Loic
+""" Cressot Loic & Merckling Astrid
     ISIR CNRS/UPMC
     02/2018
 """ 
