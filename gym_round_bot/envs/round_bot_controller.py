@@ -237,9 +237,6 @@ class XZcontinuous_Controller(Controller):
     def _init(self):
         def act(x, z):
             self._model.strafe = [x, z]
-            speed = self._model.walking_speed + np.array([x, z])
-            # self._model.walking_speed = speed + np.random.normal(0, speed * self.noise_ratio)
-            self._model.walking_speed = speed
         self._act = act
 
     @property

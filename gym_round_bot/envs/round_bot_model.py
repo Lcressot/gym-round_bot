@@ -694,18 +694,15 @@ class Model(object):
         - dt (float): The change in time since the last call.
         """
         #### update robot position
-        # walking
-        speed = self.walking_speed if not self.flying else self.flying_speed
-        # d = dt * speed * self.current_friction # distance covered this tick.
-        # motion_vec = self.get_motion_vector()
-        # New position in space, before accounting for gravity.
-        # motion_vec *= d
-        motion_vec = np.array([speed[0],0.,speed[1]])
-        # collisions
-        new_position = [self.robot_position[0] + speed[0],0.6, self.robot_position[1] + speed[1]]
+        ## Derive positions
+        acceleration = np.array(self.strafe)
+        motion_vec = self.walking_speed * dt
+        motion_vec = np.array([motion_vec[0], 0, motion_vec[1]])
+
+        ## Derive speed
+        self.walking_speed = self.walking_speed + acceleration * dt
         
         # compute new position and friction with collide
-        # self.collided = self.collide(motion_vec)
         self.collided = self.collide(motion_vec)
        
         # update robot's block

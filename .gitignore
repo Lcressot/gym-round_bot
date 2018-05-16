@@ -1,4 +1,3 @@
 gym_round_bot/envs/debug_tools.py
 gym_round_bot/envs/*.pyc
 gym_round_bot/agents/*.pyc
-ast_test.py
