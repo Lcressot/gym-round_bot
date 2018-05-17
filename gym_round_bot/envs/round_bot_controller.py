@@ -236,7 +236,7 @@ class XZcontinuous_Controller(Controller):
 
     def _init(self):
         def act(x, z):
-            self._model.strafe = [x, z]
+            self._model.acceleration = [x, z]
         self._act = act
 
     @property

@@ -3,9 +3,9 @@
 
 """ Merckling Astrid
     ISIR CNRS/UPMC
-    02/2018
+    2018
 
-    Small script for testing and understanding the model and windows (no gym env involved here)
+    Script for generating training data
 """ 
 
 
