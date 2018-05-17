@@ -26,7 +26,7 @@ from gym_round_bot.envs import round_bot_controller
 sys.path.insert(0, '/home/astrid/Intel_Artif/2018/StaRep_RL/agents/')
 from action_wrapper import ActionWrapper
 
-parser = argparse.ArgumentParser(description='PyTorch Online Learning')
+parser = argparse.ArgumentParser(description='Training data options')
 
 parser.add_argument('-d', '--data', default='', help='Select data file to load')
 parser.add_argument('-m', '--model_folder', default='./models/', help='Select model folder')
