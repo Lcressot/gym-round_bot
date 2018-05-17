@@ -106,7 +106,6 @@ episode_starts = []
 
 
 env.max_steps = args.max_step
-env.unwrapped._model.walking_speed = np.array([0,0],dtype=float)
 
 
 
@@ -140,7 +139,8 @@ for n_reset in range(args.n_ep):
         done = False
         step = 0
         env.reset()
-        env.unwrapped._model.walking_speed = np.array([0, 0], dtype=float)
+        # Can change initial velocity, default is : np.array([0, 0], dtype=float)
+        # env.unwrapped._model.speed_continuous = np.array([0, 0], dtype=float)
         pos = np.array([env.unwrapped._model.robot_position[0], env.unwrapped._model.robot_position[2]])
         if args.debug:
             print("\nDesired Position : {}\n".format(pos_d))
@@ -148,7 +148,7 @@ for n_reset in range(args.n_ep):
             print("k_d : {}\n".format(k_d))
             print("\npos : {}".format(pos))
         while not done:
-            speed = env.unwrapped._model.walking_speed
+            speed = env.unwrapped._model.speed_continuous
             action = k_p * (pos - pos_d) + k_d * speed
             if args.debug:
                 print("\nact : {}".format(action))

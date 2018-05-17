@@ -223,11 +223,10 @@ class XZcontinuous_Controller(Controller):
     This class controls the robot to move on (oXZ) plan, always looking in the same direction
     """
 
-    def __init__(self, model, speed, xzrange=2, thetarange=2, int_actions=False, noise_ratio=0):
+    def __init__(self, model, xzrange=2, thetarange=2, int_actions=False, noise_ratio=0):
         super(XZcontinuous_Controller, self).__init__('XZ tuple2', model=model, int_actions=int_actions, xzrange=xzrange,
                                             thetarange=thetarange, noise_ratio=noise_ratio)
-        self._initial_speed = np.array(speed)
-        self.action_meaning = '[x, z] 2-tuple coding for x and z between -xzrange and +xzrange'
+        self.action_meaning = '[a_x, a_z] 2-tuple coding for accelerations in x and z coordinates between -xzrange and +xzrange'
         self._init()
         self.min_action = -xzrange
         self.max_action = xzrange
@@ -285,7 +284,7 @@ def make(name, speed=5, dtheta=7.0, xzrange=1, thetarange=1, int_actions=False, 
         return XZ_Controller(model=model, speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
 
     elif name=='XZcontinuous':
-        return XZcontinuous_Controller(model=model, speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
+        return XZcontinuous_Controller(model=model, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
 
     elif name=='XZF':
         return XZ_Controller_Fixed(model=model, speed=speed, int_actions=int_actions, fixed_point=fixed_point, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)

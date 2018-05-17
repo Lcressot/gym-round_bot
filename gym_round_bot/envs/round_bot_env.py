@@ -136,6 +136,7 @@ class RoundBotEnv(gym.Env):
         """
         self._model.reset()
         self._reward_count=0.0
+        self.unwrapped._model.speed_continuous = np.array([0, 0], dtype=float)
         
         # get observation
         self._current_observation = self._get_observation()
