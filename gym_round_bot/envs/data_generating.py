@@ -6,6 +6,7 @@
     2018
 
     Script for generating training data
+    Generate n_ep*
 """ 
 
 
@@ -28,33 +29,29 @@ from action_wrapper import ActionWrapper
 
 parser = argparse.ArgumentParser(description='Training data options')
 
-parser.add_argument('-d', '--data', default='', help='Select data file to load')
-parser.add_argument('-m', '--model_folder', default='./models/', help='Select model folder')
-parser.add_argument('-c', '--controller', default='XZcontinuous', choices=['XZ', 'Theta', 'Theta2'],
-                    help='Select controller in Theta, Theta2, XZ')
-parser.add_argument('-n', '--name_set', default='', help='Give a name_set')
-parser.add_argument('-l', '--load_from', default='', help='Give directory to load model from')
+# Environment
 parser.add_argument('--world', default='rb1', help='Select the world')
-parser.add_argument('-w', '--winsize', nargs=2, type=int, metavar=('w', 'h'), default=None,
-                    help='Size of rendering window')
-parser.add_argument('-xzt', '--xztrange', nargs=2, type=int, default=(2, 2), help='xzrange and theta range')
-parser.add_argument('-obs', '--obssize', nargs=2, type=int, metavar=('w', 'h'), default=(16, 16),
-                    help='Size of environment observations')
-parser.add_argument('-qne', '--qnum_epochs', type=int, default=10, help='Max number of training epochs for Q fitting')
-parser.add_argument('-lne', '--lnum_epochs', type=int, default=40, help='Number of epochs for learning representation')
-parser.add_argument('-ns', '--n_samples', type=int, default=0, help='Number of samples to take from loaded data [0:ns]')
-parser.add_argument('-sd', '--state_dim', type=int, default=3, help='States dimension')
-parser.add_argument('-nep', '--n_episodes_test', type=int, default=100, help='Number of episodes for test')
-parser.add_argument('-ct', '--conv_threshold', type=float, default=0.0,
-                    help='Score Treshold for stopping fitting <=1.0')
-parser.add_argument('-vi', '--visible', action='store_true', default=True, help='See agent running in env')
-# parser.add_argument('--speed', type=float, default=10, help='agent\'s speed')
-parser.add_argument('--speed', nargs=2, type=float, metavar=('vx', 'vz'), default=(1, 1), help='agent\'s speed')
-parser.add_argument('--dtheta', type=float, default=7.0, help='rotationfrom sklearn.decomposition import PCA angle')
-parser.add_argument('-ep', '--n_ep', type=int, default=20, help='number of episodes/trajetories')
-parser.add_argument('-ms', '--max_step', type=int, default=200, help='Number of steps in a trajectory')
+parser.add_argument('--texture', default='minecraft+', choices=['minecraft', 'minecraft+', 'colours'], help='Select the bricks texture')
+parser.add_argument('--deterministic', action='store_true', default=False, help='Set a deterministic policy')
+parser.add_argument('--controller', default='XZcontinuous', choices=['XZcontinuous','XZ', 'Theta', 'Theta2'], help='Select controller in Theta, Theta2, XZ')
+parser.add_argument('--xztrange', nargs=2, type=int, default=(2, 2), help='xzrange and theta range')
+parser.add_argument('--speed', type=float, default=10.0, help='agent\'s speed')
+parser.add_argument('--dtheta', type=float, default=15.0, help='rotation angle')
 parser.add_argument('--noise_ratio', type=float, default=0.0, help='Ratio of speed in additive gaussian noise stdv')
+parser.add_argument('--max_step', type=int, default=200, help='Number of steps in a trajectory')
+
+# Display options
+parser.add_argument('--visible', action='store_true', default=True, help='See agent running in env')
+parser.add_argument('--display', action='store_true', default=False, help='Display states\' representations')
 parser.add_argument('--debug', action='store_true', default=False, help='Print positions, actions, rewards at each step for each env')
+parser.add_argument('--winsize', nargs=2, type=int, metavar=('w', 'h'), default=None,
+                    # default= None, default=[300,300],
+                    help='Size of rendering window')
+parser.add_argument('--obssize', nargs=2, type=int, metavar=('w', 'h'), default=(8, 8), help='Size of environment observations')#(16,16)
+    
+# Deterministic policies options
+parser.add_argument('--nb_pi', type=int, default=32, help='number of policies')
+parser.add_argument('--nb_trj', type=int, default=32, help='number of trajetories/policy')
 
 args = parser.parse_args()
 
@@ -109,7 +106,7 @@ env.max_steps = args.max_step
 
 
 
-for n_reset in range(args.n_ep):
+for n_reset in range(args.nb_pi):
     env.reset()
     env.max_steps = args.max_step
     done = False
@@ -117,7 +114,7 @@ for n_reset in range(args.n_ep):
     k_p = random.uniform(- 1.3, - 0.5)
     k_d = random.uniform(- 1.3, - 0.5)
     pos_d = np.array([random.uniform(-7.,7.), random.uniform(-7.,7.)])
-    nb_pi = 0
+    n_trj = 0
 
     observations_pi = []
     image_lines_pi = []
@@ -127,7 +124,7 @@ for n_reset in range(args.n_ep):
     positions_pi = []
 
 
-    while nb_pi < 32:
+    while n_trj < args.nb_trj:
 
         observations_ep = []
         image_lines_ep = []
@@ -196,7 +193,7 @@ for n_reset in range(args.n_ep):
             actions_pi.append(np.vstack(actions_ep))
             episode_starts_pi.append(np.vstack(episode_starts_ep))
 
-            nb_pi = len(episode_starts_pi)
+            n_trj = len(episode_starts_pi)
 
     rewards.append(np.vstack(rewards_pi))
     observations.append(np.vstack(observations_pi))
