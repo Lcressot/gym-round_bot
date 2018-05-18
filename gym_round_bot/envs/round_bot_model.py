@@ -470,6 +470,9 @@ class Model(object):
         self.world_info = None
         self.texture_paths = None # used for rendering with window
         self.start_position, self.start_rotation, self.start_strafe = None,None,None
+        # for continuous actions
+        self.speed_continuous = np.array([0, 0], dtype=float)
+        self.acceleration = []
         # maximum absolute possible reward in model, used for normalization
         self.max_reward=0.0
         # load world        
@@ -694,15 +697,27 @@ class Model(object):
         ----------
         - dt (float): The change in time since the last call.
         """
-        #### update robot position
-        # walking
-        speed = self.walking_speed if not self.flying else self.flying_speed
-        d = dt * speed * self.current_friction # distance covered this tick.
-        motion_vec = self.get_motion_vector()
-        # New position in space, before accounting for gravity.
-        motion_vec *= d
-        # collisions
-        new_position = self.robot_position + motion_vec
+
+        if self.acceleration == []:
+            # ====Discrete actions====
+            #### update robot position
+            # walking
+            speed = self.walking_speed if not self.flying else self.flying_speed
+            d = dt * speed * self.current_friction  # distance covered this tick.
+            motion_vec = self.get_motion_vector()
+            # New position in space, before accounting for gravity.
+            motion_vec *= d
+
+        else:
+            #====Continuous actions====
+            #### update robot position
+            ## Derive positions
+            acceleration = np.array(self.acceleration)
+            motion_vec = self.speed_continuous * dt
+            motion_vec = np.array([motion_vec[0], 0, motion_vec[1]])
+
+            ## Derive speed
+            self.speed_continuous = self.speed_continuous + acceleration * dt
         
         # compute new position and friction with collide
         self.collided = self.collide(motion_vec)
@@ -710,7 +725,7 @@ class Model(object):
         # update robot's block
         rx,ry = self.robot_rotation
         # TODO : rectify this strange rotation parametrization
-        self.robot_block.translate_and_rotate_to( self.robot_position, np.array([-ry,-rx,0.0]) )
+        self.robot_block.translate_and_rotate_to(self.robot_position, np.array([-ry,-rx,0.0]) )
 
         #### update distractors
         for d in self.distractors:
