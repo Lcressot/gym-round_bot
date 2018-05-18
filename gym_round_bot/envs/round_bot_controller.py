@@ -145,7 +145,7 @@ class Theta_Controller(Controller):
         def act(s,d): # inside func code convert s and d variables to their value with eval()
             self._model.strafe[0]= 0 if s-self._xzrange==0 else np.sign(s-self._xzrange)
             speed = self._initial_speed*(abs(s-self._xzrange))
-            self._model.walking_speed= speed + np.random.normal(0,speed*self.noise_ratio)
+            self._model.rolling_speed= speed + np.random.normal(0,speed*self.noise_ratio)
             dth = ((d-self._thetarange)*self.dtheta)
             self._model.change_robot_rotation(dth+np.random.normal(0,abs(dth)*self.noise_ratio),0)
         self._act = act
@@ -156,11 +156,11 @@ class Theta_Controller(Controller):
 
     @property
     def speed(self, s):
-        self._model.walking_speed = s
+        self._model.rolling_speed = s
 
     @property
     def speed(self):
-        return self._model.walking_speed
+        return self._model.rolling_speed
 
 
 class Theta2_Controller(Theta_Controller):
@@ -177,7 +177,7 @@ class Theta2_Controller(Theta_Controller):
         def act(s,d):
             self._model.strafe[0]= 0 if s-self._xzrange==0 else np.sign(s-self._xzrange)
             speed = self._initial_speed*abs(s-self._xzrange)
-            self._model.walking_speed= speed + np.random.normal(0,speed*self.noise_ratio)
+            self._model.rolling_speed= speed + np.random.normal(0,speed*self.noise_ratio)
             dth = (d-self._thetarange)*self.dtheta
             self._model.change_robot_rotation(dth+np.random.normal(0,abs(dth)*self.noise_ratio),0)
         self._act = act
@@ -206,7 +206,7 @@ class XZ_Controller(Controller):
         def act(x,z):
             self._model.strafe=[x-self._xzrange,z-self._xzrange]
             speed = self._initial_speed*np.sqrt((x-self._xzrange)**2+(z-self._xzrange)**2)
-            self._model.walking_speed = speed + np.random.normal(0,speed*self.noise_ratio)
+            self._model.rolling_speed = speed + np.random.normal(0,speed*self.noise_ratio)
         self._act = act              
 
     @property
@@ -215,14 +215,13 @@ class XZ_Controller(Controller):
 
     @property
     def speed(self):
-        return self._model.walking_speed
+        return self._model.rolling_speed
 
 
 class XZcontinuous_Controller(Controller):
     """
     This class controls the robot to move on (oXZ) plan, always looking in the same direction
     """
-
     def __init__(self, model, xzrange=2, thetarange=2, int_actions=False, noise_ratio=0):
         super(XZcontinuous_Controller, self).__init__('XZ tuple2', model=model, int_actions=int_actions, xzrange=xzrange,
                                             thetarange=thetarange, noise_ratio=noise_ratio)
@@ -244,7 +243,7 @@ class XZcontinuous_Controller(Controller):
 
     @property
     def speed(self):
-        return self._model.walking_speed
+        return self._model.rolling_speed
 
 
 class XZ_Controller_Fixed(XZ_Controller):
@@ -262,7 +261,7 @@ class XZ_Controller_Fixed(XZ_Controller):
         def act(x,z):
             self._model.strafe= [x-self._xzrange,z-self._xzrange]
             speed = self._initial_speed*np.sqrt((x-self._xzrange)**2+(z-self._xzrange)**2)
-            self._model.walking_speed = speed + np.random.normal(0,speed*self.noise_ratio)                        
+            self._model.rolling_speed = speed + np.random.normal(0,speed*self.noise_ratio)                        
             vec = self._fixed_point-np.array(self._model.robot_position[0:3:2])
             self._model.robot_rotation[0] = 90+np.degrees( np.arctan2( vec[1], vec[0] )  )
         self._act = act 
@@ -271,7 +270,7 @@ def make(name, speed=5, dtheta=7.0, xzrange=1, thetarange=1, int_actions=False, 
     """
     Functions for making controller objects
     """
-    compatible_controllers = {'Theta, Theta2, XZ, XZF'}
+    compatible_controllers = {'Theta','Theta2','XZ','XZF','XZcontinuous'}
     noise_ratio = float(noise_ratio)
 
     if name=='Theta':

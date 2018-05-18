@@ -462,7 +462,7 @@ class Model(object):
 
         self.ticks_per_sec = 60
         # default speed values
-        self.walking_speed = 10
+        self.rolling_speed = 10
         self.flying_speed = 15
         self.current_friction = 1.0 # friction of the current material on which the robot is standing (0 < friction <= 1)
         # Note : this friction is a pourcentage of speed reduction, not a physical friction coefficient between two materials
@@ -472,7 +472,7 @@ class Model(object):
         self.start_position, self.start_rotation, self.start_strafe = None,None,None
         # for continuous actions
         self.speed_continuous = np.array([0, 0], dtype=float)
-        self.acceleration = []
+        self.acceleration = None
         # maximum absolute possible reward in model, used for normalization
         self.max_reward=0.0
         # load world        
@@ -698,11 +698,11 @@ class Model(object):
         - dt (float): The change in time since the last call.
         """
 
-        if self.acceleration == []:
+        if not self.acceleration :
             # ====Discrete actions====
             #### update robot position
             # walking
-            speed = self.walking_speed if not self.flying else self.flying_speed
+            speed = self.rolling_speed if not self.flying else self.flying_speed
             d = dt * speed * self.current_friction  # distance covered this tick.
             motion_vec = self.get_motion_vector()
             # New position in space, before accounting for gravity.
@@ -785,6 +785,7 @@ class Model(object):
         self.texture_paths = texture_paths
         self.start_position = self.robot_block.position
         rx,ry,_ = self.robot_block.rotation
+        # Note: ry,rx -> x,y cause x is (Oxz) whereas rx is rotation around x, same for y and ry
         # Note: ry,rx -> x,y cause x is (Oxz) whereas rx is rotation around x, same for y and ry
         self.start_rotation = (ry,rx)
         self.start_strafe = [0.0,0.0] # start with a null strafe
