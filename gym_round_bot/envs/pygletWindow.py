@@ -10,6 +10,7 @@
 import math
 import numpy as np
 from sys import platform
+import copy
 
 import scipy.misc
 
@@ -173,7 +174,7 @@ class PygletWindow(pyglet.window.Window):
         else:
             # reshape as line vector
             nparr=nparr.reshape(1,self.width*self.height*3)
-        return nparr    
+        return copy.deepcopy(nparr) # important to copy returned np.arrays !
    
     def set_2d(self):
         """ Configure OpenGL to draw in 2d.
@@ -398,7 +399,9 @@ class MainWindow(PygletWindow):
             Private Boolean function for deciding whether to show a block or not 
         """ 
         # only show visible blocks except robot, start and reward
-        if not self.global_pov and block.block_type in ['robot','start','reward']:
+        if block.block_type in ['start','reward']:
+            return False
+        elif not self.global_pov and block.block_type == 'robot':
             return False
         else:
             return block.visible 

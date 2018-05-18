@@ -8,6 +8,7 @@
 """ 
 
 import random
+import copy
 import time
 import math
 from gym_round_bot.envs import round_bot_worlds
@@ -85,7 +86,7 @@ class Block(object):
     # Properties are to be used externally to the class because they are computationally more costfull than direct call to _attributes
     @property
     def position(self):
-        return self._position
+        return copy.deepcopy(self._position)
     @position.setter
     def position(self, position):
         # sets the block to a position
@@ -102,7 +103,7 @@ class Block(object):
       
     @property
     def rotation(self):
-        return self._rotation
+        return copy.deepcopy(self._rotation)
     @property
     def rx(self):
         return self._rotation[0]
@@ -782,6 +783,7 @@ class Model(object):
         arrays=[]
         for b in self.movable_blocks:
             arrays.append(list(b.position)+list(b.rotation))
-        return np.array(arrays)
+        return np.array(copy.deepcopy(arrays))
+        #return np.concatenate( [self.robot_block.position, self.robot_block.rotation] ) 
 
 
