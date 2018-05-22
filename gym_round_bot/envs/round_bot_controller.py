@@ -187,7 +187,7 @@ class ContinuousController(Controller):
 
     @property
     def num_actions(self):
-        return len(self._action_space.shape)
+        return self._action_space.shape[0]
 
     def center_reduce_actions(self, actions):
         """
