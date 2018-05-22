@@ -117,9 +117,9 @@ class PygletWindow(pyglet.window.Window):
         self._update(dt)
         # try update on all movable blocks
         for block in self.model.movable_blocks:
-            try:
+            try: # use of try except instead of if statement here for computational optimization
                 self.shown[block].vertices = block.vertices        
-            except:
+            except KeyError:
                 pass
 
     def step(self, dt):
@@ -390,7 +390,7 @@ class MainWindow(PygletWindow):
         removes a following window
         """
         if secondary_window not in self.followers:
-            raise Exception('the provided window was not part of the main window following windows')
+            raise KeyError('the provided window was not part of the main window following windows')
         else:
             self.followers.remove(secondary_window)
 

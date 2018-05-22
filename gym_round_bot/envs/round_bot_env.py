@@ -155,7 +155,7 @@ class RoundBotEnv(gym.Env):
             if not self._window.visible:
                 self._window.set_visible(True)
         else: 
-            raise Exception('Unknown render mode: '+mode)
+            raise ValueError('Unknown render mode: '+mode)
 
 
     def seed(self, seed=None):
@@ -277,7 +277,7 @@ class RoundBotEnv(gym.Env):
         adds a monitor window if there are none yet
         """
         if not (height > 0 and width > 0):
-            raise Exception('unvalid dimensions for monitor window')
+            raise ValueError('unvalid dimensions for monitor window')
         if not self._monitor_window:
             self._monitor_window = pygletWindow.SecondaryWindow(
                                         self._model,

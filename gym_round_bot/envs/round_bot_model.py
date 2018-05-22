@@ -63,7 +63,7 @@ class Block(object):
         self.visible = visible
         self.crossable = crossable
         if not friction > 0.0 and friction <= 1.0:
-            raise Exception('Block friction must be in range ]0,1] ')
+            raise ValueError('Block friction must be in range ]0,1] ')
         self.friction = friction
 
         # return reward when collided
@@ -256,7 +256,7 @@ class FlatBlock(Block):
     """
     def _init(self):
         if not sum(dimensions==0.0)==1:
-            raise Exception('FlatBlock must have exactly one null dimension')
+            raise ValueError('FlatBlock must have exactly one null dimension')
         # cut texture list to size one if it has been set to longer
         self.texture = [self.texture[0]]
         self.block_type = 'flat'
@@ -361,7 +361,7 @@ class DistractorBlock(Block):
         self._boundingBox = boundingBox
         self._degrees_of_freedom = (self._dimensions < self._boundingBox.dimensions) # axis on which the distractor can move inside the bounding box
         if self._boundingBox is not None and not any(self._degrees_of_freedom):
-            raise Exception('DistractorBlock\'s boundingBox must have at least one bigger dimension to allow displacement')
+            raise ValueError('DistractorBlock\'s boundingBox must have at least one bigger dimension to allow displacement')
         self._change_direction_frequency = change_dir_frequency # frequency of changing direction
         self._absolute_speed = speed #(float)
         self._relative_position = np.zeros(3) # relative_position to bounding box (which can move)
@@ -410,7 +410,7 @@ class SandBoxBlock(FlatBlock):
     """
     def __init__(self, position, dimensions, rotation, texture, collision_reward=0.0, movable=False, linked_block=None, friction=0.5, visible=True):
         if friction == 1.0:
-            raise Exception('SandBoxBlock must have a friction < 1.0, i.e that slows down the robot')
+            raise ValueError('SandBoxBlock must have a friction < 1.0, i.e that slows down the robot')
         super(SandBoxBlock, self).__init__(position=position, dimensions=dimensions, rotation=rotation, texture=texture,
                                            visible=visible, crossable=True, collision_reward=collision_reward, movable=movable,
                                            linked_block=linked_block, friction=friction)

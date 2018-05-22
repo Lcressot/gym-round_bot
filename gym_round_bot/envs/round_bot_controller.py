@@ -301,21 +301,15 @@ def make(name, speed=5, dtheta=7.0, xzrange=1, thetarange=1, int_actions=False, 
 
     if name=='Theta':
         return Theta_Controller(model=model, dtheta=dtheta,speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
-
     elif name=='Theta2':
         return Theta2_Controller(model=model, dtheta=dtheta, speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
-
     elif name=='XZ':        
         return XZ_Controller(model=model, speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
-
     elif name=='XZca':
         return XZca_Controller(model=model, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
-
     elif name=='XZc':
         return XZc_Controller(model=model, speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
-
     elif name=='XZF':
         return XZ_Controller_Fixed(model=model, speed=speed, int_actions=int_actions, fixed_point=fixed_point, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
-
     else :
-        raise Exception('unknown or uncompatible controller name \'' + name + '\'. Compatible controllers are : '+str(compatible_controllers))
+        raise ValueError('unknown or uncompatible controller name \'' + name + '\'. Compatible controllers are : '+str(compatible_controllers))
