@@ -9,6 +9,7 @@
 from gym_round_bot.envs import round_bot_model
 import numpy as np
 from gym import spaces
+import copy
 
 """
     This file defines the Controller class for controlling the robot
@@ -31,10 +32,10 @@ class Controller(object):
         - noise_ratio : (float) Ratio to compute additive gaussian noise standard deviation from action's speed
         
         """
+        self._controllerType = controllerType
         self._model = model # can be set after initialization
         self._xzrange = xzrange
         self._thetarange = thetarange
-        self.controllerType = controllerType # type of actions : ex int for integers, tuple2 for (x,y) tuples, float...
         self.action_meaning = {} # dictionnary to map actions number to their string meaning
         self._actions = {} # dictionnary to map actions number to their code meaning
         self.int_actions = int_actions
@@ -83,6 +84,8 @@ class Controller(object):
                         t.append(i+[y])
                 r = t
             return {tuple(r[i]): i for i in range(len(r))}
+        else:
+            raise Exception('Cannot make action mapping for this controller !')
 
     @property
     def reverse_actions_mapping(self):
@@ -111,6 +114,18 @@ class Controller(object):
         else:
             return spaces.Discrete(self.num_actions-1)
 
+    @property
+    def speed(self, s):
+        self._model.rolling_speed = s
+
+    @property
+    def speed(self):
+        return self._model.rolling_speed
+
+    @property
+    def controllerType(self):
+        return copy.copy(self._controllerType)
+
     def step(self, action):
         """
         Controls the model's robot to perform the action
@@ -129,7 +144,7 @@ class Theta_Controller(Controller):
     """ This class controls the robot with 2*thetarange dtheta rotations and xzrange fixed speed forward/bacwkard move
     """
     def __init__(self, model, dtheta, speed, int_actions=int, xzrange=2, thetarange=2, noise_ratio=0):
-        super(Theta_Controller,self).__init__('Theta tuple2',model=model, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
+        super(Theta_Controller,self).__init__('Theta', model=model, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
         self.dtheta = dtheta
         self._initial_speed = speed
         self._init()
@@ -154,20 +169,12 @@ class Theta_Controller(Controller):
         # set missing MultiDiscrete parameter n
         self._action_space.n = self.num_actions
 
-    @property
-    def speed(self, s):
-        self._model.rolling_speed = s
-
-    @property
-    def speed(self):
-        return self._model.rolling_speed
-
 
 class Theta2_Controller(Theta_Controller):
     """ This class controls the robot like Theta but cannot go backwards
     """
     def __init__(self, model, dtheta, xzrange=1, thetarange=1, speed=10.0, int_actions=False, noise_ratio=0):
-        super(Theta2_Controller,self).__init__(model, dtheta=dtheta, speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)        
+        super(Theta2_Controller,self).__init__('Theta2', model=model, dtheta=dtheta, speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)        
         
     def _init(self):
         """ Private initialisation of Theta2_Controller
@@ -192,7 +199,7 @@ class XZ_Controller(Controller):
     This class controls the robot to move on (oXZ) plan, always looking in the same direction
     """
     def __init__(self, model, speed, xzrange=2, thetarange=2, int_actions=False, noise_ratio=0):
-        super(XZ_Controller,self).__init__('XZ tuple2', model=model, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
+        super(XZ_Controller,self).__init__('XZ',model=model, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
         self._initial_speed = speed
         self.action_meaning = '[x, z] 2-tuple coding for x and z between -xzrange and +xzrange'
         self._init()
@@ -213,17 +220,60 @@ class XZ_Controller(Controller):
     def speed(self, s):
         self._initial_speed = s
 
-    @property
-    def speed(self):
-        return self._model.rolling_speed
 
+class XZ_Controller_Fixed(XZ_Controller):
+    """
+    This class controls the robot to move on (oXZ) plan, but always looking in to the same point P
+    """
+    def __init__(self, model, speed, xzrange=2, thetarange=2, int_actions=False, fixed_point=[0,0], noise_ratio=0):
+        super(XZ_Controller_Fixed,self).__init__('XZ fixed', model=model, speed=speed, xzrange=xzrange, thetarange=thetarange, int_actions=int_actions, noise_ratio=noise_ratio)
+        self._fixed_point = fixed_point
+        # set missing MultiDiscrete parameter n
+        self._action_space.n = self.num_actions
+    
+    def _init(self):
+        self._actions = { (x,z) for x in range(0,2*self._xzrange+1) for z in range(0,2*self._xzrange+1) }
+        def act(x,z):
+            self._model.strafe= [x-self._xzrange,z-self._xzrange]
+            speed = self._initial_speed*np.sqrt((x-self._xzrange)**2+(z-self._xzrange)**2)
+            self._model.rolling_speed = speed + np.random.normal(0,speed*self.noise_ratio)                        
+            vec = self._fixed_point-np.array(self._model.robot_position[0:3:2])
+            self._model.robot_rotation[0] = 90+np.degrees( np.arctan2( vec[1], vec[0] )  )
+        self._act = act 
 
-class XZcontinuous_Controller(Controller):
+class XZc_Controller(Controller):
     """
     This class controls the robot to move on (oXZ) plan, always looking in the same direction
+    Actions are continuous translations
+    """
+    def __init__(self, model, speed, xzrange=2, thetarange=2, int_actions=False, noise_ratio=0):
+        super(XZc_Controller, self).__init__('XZ continuous', model=model, int_actions=int_actions, xzrange=xzrange,
+                                            thetarange=thetarange, noise_ratio=noise_ratio)
+        self.action_meaning = '[a_x, a_z] 2-tuple coding for translations in x and z coordinates between -xzrange and +xzrange'
+        self._init()
+        self.min_action = -xzrange
+        self.max_action = xzrange
+        self._action_space = spaces.Box(low=self.min_action, high=self.max_action, shape=(2,), dtype= np.float32)
+        self._initial_speed = speed
+
+    def _init(self):
+        def act(x, z):
+            self._model.strafe=[np.sign(x),np.sign(z)]
+            speed = self._initial_speed*np.sqrt((x)**2+(z)**2)
+            self._model.rolling_speed = speed + np.random.normal(0,speed*self.noise_ratio)
+        self._act = act
+
+    @property
+    def speed(self, s):
+        self._initial_speed = s
+
+class XZca_Controller(Controller):
+    """
+    This class controls the robot to move on (oXZ) plan, always looking in the same direction
+    Actions are continuous acceleration
     """
     def __init__(self, model, xzrange=2, thetarange=2, int_actions=False, noise_ratio=0):
-        super(XZcontinuous_Controller, self).__init__('XZ tuple2', model=model, int_actions=int_actions, xzrange=xzrange,
+        super(XZca_Controller, self).__init__('XZ continous acceleration', model=model, int_actions=int_actions, xzrange=xzrange,
                                             thetarange=thetarange, noise_ratio=noise_ratio)
         self.action_meaning = '[a_x, a_z] 2-tuple coding for accelerations in x and z coordinates between -xzrange and +xzrange'
         self._init()
@@ -239,38 +289,14 @@ class XZcontinuous_Controller(Controller):
 
     @property
     def speed(self, s):
-        self._initial_speed = s
+        raise Exception('cannot modify speed for this controller, only accelerations')
 
-    @property
-    def speed(self):
-        return self._model.rolling_speed
-
-
-class XZ_Controller_Fixed(XZ_Controller):
-    """
-    This class controls the robot to move on (oXZ) plan, but always looking in to the same point P
-    """
-    def __init__(self, model, speed, xzrange=2, thetarange=2, int_actions=False, fixed_point=[0,0], noise_ratio=0):
-        super(XZ_Controller_Fixed,self).__init__(model=model, speed=speed, xzrange=xzrange, thetarange=thetarange, int_actions=int_actions, noise_ratio=noise_ratio)
-        self._fixed_point = fixed_point
-        # set missing MultiDiscrete parameter n
-        self._action_space.n = self.num_actions
-    
-    def _init(self):
-        self._actions = { (x,z) for x in range(0,2*self._xzrange+1) for z in range(0,2*self._xzrange+1) }
-        def act(x,z):
-            self._model.strafe= [x-self._xzrange,z-self._xzrange]
-            speed = self._initial_speed*np.sqrt((x-self._xzrange)**2+(z-self._xzrange)**2)
-            self._model.rolling_speed = speed + np.random.normal(0,speed*self.noise_ratio)                        
-            vec = self._fixed_point-np.array(self._model.robot_position[0:3:2])
-            self._model.robot_rotation[0] = 90+np.degrees( np.arctan2( vec[1], vec[0] )  )
-        self._act = act 
 
 def make(name, speed=5, dtheta=7.0, xzrange=1, thetarange=1, int_actions=False, model=None, fixed_point=[0,0],noise_ratio=0.0):
     """
     Functions for making controller objects
     """
-    compatible_controllers = {'Theta','Theta2','XZ','XZF','XZcontinuous'}
+    compatible_controllers = {'Theta','Theta2','XZ','XZF','XZc','XZca'}
     noise_ratio = float(noise_ratio)
 
     if name=='Theta':
@@ -282,8 +308,11 @@ def make(name, speed=5, dtheta=7.0, xzrange=1, thetarange=1, int_actions=False, 
     elif name=='XZ':        
         return XZ_Controller(model=model, speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
 
-    elif name=='XZcontinuous':
-        return XZcontinuous_Controller(model=model, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
+    elif name=='XZca':
+        return XZca_Controller(model=model, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
+
+    elif name=='XZc':
+        return XZc_Controller(model=model, speed=speed, int_actions=int_actions, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)
 
     elif name=='XZF':
         return XZ_Controller_Fixed(model=model, speed=speed, int_actions=int_actions, fixed_point=fixed_point, xzrange=xzrange, thetarange=thetarange, noise_ratio=noise_ratio)

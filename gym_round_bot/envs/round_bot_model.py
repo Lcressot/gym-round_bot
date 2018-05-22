@@ -463,7 +463,6 @@ class Model(object):
         self.ticks_per_sec = 60
         # default speed values
         self.rolling_speed = 10
-        self.flying_speed = 15
         self.current_friction = 1.0 # friction of the current material on which the robot is standing (0 < friction <= 1)
         # Note : this friction is a pourcentage of speed reduction, not a physical friction coefficient between two materials
         
@@ -702,7 +701,7 @@ class Model(object):
             # ====Discrete actions====
             #### update robot position
             # walking
-            speed = self.rolling_speed if not self.flying else self.flying_speed
+            speed = self.rolling_speed
             d = dt * speed * self.current_friction  # distance covered this tick.
             motion_vec = self.get_motion_vector()
             # New position in space, before accounting for gravity.
