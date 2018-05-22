@@ -28,7 +28,9 @@ This script shows how to run a simple simulation (without Open AI Gym) simply by
 ### Controller :
 round_bot_controller.py
 
-This module defines a class for controlling the robot of a model. Given an action number, it can return its string meaning or perform the corresponding action in the model. For the Theta controller, you can set the speed and teta rotation of the robot, but do no set a to high speed because you could go through walls !
+This module defines a class for controlling the robot of a model. Given an action, it can return its string meaning or perform the corresponding action in the model.
+Controllers are subclass of either ContinuousController or DiscreteController, which are subclasses of the Controller abstract class.
+Regarding the Discrete Theta controller, you can set the speed and teta rotation of the robot, but do no set a to high speed because you could go through walls !
 
 ### Open AI gym environment :
 round_bot_env.py

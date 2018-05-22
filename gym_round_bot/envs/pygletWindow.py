@@ -45,7 +45,10 @@ class PygletWindow(pyglet.window.Window):
         - *args : Tuple args of parent Class pyglet.window.Window
         - **kwargs : Dict kwargs of parent Class pyglet.window.Window
         """
-
+        # prevent user from instantiating directly this abstract class
+        if type(self) is PygletWindow:
+            raise NotImplementedError('Cannot instantiate this abstract class')
+            
         # Global point of view : if None, view is subjective. If True, automatic computing
         if global_pov==True:
             # compute global_pov automatically
