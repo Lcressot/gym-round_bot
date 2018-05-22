@@ -58,7 +58,10 @@ class RoundBotEnv(gym.Env):
         if self._monitor_window:
             self.delete_monitor_window()
         if self._window:
-            self._window.close()
+            try:
+                self._window.close()
+            except ImportError: # happens sometimes
+                pass
 
     @property
     def action_space(self):
@@ -91,6 +94,11 @@ class RoundBotEnv(gym.Env):
         """ Returns currents ground truth, i.e robot position and rotation. Warning : return copy and not the object
         """
         return copy.copy(self._model.robot_position), copy.copy(self._model.robot_rotation)
+
+    @property
+    def controller(self):
+        return self._controller
+    
 
     def step(self, action):
         """
