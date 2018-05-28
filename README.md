@@ -84,7 +84,7 @@ from gym_round_bot.envs import round_bot_controller as rbc
 world = 'rb1' # the world to load
 obssize=[16,16] # the size of observations (rendering window)
 winsize=[300,300] # the size of monitoring window (None if not wanted)
-controller = rbc.make('Theta2',speed=5,dtheta=15, xzrange=1, thetarange=1) # the robot controller
+controller = rbc.make('Theta2',speed=5,dtheta=15, xzrange=[1,1], thetarange=1) # the robot controller
                 
 # set env metadata
 round_bot_env.set_metadata(

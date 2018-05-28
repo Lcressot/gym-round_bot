@@ -317,7 +317,7 @@ class RoundBotEnv(gym.Env):
 
 def set_metadata(world='rb1',
                 texture='minecraft',
-                controller=round_bot_controller.make(name='Theta',dtheta=20,speed=10,int_actions=False,xzrange=2,thetarange=2),
+                controller=round_bot_controller.make(name='Theta',dtheta=20,speed=10,int_actions=False,xzrange=[2,2],thetarange=2),
                 obssize=[16,16],
                 winsize=None,
                 global_pov=None,
