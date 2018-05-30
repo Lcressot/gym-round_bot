@@ -48,12 +48,14 @@ class RoundBotEnv(gym.Env):
         self._position_observations = None
         self._get_observation = None # function to get current observation (which transforms and reshapes it if asked)
         self._sandboxes = None
+        self._trigger_buttonutton = None
         self._distractors = None
         self._load() # load with loading_vars variables
 
     def __del__(self):
         """
         Cleans the env object before env deletion        
+        trigger_button = self._trigger_button,
         """
         if self._monitor_window:
             self.delete_monitor_window()
@@ -190,12 +192,14 @@ class RoundBotEnv(gym.Env):
         random_start_rot = ('Theta' in metadata['controller'].controllerType)
         self._distractors = RoundBotEnv.metadata['distractors']
         self._sandboxes = RoundBotEnv.metadata['sandboxes']
+        self._trigger_button = RoundBotEnv.metadata['trigger_button']
         self._model = round_bot_model.Model(world=metadata['world'],
                                             random_start_pos=self.random_start,
                                             random_start_rot=random_start_rot,
                                             texture=metadata['texture'],
                                             distractors=self._distractors,
                                             sandboxes=self._sandboxes,
+                                            trigger_button = self._trigger_button,
                                             )
         self.obssize = metadata['obssize']
         self._crash_stop = metadata['crash_stop']
@@ -335,6 +339,7 @@ def set_metadata(world='rb1',
                 position_observations = False,
                 distractors = False,
                 sandboxes=False,
+                trigger_button=False,
                 ):
     """ static module method for setting loading variables before call to gym.make
 
@@ -361,6 +366,7 @@ def set_metadata(world='rb1',
             every moving blocks in the scene
         - distractors (Bool) : whether to add visual distractors on walls or not
         - sandboxes (Bool): whether to add sandboxes on the ground or not (slowing down the robot when crossed)
+        - trigger_button (Bool): whether to add a trigger button 
     """
     RoundBotEnv.metadata['world'] = world
     RoundBotEnv.metadata['texture'] = texture
@@ -382,6 +388,7 @@ def set_metadata(world='rb1',
     RoundBotEnv.metadata['position_observations'] = position_observations
     RoundBotEnv.metadata['distractors'] = distractors
     RoundBotEnv.metadata['sandboxes'] = sandboxes
+    RoundBotEnv.metadata['trigger_button'] = trigger_button
 
     
 

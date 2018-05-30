@@ -19,10 +19,10 @@ from gym_round_bot.envs import round_bot_controller as rbc
 
 # set variables 
 world = 'rb1' # the world to load
-obssize=[300,300] # the size of observations (rendering window)
-winsize=[300,300] # the size of monitoring window (None if not wanted)
+obssize=[600,600] # the size of observations (rendering window)
+winsize=[600,600] # the size of monitoring window (None if not wanted)
 
-controller = rbc.make('Theta',speed=10,dtheta=15, speedrange=1, xzrange=[1,1], thetarange=1,noise_ratio=0.0) # the robot controller                
+controller = rbc.make('XZ',speed=5,dtheta=17, speedrange=1, xzrange=[1,1], thetarange=1,noise_ratio=0.0) # the robot controller                
 # set env metadata
 round_bot_env.set_metadata(
         world=world,
@@ -31,10 +31,11 @@ round_bot_env.set_metadata(
         winsize=winsize,
         controller=controller,
         normalize_rewards=False,
-        position_observations=True,
+        position_observations=False,
         normalize_observations=True,
-        observation_transformation = lambda X:X,
-        distractors=True,
+        observation_transformation = None,
+        distractors=False,
+        trigger_button = True,
    )
 # create env 
 env = gym.make('RoundBot-v0')

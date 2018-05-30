@@ -48,12 +48,18 @@ class PygletWindow(pyglet.window.Window):
         # prevent user from instantiating directly this abstract class
         if type(self) is PygletWindow:
             raise NotImplementedError('Cannot instantiate this abstract class')
+
+        # Instance of the model that handles the world.
+        self.model = model
+
+        # perspective or orthogonal projection
+        self.perspective = perspective
+        self.focal = focal
             
         # Global point of view : if None, view is subjective. If True, automatic computing
         if global_pov==True:
             # compute global_pov automatically
-            self.ortho_width = model.world_info['width']/2
-            global_pov = (0, self.ortho_width/np.tan(np.radians(focal/2.0)), 0)
+            global_pov = self.automatic_global_pov()
 
         elif global_pov: # if not True but not None
             self.ortho_width = global_pov[1]*np.tan(np.radians(focal/2.0)) 
@@ -61,14 +67,9 @@ class PygletWindow(pyglet.window.Window):
         else: # if None
             if not perspective:
                 print('Warning : no global_pov provided, setting perspective to True')
-                perspective = True
+                self.perspective = True
 
         self.global_pov = global_pov
-
-        
-        # perspective or orthogonal projection
-        self.perspective = perspective
-        self.focal = focal
 
         # Wheter or not the user can interact with the window
         self.interactive = interactive          
@@ -78,9 +79,6 @@ class PygletWindow(pyglet.window.Window):
 
         # Whether or not the window exclusively captures the mouse.
         self.exclusive = False        
-
-        # Instance of the model that handles the world.
-        self.model = model
 
         # Mapping from shown blocks to textures
         self.shown = dict()
@@ -94,6 +92,7 @@ class PygletWindow(pyglet.window.Window):
         self.texture_groups['robot'] = TextureGroup(image.load(self.model.texture_paths['robot']).get_texture())
         self.texture_groups['distractor'] = TextureGroup(image.load(self.model.texture_paths['distractors']).get_texture())
         self.texture_groups['sandbox'] = TextureGroup(image.load(self.model.texture_paths['brick']).get_texture())
+        self.texture_groups['trigger_button'] = TextureGroup(image.load(self.model.texture_paths['brick']).get_texture())
 
         # add this window pointer to model
         self.model.add_window(self)
@@ -140,6 +139,14 @@ class PygletWindow(pyglet.window.Window):
         Private (protected) update of a window
         """
         raise NotImplemented
+
+    def automatic_global_pov(self):
+        """
+        Sets up the global_pov automatically
+        """
+        self.perspective = False
+        self.ortho_width = self.model.world_info['width']/2
+        return (0, self.ortho_width/np.tan(np.radians(self.focal/2.0)), 0)
 
     def show_block(self, block):
         """ Add block the shown dict
@@ -241,14 +248,12 @@ class PygletWindow(pyglet.window.Window):
 
     def draw_reticle(self):
         """ Draw the crosshairs in the center of the screen.
-
         """
         glColor3d(0, 0, 0)
         self.reticle.draw(GL_LINES)
 
-    def setup_fog():
+    def setup_fog(self):
         """ Configure the OpenGL fog properties.
-
         """
         # Enable fog. Fog 'blends a fog color with each rasterized pixel fragment's
         # post-texturing color.'
@@ -261,8 +266,8 @@ class PygletWindow(pyglet.window.Window):
         glFogi(GL_FOG_MODE, GL_LINEAR)
         # How close and far away fog starts and ends. The closer the start and end,
         # the denser the fog in the fog range.
-        glFogf(GL_FOG_START, 20.0)
-        glFogf(GL_FOG_END, 60.0)
+        glFogf(GL_FOG_START, 0.0)
+        glFogf(GL_FOG_END, 15.0)
 
 
     def setup_gl(self):
@@ -281,7 +286,7 @@ class PygletWindow(pyglet.window.Window):
         # as smooth.'
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-        #setup_fog()
+        #self.setup_fog()
         self.switch_to() # set opengl context to this window
 
     def multiview_render(self, xzangles, as_line=False):
@@ -320,7 +325,15 @@ class PygletWindow(pyglet.window.Window):
         #multiview_rnd = multiview_rnd.astype(np.uint8)
         return multiview_rnd if not as_line else np.reshape(multiview_rnd,[1,self.width*self.height*3])
 
-
+    def switch_pov(self):
+        """
+        Switches point of view between subjective and global
+        """
+        if not self.global_pov:
+            self.global_pov = self.automatic_global_pov()
+        else :
+            self.global_pov = None
+            self.perspective = True
 
 
 ################################################################################################################################
@@ -401,10 +414,9 @@ class MainWindow(PygletWindow):
         """
             Private Boolean function for deciding whether to show a block or not 
         """ 
-        # only show visible blocks except robot, start and reward
+        # only show visible blocks except start and reward
+        # Note: robot block is too small to appear in the subjective view so showing it is not a problem
         if block.block_type in ['start','reward']:
-            return False
-        elif not self.global_pov and block.block_type == 'robot':
             return False
         else:
             return block.visible 
@@ -592,3 +604,8 @@ class SecondaryWindow(PygletWindow):
         # show visible blocks
         return block.visible
 
+    def switch_pov(self):
+        """
+        Cannot switch point of view between subjective and global in a secondary_window
+        """
+        pass

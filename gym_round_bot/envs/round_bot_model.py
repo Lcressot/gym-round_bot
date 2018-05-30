@@ -62,6 +62,7 @@ class Block(object):
         self.texture = texture
         self.visible = visible
         self.crossable = crossable
+        self.inCollision = False # whether block is currently in a collision
         if not friction > 0.0 and friction <= 1.0:
             raise ValueError('Block friction must be in range ]0,1] ')
         self.friction = friction
@@ -226,7 +227,15 @@ class Block(object):
             raise Exception('Cannot set new position to not movable Block')
         self._make_block(offset_position, self._dimensions, rotation) # easier to recreate vertices form scratch
         
+    def collide(self, inCollision):
+        """
+        Called when block is collided are not collided anymore
 
+        parameter:
+        ----------
+        inCollision (bool) : True if block is collided, false if it is not
+        """
+        self.inCollision = inCollision
 
 ################################################################################################
 class Cube(Block):
@@ -240,7 +249,7 @@ class Cube(Block):
         - size (int)
         """
         self.size = size
-        super(Cube,self).__init__( position, rotation, np.ones(3)*size, texture, visible, crossable, collision_reward, movable=False)
+        super(Cube,self).__init__( position, rotation, np.ones(3)*size, texture, visible, crossable, collision_reward, movable=movable)
 
     def cube_vertices(x_off, y_off, z_off, w, rx=0, ry=0, rz=0):
         """ Return the vertices of the cube at position x, y, z with size w.
@@ -295,7 +304,7 @@ class BoundingBoxBlock(Block):
 
         super(BoundingBoxBlock,self).__init__(position, dimensions, rotation, texture=None,
                                               visible=visible, crossable=True, collision_reward=collision_reward,
-                                              movable=True, linked_block=linked_block)
+                                              movable=movable, linked_block=linked_block)
     def _init(self):
         self.block_type = 'boundingBox'
 
@@ -324,7 +333,7 @@ class StartBlock(BoundingBoxBlock):
     """ StartBlock are only visible in secondary windows and are crossable
     """
     def __init__(self, position, dimensions, rotation, texture, collision_reward=0.0, movable=False):
-        super(StartBlock,self).__init__(position, dimensions, rotation, collision_reward=0.0, movable=False, visible=True)
+        super(StartBlock,self).__init__(position, dimensions, rotation, collision_reward=0.0, movable=movable, visible=True)
         self.texture = texture
 
     def _init(self):
@@ -335,7 +344,7 @@ class RewardBlock(BoundingBoxBlock):
     """ RewardBlock are only visible in secondary windows and crossable blocks
     """
     def __init__(self, position, dimensions, rotation, texture, collision_reward=0.0, movable=False):
-        super(RewardBlock,self).__init__(position, dimensions, rotation, collision_reward=collision_reward, movable=False, visible=True)
+        super(RewardBlock,self).__init__(position, dimensions, rotation, collision_reward=collision_reward, movable=movable, visible=True)
         self.texture = texture
 
     def _init(self):
@@ -404,9 +413,10 @@ class FlatDistractorBlock(DistractorBlock, FlatBlock):
                                                  change_dir_frequency=change_dir_frequency)
 
 
+################################################################################################
 class SandBoxBlock(FlatBlock):
     """
-    SandBox Blocks are flat, crossable and have a low friction coeffifient
+    SandBox Blocks are flat, crossable and have a low friction coefficient
     """
     def __init__(self, position, dimensions, rotation, texture, collision_reward=0.0, movable=False, linked_block=None, friction=0.5, visible=True):
         if friction == 1.0:
@@ -418,8 +428,37 @@ class SandBoxBlock(FlatBlock):
         self.block_type = 'sandbox'
 
 
+################################################################################################
+class TriggerButtonBlock(BoundingBoxBlock):
+    """
+    TriggerButtonBlock are crossable, visible, and trigger a function call when crossed
+    """
+    def __init__(self, position, dimensions, rotation, texture, collision_reward=0.0, movable=False):
+        super(TriggerButtonBlock,self).__init__(position, dimensions, rotation, collision_reward=collision_reward, movable=movable, visible=True)
+        self.texture = texture
+        # the self.trigger_function will be called when the block is crossed, but it needs to be initialized before
+        def default_trigger(*args, **kwargs):
+            raise Exception('trigger_function has not been initialized')
+        self.trigger_function = default_trigger
 
+    def trigger(self, *args, **kwargs):
+        self.trigger_function(*args, **kwargs)
 
+    def _init(self):
+        self.block_type = 'trigger_button'
+
+    def collide(self, inCollision):
+        """
+        Called when block is collided
+
+        parameter:
+        ----------
+        inCollision (bool) : True if block is collided, false if it is not
+        """
+        # trigger the button only if the block is newly under collision
+        if not self.inCollision and inCollision :
+            self.trigger()
+        self.inCollision = inCollision
 
 
 
@@ -427,7 +466,7 @@ class SandBoxBlock(FlatBlock):
 ##################################################################################################################################################
 class Model(object):
 
-    def __init__(self, world='rb1', texture='minecraft', random_start_pos=True, random_start_rot=False, distractors=False, sandboxes=False):
+    def __init__(self,world='rb1',texture='minecraft',random_start_pos=True,random_start_rot=False,distractors=False,sandboxes=False,trigger_button=False):
         """
 
         Class for round bot model. This class should play the model role of MVC structure,
@@ -442,6 +481,7 @@ class Model(object):
         - random_start_rot (Bool) : whether the robot rotation is randomly sampled at reset or not.
         - distractors (Bool) : whether to add visual distractors on walls or not
         - sandoxes (Bool) : whether to add visual distractors on walls or not
+        - trigger_button (Bool) : whether to add a trigger button
         """
         # reference to windows
         self.windows = set()
@@ -449,6 +489,8 @@ class Model(object):
         self.visible_blocks = set()
         # A set of all collision blocks
         self.collision_blocks = set()
+        # A set of  blocks currently under collision
+        self.under_collision_blocks = set()
         # A set of movable blocks
         self.movable_blocks = set()
         # set of starting areas:
@@ -475,7 +517,7 @@ class Model(object):
         # maximum absolute possible reward in model, used for normalization
         self.max_reward=0.0
         # load world        
-        self.load_world(world, texture, distractors, sandboxes)
+        self.load_world(world, texture, distractors, sandboxes, trigger_button)
         self.flying, self.collided, self.current_reward = None, None, None
         # reset first time
         self.reset()
@@ -565,7 +607,7 @@ class Model(object):
             self.collision_blocks.add(block)
         elif block_type=='reward':
             block = RewardBlock( position=position, dimensions=dimensions, rotation=rotation, texture=texture, collision_reward=collision_reward )
-            self.collision_blocks.add( block ) # add reward blocks to collision_block to detect collisions
+            self.collision_blocks.add( block )
         elif block_type == 'distractor':
             block = DistractorBlock( boundingBox=boundingBox, dimensions=dimensions, rotation=rotation,
                                       texture=texture, collision_reward=collision_reward, speed=speed) # warning no position for this block !
@@ -574,6 +616,13 @@ class Model(object):
             block = FlatDistractorBlock( boundingBox=boundingBox, dimensions=dimensions, rotation=rotation,
                                       texture=texture, collision_reward=collision_reward, speed=speed) # warning no position for this block !
             self.distractors.add(block)
+        elif block_type=='trigger_button':
+            block = TriggerButtonBlock( position=position, dimensions=dimensions, rotation=rotation, texture=texture, collision_reward=collision_reward )
+            self.collision_blocks.add( block )
+            # set the trigger function to switch_pov for now
+            block.trigger_function = self.switch_pov
+        else:
+            raise ValueError('Unknown block_type : ' + block_type)
 
         if block.movable:
             self.movable_blocks.add(block)
@@ -748,9 +797,13 @@ class Model(object):
         self.current_reward=0.0
         self.current_friction = 1.0
         collided=False
-        for block in self.collision_blocks:
+        for block in self.collision_blocks:            
             new_overlap = (block.dimensions+self.robot_block.dimensions)/2.0 - np.abs(self.robot_position+motion_vector - block.position)
             if all( new_overlap > 0):
+                try:
+                    block.collide(True) # signal to the block it has been collided
+                except NotImplementedError:
+                    pass
                 # get block collision reward to be used in RL envs
                 if block.collision_reward < 0:
                     self.current_reward = min(self.current_reward, block.collision_reward) # if negative reward is min 
@@ -758,7 +811,7 @@ class Model(object):
                     self.current_reward += block.collision_reward # if positive, reward sums up
                 # update current friction ratio
                 self.current_friction = min(self.current_friction, block.friction)
-                # detect collision only if block is not crossable
+                # react to collision only if block is not crossable
                 if not block.crossable:
                     # old overlap is needed to know on which dimensions the problematic overlapping has been done in the last move
                     old_overlap = (block.dimensions+self.robot_block.dimensions)/2.0 - np.abs(self.robot_position - block.position)
@@ -766,17 +819,28 @@ class Model(object):
                     motion_vector -= new_overlap * (old_overlap<0) * np.sign(motion_vector) *1.1
                     collided = True
                     self.current_friction=0.0 # minimum friction if collision is detected
+                else:
+                    self.under_collision_blocks.add(block) # add this block to the set of block currently under collision
+            else:
+                try:
+                    self.under_collision_blocks.remove(block)
+                    block.collide(False) # signal to the block it is not collided anymore
+                except KeyError:
+                    pass
+
         self.robot_position += motion_vector # update
         return collided
 
 
-    def load_world(self, world, texture, distractors, sandboxes):
+    def load_world(self, world, texture, distractors, sandboxes, trigger_button):
         """ Loads the world passed as string parameter
         """
         if world == 'rb1':
-            texture_paths, world_info = round_bot_worlds.build_rb1_world(self, texture=texture, distractors=distractors, sandboxes=sandboxes)
+            texture_paths, world_info = round_bot_worlds.build_rb1_world(self, texture=texture, distractors=distractors,
+                                                                         sandboxes=sandboxes, trigger_button=trigger_button)
         elif world == 'rb1_1wall':
-            texture_paths, world_info = round_bot_worlds.build_rb1_1wall_world(self, texture=texture, distractors=distractors, sandboxes=sandboxes)
+            texture_paths, world_info = round_bot_worlds.build_rb1_1wall_world(self, texture=texture, distractors=distractors,
+                                                                         sandboxes=sandboxes, trigger_button=trigger_button)
         else:
             raise(Exception('Error: unknown world : ' + world))
 
@@ -801,4 +865,9 @@ class Model(object):
         return np.array(copy.deepcopy(arrays))
         #return np.concatenate( [self.robot_block.position, self.robot_block.rotation] ) 
 
-
+    def switch_pov(self):
+        """
+        Switches point of view between subjective and global in windows
+        """
+        for w in self.windows:
+            w.switch_pov()

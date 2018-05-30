@@ -45,7 +45,8 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
                             wall_reward=-1,
                             distractors=False,
                             distractors_speed=0.1,
-                            sandboxes=False,                        
+                            sandboxes=False,
+                            trigger_button=False,                 
                             ):
     """
     Builds a simple rectangle planar world with walls around
@@ -63,6 +64,7 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
     - distractors (Bool) : add visual distractors on walls and ground
     - distractors_speed (float) : speed of visual distractors displacement
     - sandboxes (Bool) : add sandboxes ont the ground (slowing down the robot when crossed)
+    - trigger_button (Bool) : add a trigger button that will trigger a change in the environment (change to be defined)
 
     Returns
     -------
@@ -149,6 +151,11 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
         # add sandboxes ont the ground if asked (slowing down the robot when crossed)
         model.add_block( (0, 0.3, 0, n/2, 0, n/2, 0.0, 0.0, 0.0), SAND, block_type='sandbox')
 
+    if trigger_button :
+        # add a trigger button that will trigger a change in the world when crossed ON / OFF
+        #TRIGGER = round_bot_model.Block.tex_coords((1, 0), (1, 0), (1, 0))
+        model.add_block( (0, 0.3, 0, n/3, 0.2, n/3, 0.0, 0.0, 0.0), STONE, block_type='trigger_button')
+
 
     world_info = {  'width' : 2*n,
                     'depth' : 2*n,
@@ -158,7 +165,8 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
 
 
 
-def build_rb1_world(model, texture, width=20, hwalls=4, dwalls=1, wall_reward=-1, goal_reward=10, distractors=False, distractors_speed=0.5, sandboxes=False):
+def build_rb1_world(model, texture, width=20, hwalls=4, dwalls=1, wall_reward=-1, goal_reward=10, distractors=False,
+                    distractors_speed=0.5, sandboxes=False, trigger_button=False):
     """
     Builds the rb1 world
     """    
@@ -167,7 +175,7 @@ def build_rb1_world(model, texture, width=20, hwalls=4, dwalls=1, wall_reward=-1
                                                         hwalls=hwalls, dwalls=dwalls,
                                                         wall_reward=wall_reward, distractors=distractors,
                                                         distractors_speed=distractors_speed,
-                                                        sandboxes=sandboxes,)
+                                                        sandboxes=sandboxes, trigger_button=trigger_button,)
 
     ## then add specs
     from gym_round_bot.envs import round_bot_model
@@ -197,7 +205,8 @@ def build_rb1_world(model, texture, width=20, hwalls=4, dwalls=1, wall_reward=-1
 
 
 
-def build_rb1_1wall_world(model, texture, width=20, hwalls=2, dwalls=2, wall_reward=-1, goal_reward=10, distractors=False,distractors_speed=0.1, sandboxes=False):
+def build_rb1_1wall_world(model, texture, width=20, hwalls=2, dwalls=2, wall_reward=-1, goal_reward=10, distractors=False,
+                          distractors_speed=0.1, sandboxes=False, trigger_button=False):
     """
     Builds a simple rectangle planar world with walls around, and 1 wall in the middle
     """
@@ -206,7 +215,7 @@ def build_rb1_1wall_world(model, texture, width=20, hwalls=2, dwalls=2, wall_rew
                                                         hwalls=hwalls, dwalls=dwalls,
                                                         wall_reward=wall_reward, distractors=distractors,
                                                         distractors_speed=distractors_speed,
-                                                        sandboxes=sandboxes),
+                                                        sandboxes=sandboxes, trigger_button=trigger_button,)
 
     ## then add specs
     from gym_round_bot.envs import round_bot_model
