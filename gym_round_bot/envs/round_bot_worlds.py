@@ -76,10 +76,12 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
     from gym_round_bot.envs import round_bot_model 
     # create textures coordinates
     GRASS = round_bot_model.Block.tex_coords((1, 0), (0, 1), (0, 0))
-    MUD = round_bot_model.Block.tex_coords((0, 1), (0, 1), (0, 1))
     SAND = round_bot_model.Block.tex_coords((1, 1), (1, 1), (1, 1))
     BRICK = round_bot_model.Block.tex_coords((2, 0), (2, 0), (2, 0))
+    BRICK2 = round_bot_model.Block.tex_coords((0, 2), (0, 2), (0, 2))
     STONE = round_bot_model.Block.tex_coords((2, 1), (2, 1), (2, 1))
+    STONE2 = round_bot_model.Block.tex_coords((1, 2), (1, 2), (1, 2))
+    BUTTON = round_bot_model.Block.tex_coords((2, 2), (2, 2), (2, 2))
     DISTRACTORS = [ round_bot_model.Block.tex_coords(t,t,t) for t in [(0,0),(1,0),(2,0),(0,1),(1,1),(2,1),(2,0)] ]
 
     # wwalls = width of walls
@@ -103,18 +105,18 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
 
 
     # Build wall blocks with negative reward on collision
-    #back wall
-    back_wall_block = model.add_block( (0, hwalls/2, -n, wwalls, hwalls, dwalls, 0.0, 0.0, 0.0),
-                     texture=STONE, block_type='brick', collision_reward = wall_reward)
     #front wall
-    front_wall_block = model.add_block( (0, hwalls/2, n, wwalls, hwalls, dwalls, 0.0, 0.0, 0.0),
+    back_wall_block = model.add_block( (0, hwalls/2, -n, wwalls, hwalls, dwalls, 0.0, 0.0, 0.0),
                      texture=BRICK, block_type='brick', collision_reward = wall_reward)
+    #back wall
+    front_wall_block = model.add_block( (0, hwalls/2, n, wwalls, hwalls, dwalls, 0.0, 0.0, 0.0),
+                     texture=STONE2, block_type='brick', collision_reward = wall_reward)
     #left wall
     left_wall_block = model.add_block( (-n, hwalls/2, 0, dwalls, hwalls, wwalls, 0.0, 0.0, 0.0),
-                     texture=SAND, block_type='brick', collision_reward = wall_reward)
+                     texture=STONE, block_type='brick', collision_reward = wall_reward)
     #right wall
     right_wall_block = model.add_block( (n, hwalls/2, 0, dwalls, hwalls, wwalls, 0.0, 0.0, 0.0),
-                     texture=MUD, block_type='brick', collision_reward = wall_reward)
+                     texture=BRICK2, block_type='brick', collision_reward = wall_reward)
 
     
     if distractors:
@@ -154,7 +156,7 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, hwalls=4, dwa
     if trigger_button :
         # add a trigger button that will trigger a change in the world when crossed ON / OFF
         #TRIGGER = round_bot_model.Block.tex_coords((1, 0), (1, 0), (1, 0))
-        model.add_block( (0, 0.3, 0, n/3, 0.2, n/3, 0.0, 0.0, 0.0), STONE, block_type='trigger_button')
+        model.add_block( (0, 0.3, 0, n/3, 0.2, n/3, 0.0, 0.0, 0.0), BUTTON, block_type='trigger_button')
 
 
     world_info = {  'width' : 2*n,

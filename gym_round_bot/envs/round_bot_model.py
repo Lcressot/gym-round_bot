@@ -859,11 +859,11 @@ class Model(object):
         -------
         np.array : array of arrays of every position and rotation of movable blocks ( no need to compute non movable )
         """
-        arrays=[]
-        for b in self.movable_blocks:
-            arrays.append(list(b.position)+list(b.rotation))
-        return np.array(copy.deepcopy(arrays))
-        #return np.concatenate( [self.robot_block.position, self.robot_block.rotation] ) 
+        # arrays=[]
+        # for b in self.movable_blocks:
+        #     arrays.append(list(b.position)+list(b.rotation))
+        # return np.array(copy.deepcopy(arrays))
+        return copy.deepcopy(np.reshape(np.concatenate( [self.robot_block.position, self.robot_block.rotation] ),[1,-1]) )
 
     def switch_pov(self):
         """
