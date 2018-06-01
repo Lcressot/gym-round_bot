@@ -68,7 +68,11 @@ class RoundBotEnv(gym.Env):
     @property
     def action_space(self):
         # self.action_space is self._controller.action_space
-        return self._controller.action_space
+        return copy.deepcopy(self._controller.action_space)
+
+    @property
+    def observation_space(self):
+        return copy.deepcopy(self._observation_space)
 
     @property
     def compatible_worlds(self):        
@@ -246,7 +250,17 @@ class RoundBotEnv(gym.Env):
             self._window.add_follower(self._monitor_window)
 
         # observation are RGB images of rendered world (as line arrays)
-        self._observation_space = spaces.Box(low=0, high=255, shape=[1, metadata['obssize'][0]*metadata['obssize'][1]*3],dtype=np.uint8)
+        if not self._position_observations:
+            if not self._normalize_observations:
+                self._observation_space = spaces.Box(low=0, high=255, shape=[1, metadata['obssize'][0]*metadata['obssize'][1]*3],dtype=np.uint8)
+            else:
+                self._observation_space = spaces.Box(low=-1.0, high=1.0, shape=[1, metadata['obssize'][0]*metadata['obssize'][1]*3],dtype=np.float)
+        else:
+            if not self._normalize_observations:
+                w=self._model.world_info['width']
+                self._observation_space = spaces.Box(low=-w, high=w, shape=[1, 6],dtype=np.float)
+            else
+                self._observation_space = spaces.Box(low=-1.0, high=1.0, shape=[1, 6],dtype=np.float)            
 
         self._multiview = metadata['multiview'] # if not None, observations will be fusion of subjective view with given relative xOz angles
 
