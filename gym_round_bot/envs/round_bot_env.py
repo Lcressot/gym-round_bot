@@ -259,7 +259,7 @@ class RoundBotEnv(gym.Env):
             if not self._normalize_observations:
                 w=self._model.world_info['width']
                 self._observation_space = spaces.Box(low=-w, high=w, shape=[1, 6],dtype=np.float)
-            else
+            else:
                 self._observation_space = spaces.Box(low=-1.0, high=1.0, shape=[1, 6],dtype=np.float)            
 
         self._multiview = metadata['multiview'] # if not None, observations will be fusion of subjective view with given relative xOz angles

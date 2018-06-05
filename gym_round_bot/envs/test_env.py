@@ -19,14 +19,14 @@ from gym_round_bot.envs import round_bot_controller as rbc
 
 # set variables 
 world = 'rb1' # the world to load
-obssize=[600,600] # the size of observations (rendering window)
+obssize=[16,16] # the size of observations (rendering window)
 winsize=[600,600] # the size of monitoring window (None if not wanted)
 
-controller = rbc.make('XZ',speed=5,dtheta=17, speedrange=1, xzrange=[1,1], thetarange=1,noise_ratio=0.0) # the robot controller                
+controller = rbc.make('Theta2',speed=10,dtheta=17, speedrange=1, xzrange=[1,1], thetarange=1,noise_ratio=0.0) # the robot controller                
 # set env metadata
 round_bot_env.set_metadata(
         world=world,
-        texture='minecraft+',
+        texture='minecraft',
         obssize=obssize,
         winsize=winsize,
         controller=controller,
@@ -35,7 +35,7 @@ round_bot_env.set_metadata(
         normalize_observations=True,
         observation_transformation = None,
         distractors=False,
-        trigger_button = True,
+        #trigger_button = True,
    )
 # create env 
 env = gym.make('RoundBot-v0')
