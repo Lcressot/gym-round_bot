@@ -30,6 +30,8 @@ def _texture_path(texture_bricks_name):
     """
     if texture_bricks_name == 'minecraft':
         return '/textures/texture_minecraft.png'
+    elif texture_bricks_name == 'graffiti':
+        return '/textures/texture_graffiti.png'
     elif texture_bricks_name == 'minecraft+':
         return '/textures/texture_minecraft+.png'
     elif texture_bricks_name == 'colours':
