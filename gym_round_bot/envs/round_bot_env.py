@@ -85,6 +85,7 @@ class RoundBotEnv(gym.Env):
         return {'minecraft', # minecraft game-like textures
                 'colours', # uniform colors, perceptual aliasing !
                 'minecraft+', # minecraft game-like textures with other additional antialiasing elements
+                'graffiti', # graffitis
                 }
 
     @property
