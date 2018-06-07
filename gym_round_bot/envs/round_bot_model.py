@@ -558,7 +558,9 @@ class Model(object):
         self.robot_rotation = list(self.start_rotation)
 
         if self.random_start_rot:
-            self.robot_rotation[0] = random.random()*360-180  # only x component is randomly sampled                       
+            self.robot_rotation[0] = random.random()*360-180  # only x component is randomly sampled
+        else:
+            self.robot_rotation = self.start_rotation
 
         # Strafing is moving lateral to the direction you are facing,
         # e.g. moving to the left or right while continuing to face forward.
