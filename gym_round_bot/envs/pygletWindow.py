@@ -145,7 +145,7 @@ class PygletWindow(pyglet.window.Window):
         Sets up the global_pov automatically
         """
         self.perspective = False
-        self.ortho_width = self.model.world_info['width']/2
+        self.ortho_width = max(self.model.world_info['width']/2,self.model.world_info['depth']/2)
         return (0, self.ortho_width/np.tan(np.radians(self.focal/2.0)), 0)
 
     def show_block(self, block):
