@@ -169,7 +169,7 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, depth=20, hwa
 
 
 
-def build_rb1_world(model, texture, width=10, depth=80, hwalls=4, dwalls=1, wall_reward=-1, goal_reward=10, distractors=False,
+def build_rb1_world(model, texture, width=20, depth=20, hwalls=4, dwalls=1, wall_reward=-1, goal_reward=10, distractors=False,
                     distractors_speed=0.5, sandboxes=False, trigger_button=False):
     """
     Builds the rb1 world

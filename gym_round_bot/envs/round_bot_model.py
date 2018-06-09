@@ -865,7 +865,7 @@ class Model(object):
         # for b in self.movable_blocks:
         #     arrays.append(list(b.position)+list(b.rotation))
         # return np.array(copy.deepcopy(arrays))
-        return copy.deepcopy(np.reshape(np.concatenate( [self.robot_block.position, self.robot_block.rotation] ),[1,-1]) )
+        return copy.deepcopy(np.reshape(np.concatenate( [self.robot_position, self.robot_rotation] ),[1,-1]) )
 
     def switch_pov(self):
         """

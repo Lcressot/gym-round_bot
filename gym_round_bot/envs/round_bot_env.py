@@ -285,7 +285,9 @@ class RoundBotEnv(gym.Env):
                 to_eval += '*2.0/255.0 - 1.0' # normalize from int [0:255] range to float [-1:1] range
             else:
                 w=self._model.world_info['width']
-                to_eval += '/' + str([w,w,w,360.0,360.0,360.0]) # normalize position with w and rotation with 360
+                d=self._model.world_info['depth']
+                m = max(w,d)
+                to_eval += '/' + str([m,m,m,360.0,360.0]) # normalize position with m and rotation with 360
 
         if self._observation_transformation:
             to_eval = 'self._observation_transformation(' + to_eval + ')'
