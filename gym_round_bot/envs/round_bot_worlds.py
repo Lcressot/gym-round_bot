@@ -90,6 +90,7 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, depth=20, hwa
     nw = width/2.0  # 1/2 width of this world
     nd = depth/2.0  # 1/2 depth of this world
     wr = width/3.0 # wr width of reward area
+    wwalls = width
 
     # get texture paths in current directory
     brick_texture_path = os.path.dirname(__file__) + texture_bricks
@@ -114,10 +115,10 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, depth=20, hwa
     front_wall_block = model.add_block( (0, hwalls/2, nw, depth, hwalls, dwalls, 0.0, 0.0, 0.0),
                      texture=STONE2, block_type='brick', collision_reward = wall_reward)
     #left wall
-    left_wall_block = model.add_block( (-nd, hwalls/2, 0, dwalls, hwalls, width, 0.0, 0.0, 0.0),
+    left_wall_block = model.add_block( (-nd, hwalls/2, 0, dwalls, hwalls, wwalls, 0.0, 0.0, 0.0),
                      texture=STONE, block_type='brick', collision_reward = wall_reward)
     #right wall
-    right_wall_block = model.add_block( (nd, hwalls/2, 0, dwalls, hwalls, width, 0.0, 0.0, 0.0),
+    right_wall_block = model.add_block( (nd, hwalls/2, 0, dwalls, hwalls, wwalls, 0.0, 0.0, 0.0),
                      texture=BRICK2, block_type='brick', collision_reward = wall_reward)
 
     
@@ -125,7 +126,7 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, depth=20, hwa
         # add visual distractors on the groud and inner faces of walls if asked
 
         # distractor ground block
-        size_wall_distractor = n
+        size_wall_distractor = n = min(nw,nd)
         ground_bb = round_bot_model.BoundingBoxBlock( (0, 0.1, 0), (2*n, 0, 2*n), (0.0, 0.0, 0.0), linked_block=ground_block)
         model.add_block( components=(0, 0, 0, size_wall_distractor, 0.0, size_wall_distractor, 0.0, 0.0, 0.0),
                          texture=DISTRACTORS[0], block_type='flat_distractor', boundingBox = ground_bb, speed=distractors_speed)

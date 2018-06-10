@@ -36,15 +36,15 @@ round_bot_env.set_metadata(
         observation_transformation = None,
         distractors=False,
         #trigger_button = True,
+        global_pov = (10,20,0)
    )
 # create env 
 env = gym.make('RoundBot-v0')
 # need to be called at least once
 env.reset()  
-
 # perform steps
 while(True):
-    ob, reward, done, _ = env.step(tuple(controller.action_space.sample()))
+    ob, reward, done, _ = env.step((tuple(controller.action_space.sample())))
     # print(reward)
     # render to screen if needed
     env.render()

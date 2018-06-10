@@ -16,9 +16,10 @@ if __name__ == '__main__':
 
     #world = 'rb1_1wall'
     world = 'rb1'
-    winsize=[400,400]
+    winsize=[600,600]
     #model = round_bot_model.Model(world,'colours',distractors=True)
-    model = round_bot_model.Model(world,'colours', sandboxes=True)
+    #model = round_bot_model.Model(world,'graffiti', sandboxes=True)
+    model = round_bot_model.Model(world,'graffiti')
     window = pygletWindow.MainWindow(
     	model,
 		#global_pov=(0,20,0),
