@@ -262,7 +262,6 @@ class RoundBotEnv(gym.Env):
         # observation getter
         self._get_observation = self._build_observation_getter()
         self._perform_udpate = self._build_update()
-
        
 
     def _build_update(self):

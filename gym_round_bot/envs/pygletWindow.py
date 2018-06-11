@@ -184,7 +184,7 @@ class PygletWindow(pyglet.window.Window):
         else:
             # reshape as line vector
             nparr=nparr.reshape(1,self.width*self.height*3)
-        return copy.deepcopy(nparr) # important to copy returned np.arrays !
+        return copy.copy(nparr) # important to copy returned np.arrays !
    
     def set_2d(self):
         """ Configure OpenGL to draw in 2d.
@@ -301,7 +301,13 @@ class PygletWindow(pyglet.window.Window):
         A simple fusion of subjective views with given angles, used to widen the field of view
 
         Note : this function doesn't perform any model updates ! It must be done before
-        """        
+        """
+
+        # if global pov is on, don't use multi-view rendering which is only for subjective views
+        if self.global_pov:
+            self.on_draw()
+            return self.get_image()
+           
         nviews = len(xzangles)
         multiview_rnd = np.zeros([self.height, self.width, 3], dtype=np.uint8)
         w = int(self.width/nviews)
