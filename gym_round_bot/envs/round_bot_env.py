@@ -113,17 +113,10 @@ class RoundBotEnv(gym.Env):
         """
         # perform action
         self._controller.step(action)
-        
-        # update model and window
-        if not self._multiview:
-            self._window.step(0.1) # update with 0.1 second intervall               
-            # get observation
-            self._current_observation = self._get_observation()
-        else:
-            self._window.update(0.1) # update with 0.1 second intervall
-            # get observation
-            self._current_observation = self._window.multiview_render(self._multiview)
-       
+     
+        # update and get observation
+        self._perform_udpate()
+        self._current_observation = self._get_observation()
 
         # get reward :
         reward = self._model.current_reward
@@ -155,7 +148,7 @@ class RoundBotEnv(gym.Env):
         
         # get observation
         self._current_observation = self._get_observation()
-      
+
         return self._current_observation
         
 
@@ -268,6 +261,19 @@ class RoundBotEnv(gym.Env):
         ## build self._get_observation function, which gets current observation (which transforms and reshapes it if asked)
         # observation getter
         self._get_observation = self._build_observation_getter()
+        self._perform_udpate = self._build_update()
+
+       
+
+    def _build_update(self):
+        """
+        Builds the function performing updates
+        """
+        # update model and window
+        if not self._multiview:
+            return lambda : self._window.step(0.1) # update with 0.1 second intervall               
+        else:
+            return lambda : self._window.update(0.1) # update with 0.1 second intervall
 
     def _build_observation_getter(self):
         """
@@ -275,19 +281,21 @@ class RoundBotEnv(gym.Env):
             self._position_observations , self._normalize_observations, and self._position_observations
         This way of doing allows clarity and fast processing of step function by avoiding calls to if statements and lambda functions
         """
-        if not self._position_observations :            
-            to_eval = 'self._window.get_image()'
+        if self._position_observations :
+            to_eval = 'self._model.position_observation()' 
+        elif self._multiview is not None:      
+            to_eval = 'self._window.multiview_render(self._multiview)'
         else: # observations are arrays of positions of mobable blocks           
-            to_eval = 'self._model.position_observation()'
+            to_eval = 'self._window.get_image()'
         
         if self._normalize_observations:
-            if not self._position_observations:
-                to_eval += '*2.0/255.0 - 1.0' # normalize from int [0:255] range to float [-1:1] range
-            else:
+            if self._position_observations:
                 w=self._model.world_info['width']
                 d=self._model.world_info['depth']
                 m = max(w,d)
-                to_eval += '/' + str([m,m,m,360.0,360.0]) # normalize position with m and rotation with 360
+                to_eval += '/' + str([m,m,m,360.0,360.0]) # normalize position with m and rotation with 360                
+            else:
+                to_eval += '*2.0/255.0 - 1.0' # normalize from int [0:255] range to float [-1:1] range
 
         if self._observation_transformation:
             to_eval = 'self._observation_transformation(' + to_eval + ')'

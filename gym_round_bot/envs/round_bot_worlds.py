@@ -126,29 +126,30 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, depth=20, hwa
         # add visual distractors on the groud and inner faces of walls if asked
 
         # distractor ground block
-        size_wall_distractor = n = min(nw,nd)
+        size_ground_distractor = n = min(nw,nd)
         ground_bb = round_bot_model.BoundingBoxBlock( (0, 0.1, 0), (2*n, 0, 2*n), (0.0, 0.0, 0.0), linked_block=ground_block)
-        model.add_block( components=(0, 0, 0, size_wall_distractor, 0.0, size_wall_distractor, 0.0, 0.0, 0.0),
+        model.add_block( components=(0, 0, 0, size_ground_distractor, 0.0, size_ground_distractor, 0.0, 0.0, 0.0),
                          texture=DISTRACTORS[0], block_type='flat_distractor', boundingBox = ground_bb, speed=distractors_speed)
-        model.add_block( components=(0, 0, 0, size_wall_distractor, 0.0, size_wall_distractor, 0.0, 0.0, 0.0),
+        model.add_block( components=(0, 0, 0, size_ground_distractor, 0.0, size_ground_distractor, 0.0, 0.0, 0.0),
                          texture=DISTRACTORS[0], block_type='flat_distractor', boundingBox = ground_bb, speed=distractors_speed)
         # wall distractors :
         width_wall_distractors = wwalls/2
+        height_wall_distractors = hwalls*2/3
         # distractor back_wall inner face block
-        back_wall_bb = round_bot_model.BoundingBoxBlock( (0, hwalls/2, -nw+dwalls/2+0.1), (wwalls, hwalls, 0.0), (0.0, 0.0, 0.0), linked_block=ground_block)
-        model.add_block( components=(0, 0, 0, width_wall_distractors, hwalls, 0.0, 0.0, 0.0, 0.0),
+        back_wall_bb = round_bot_model.BoundingBoxBlock( (0, hwalls/2, -nw+dwalls/2+0.1), (wwalls, height_wall_distractors, 0.0), (0.0, 0.0, 0.0), linked_block=ground_block)
+        model.add_block( components=(0, 0, 0, width_wall_distractors, height_wall_distractors, 0.0, 0.0, 0.0, 0.0),
                          texture=DISTRACTORS[1], block_type='flat_distractor', boundingBox = back_wall_bb, speed=distractors_speed)
         # distractor front_wall inner face block
-        front_wall_bb = round_bot_model.BoundingBoxBlock(( 0, hwalls/2, nw-dwalls/2-0.1), (wwalls, hwalls, 0.0), (0.0, 0.0, 0.0), linked_block=ground_block)
-        model.add_block( components=(0, 0, 0, width_wall_distractors, hwalls, 0.0, 0.0, 0.0, 0.0),
+        front_wall_bb = round_bot_model.BoundingBoxBlock(( 0, hwalls/2, nw-dwalls/2-0.1), (wwalls, height_wall_distractors, 0.0), (0.0, 0.0, 0.0), linked_block=ground_block)
+        model.add_block( components=(0, 0, 0, width_wall_distractors, height_wall_distractors, 0.0, 0.0, 0.0, 0.0),
                          texture=DISTRACTORS[2], block_type='flat_distractor', boundingBox = front_wall_bb, speed=distractors_speed)
         # distractor left_wall inner face block
-        left_wall_bb = round_bot_model.BoundingBoxBlock( (-nd+dwalls/2+0.1, hwalls/2, 0), (0.0, hwalls, wwalls), (0.0, 0.0, 0.0), linked_block=ground_block)
-        model.add_block( components=(0, 0, 0, 0.0, hwalls, width_wall_distractors, 0.0, 0.0, 0.0),
+        left_wall_bb = round_bot_model.BoundingBoxBlock( (-nd+dwalls/2+0.1, hwalls/2, 0), (0.0, height_wall_distractors, wwalls), (0.0, 0.0, 0.0), linked_block=ground_block)
+        model.add_block( components=(0, 0, 0, 0.0, height_wall_distractors, width_wall_distractors, 0.0, 0.0, 0.0),
                          texture=DISTRACTORS[3], block_type='flat_distractor', boundingBox = left_wall_bb, speed=distractors_speed)
         # distractor right_wall inner face block
-        right_wall_bb = round_bot_model.BoundingBoxBlock(( nd-dwalls/2-0.1, hwalls/2, 0), (0.0, hwalls, wwalls), (0.0, 0.0, 0.0), linked_block=ground_block)
-        model.add_block( components=(0, 0, 0, 0.0, hwalls, width_wall_distractors, 0.0, 0.0, 0.0),
+        right_wall_bb = round_bot_model.BoundingBoxBlock(( nd-dwalls/2-0.1, hwalls/2, 0), (0.0, height_wall_distractors, wwalls), (0.0, 0.0, 0.0), linked_block=ground_block)
+        model.add_block( components=(0, 0, 0, 0.0, height_wall_distractors, width_wall_distractors, 0.0, 0.0, 0.0),
                          texture=DISTRACTORS[4], block_type='flat_distractor', boundingBox = right_wall_bb, speed=distractors_speed)
 
 
