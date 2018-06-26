@@ -36,6 +36,8 @@ def _texture_path(texture_bricks_name):
         return '/textures/texture_minecraft+.png'
     elif texture_bricks_name == 'colours':
         return '/textures/texture_colours.png'
+    elif texture_bricks_name == 'simple':
+        return '/textures/texture_simple.png'
     else :
         raise ValueError('Unknown texture name '+ texture_bricks_name + ' in loading world')
 
