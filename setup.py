@@ -4,7 +4,7 @@ from setuptools import setup
 setup(
 	name='gym_round_bot',
 	version='0.0.1',    
-	install_requires=['numpy>=1.10.4','pyglet>=1.2.0','scipy'],
+	install_requires=['numpy>=1.10.4','pyglet>=1.2.0','scipy', ],
 	entry_point='gym_round_bot.envs',
 	author='Loic Cressot',
 	classifiers=[
@@ -12,7 +12,7 @@ setup(
     #   3 - Alpha
     #   4 - Beta
     #   5 - Production/Stable
-    'Development Status :: 3 - Alpha',
+    'Development Status :: 3 - Beta',
 
     # Indicate who your project is intended for
     'Intended Audience :: Developers, Researchers, Students',

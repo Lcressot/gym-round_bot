@@ -1,3 +1,4 @@
+
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
@@ -7,9 +8,6 @@
 
     Small script for testing and understanding the gym_round_bot environment
 """
-
-import gym
-import gym_round_bot
 
 # create environment
 import gym

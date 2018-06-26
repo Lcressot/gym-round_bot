@@ -36,7 +36,8 @@ class PygletWindow(pyglet.window.Window):
         """
         Parameters
         ----------
-        - model : (Round_bot_model.Model) model linked to the window
+        - model : Round_bot_model.Model
+            Model linked to the window
         - global_pov : (Tuple(int, int, int) or Bool) Global point of view. If None, view is subjective.
             If True, automatic computing. Else set with Tuple(int, int, int)
         - perspective : (Bool) camera projection mode
