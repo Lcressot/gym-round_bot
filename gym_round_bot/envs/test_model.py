@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """ Cressot Loic
-    ISIR CNRS/UPMC
+    ISIR - CNRS / Sorbonne Université
     02/2018
 
     Small script for testing and understanding the model and windows (no gym env involved here)

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """ Cressot Loic
-    ISIR CNRS/UPMC
+    ISIR - CNRS / Sorbonne Université
     02/2018
     code started from : https://github.com/fogleman/Minecraft
 """ 

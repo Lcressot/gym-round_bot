@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """ Cressot Loic
-    ISIR CNRS/UPMC
+    ISIR - CNRS / Sorbonne Université
     02/2018
 
     This file allows to build worlds

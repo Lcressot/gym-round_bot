@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """ Cressot Loic & Merckling Astrid
-    ISIR CNRS/UPMC
+    ISIR - CNRS / Sorbonne Université
     02/2018
 """ 
 

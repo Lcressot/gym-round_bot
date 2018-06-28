@@ -3,7 +3,7 @@
 # -*- coding: utf-8 -*-
 
 """ Cressot Loic & Merckling Astrid
-    ISIR CNRS/UPMC
+    ISIR - CNRS / Sorbonne Université
     02/2018
 
     Small script for testing and understanding the gym_round_bot environment

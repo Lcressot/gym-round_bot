@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """ Cressot Loic
-    ISIR CNRS/UPMC
+    ISIR - CNRS / Sorbonne Université
     02/2018
     code started from : https://github.com/fogleman/Minecraft
 """ 
@@ -36,15 +36,14 @@ class PygletWindow(pyglet.window.Window):
         """
         Parameters
         ----------
-        - model : Round_bot_model.Model
-            Model linked to the window
+        - model : (Round_bot_model.Model) Model linked to the window
         - global_pov : (Tuple(int, int, int) or Bool) Global point of view. If None, view is subjective.
             If True, automatic computing. Else set with Tuple(int, int, int)
         - perspective : (Bool) camera projection mode
         - interactive : (Bool) wether user can interact with window or not (use : take control of the robot for debug)
         - focal : (float) camera projective focal length
-        - *args : Tuple args of parent Class pyglet.window.Window
-        - **kwargs : Dict kwargs of parent Class pyglet.window.Window
+        - *args : (tuple) args of parent Class pyglet.window.Window
+        - **kwargs : (dict) kwargs of parent Class pyglet.window.Window
         """
         # prevent user from instantiating directly this abstract class
         if type(self) is PygletWindow:
