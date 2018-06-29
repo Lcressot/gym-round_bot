@@ -462,6 +462,17 @@ class TriggerButtonBlock(BoundingBoxBlock):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 ##################################################################################################################################################
 ##################################################################################################################################################
 class Model(object):
@@ -475,13 +486,13 @@ class Model(object):
 
         Parameters 
         ----------
-        - world (str) : the name of the world to load. Worlds are defined in module round_bot_worlds
-        - texture (str) : the name of the texture to be applied on blocks
-        - random_start_pos (Bool) : whether the robot position is randomly sampled inside world's starting areas at reset or not.
-        - random_start_rot (Bool) : whether the robot rotation is randomly sampled at reset or not.
-        - distractors (Bool) : whether to add visual distractors on walls or not
-        - sandoxes (Bool) : whether to add visual distractors on walls or not
-        - trigger_button (Bool) : whether to add a trigger button
+        - world : (dict) world to load with a least name entry. Worlds are defined in module round_bot_worlds
+        - texture : (str) the name of the texture to be applied on blocks
+        - random_start_pos : (Bool) whether the robot position is randomly sampled inside world's starting areas at reset or not.
+        - random_start_rot : (Bool) whether the robot rotation is randomly sampled at reset or not.
+        - distractors : (Bool) whether to add visual distractors on walls or not
+        - sandoxes : (Bool) whether to add visual distractors on walls or not
+        - trigger_button : (Bool) whether to add a trigger button
         """
         # reference to windows
         self.windows = set()
@@ -837,14 +848,26 @@ class Model(object):
     def load_world(self, world, texture, distractors, sandboxes, trigger_button):
         """ Loads the world passed as string parameter
         """
-        if world == 'rb1':
+        world_size = None
+
+        if world['name'] == 'rb1':            
+            try:
+                world_size = world['size']
+            except KeyError:
+                world_size = [20,20]
             texture_paths, world_info = round_bot_worlds.build_rb1_world(self, texture=texture, distractors=distractors,
-                                                                         sandboxes=sandboxes, trigger_button=trigger_button)
-        elif world == 'rb1_1wall':
+                                                                         sandboxes=sandboxes, trigger_button=trigger_button,
+                                                                         width=world_size[0], depth=world_size[1])
+        elif world['name'] == 'rb1_1wall':
+            try:
+                world_size = world['size']
+            except KeyError:
+                world_size = [20,20]
             texture_paths, world_info = round_bot_worlds.build_rb1_1wall_world(self, texture=texture, distractors=distractors,
-                                                                         sandboxes=sandboxes, trigger_button=trigger_button)
+                                                                         sandboxes=sandboxes, trigger_button=trigger_button,
+                                                                         width=world_size[0], depth=world_size[1])
         else:
-            raise(Exception('Error: unknown world : ' + world))
+            raise(Exception('Error: unknown world : ' + world['name']))
 
         self.world_info = world_info
         self.texture_paths = texture_paths

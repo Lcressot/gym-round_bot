@@ -179,8 +179,8 @@ class RoundBotEnv(gym.Env):
             -> see in load_metada method
         """
         metadata = RoundBotEnv.metadata
-        if not metadata['world'] in self.compatible_worlds:
-            raise(Exception('Error: unknown or uncompatible world \'' + metadata['world'] + '\' for environnement round_bot'))
+        if not metadata['world']['name'] in self.compatible_worlds:
+            raise(Exception('Error: unknown or uncompatible world \'' + metadata['world']['name'] + '\' for environnement round_bot'))
         if not metadata['texture'] in self.compatible_textures:
             raise(Exception('Error: unknown or uncompatible texture \'' + metadata['texture'] + '\' for environnement round_bot'))
         
@@ -225,7 +225,7 @@ class RoundBotEnv(gym.Env):
                                                 focal=metadata['focal'],
                                                 width=metadata['obssize'][0],
                                                 height=metadata['obssize'][1],
-                                                caption='Round bot in '+self._world+' world',
+                                                caption='Round bot in '+self._world['name']+' world',
                                                 resizable=False,
                                                 visible=metadata['visible']
                                                 )
@@ -237,7 +237,7 @@ class RoundBotEnv(gym.Env):
                                                     perspective = False,
                                                     width=metadata['winsize'][0],
                                                     height=metadata['winsize'][1],
-                                                    caption='Observation window '+ self._world,
+                                                    caption='Observation window '+ self._world['name'],
                                                     resizable=False,
                                                     visible=True,
                                                     )           
@@ -322,7 +322,7 @@ class RoundBotEnv(gym.Env):
                                         perspective = False,
                                         width=height,
                                         height=width,
-                                        caption='Observation window '+ self._world,
+                                        caption='Observation window '+ self._world['name'],
                                         resizable=False,
                                         visible=True,
                                         )           
@@ -344,7 +344,8 @@ class RoundBotEnv(gym.Env):
             self._monitor_window = None
 
 
-def set_metadata(world='rb1',
+def set_metadata(world={'name':'rb1','size':[20,20]},
+                world_spec=[20,20],
                 texture='minecraft',
                 controller=round_bot_controller.make(name='Theta',dtheta=20,speed=10,int_actions=False,xzrange=[2,2],thetarange=2),
                 obssize=[16,16],
@@ -370,7 +371,7 @@ def set_metadata(world='rb1',
 
         parameters :
         -----------
-        - world : (str) name of the world to load
+        - world : (dict) world to load with a least name entry
         - texture : (str) name of texture to set to world brick blocks
         - controller: (round_bot_Controller) controller object to use for mapping from actions to robot control
         - obssize / winsize : (tuple(int)) observation's / monitor windows's size tuple
