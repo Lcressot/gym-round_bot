@@ -16,7 +16,8 @@ from gym_round_bot.envs import round_bot_env
 from gym_round_bot.envs import round_bot_controller as rbc
 
 # set variables 
-world = 'rb1' # the world to load
+world_name = 'rb1'
+world = {'name':world_name,'size':[20,20]} # the world to load
 obssize=[300,300] # the size of observations (rendering window)
 winsize=[600,600] # the size of monitoring window (None if not wanted)
 

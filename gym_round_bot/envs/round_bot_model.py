@@ -477,7 +477,7 @@ class TriggerButtonBlock(BoundingBoxBlock):
 ##################################################################################################################################################
 class Model(object):
 
-    def __init__(self,world='rb1',texture='minecraft',random_start_pos=True,random_start_rot=False,distractors=False,sandboxes=False,trigger_button=False):
+    def __init__(self,world={'name':'rb1','size':[20,20]},texture='minecraft',random_start_pos=True,random_start_rot=False,distractors=False,sandboxes=False,trigger_button=False):
         """
 
         Class for round bot model. This class should play the model role of MVC structure,

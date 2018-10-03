@@ -176,7 +176,7 @@ class RoundBotEnv(gym.Env):
         Loads a world into environnement with metadata vars
 
         Parameters used in metadata for loading :
-            -> see in load_metada method
+            -> see in set_metada method
         """
         metadata = RoundBotEnv.metadata
         if not metadata['world']['name'] in self.compatible_worlds:
@@ -371,7 +371,7 @@ def set_metadata(world={'name':'rb1','size':[20,20]},
 
         parameters :
         -----------
-        - world : (dict) world to load with a least name entry
+        - world : (dict) world to load with at least a "name" key
         - texture : (str) name of texture to set to world brick blocks
         - controller: (round_bot_Controller) controller object to use for mapping from actions to robot control
         - obssize / winsize : (tuple(int)) observation's / monitor windows's size tuple

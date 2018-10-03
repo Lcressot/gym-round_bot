@@ -14,8 +14,9 @@ import pygletWindow
 
 if __name__ == '__main__':
 
-    world = 'rb1_1wall'
-    #world = 'rb1'
+    world_name = 'rb1_1wall'
+    #world_name = 'rb1'
+    world = {'name':world_name,'size':[20,20]}
     winsize=[600,600]
     #model = round_bot_model.Model(world,'colours',distractors=True)
     #model = round_bot_model.Model(world,'graffiti', sandboxes=True)
@@ -28,7 +29,7 @@ if __name__ == '__main__':
 		interactive=True,
 		width=winsize[0],
 		height=winsize[1],
-		caption='Round bot in '+world+' world',
+		caption='Round bot in '+world['name']+' world',
 		resizable=False,
 		visible=True,
 	)
@@ -40,7 +41,7 @@ if __name__ == '__main__':
         perspective=False,        
         width=winsize[0],
         height=winsize[1],
-        caption='Observation window '+world,
+        caption='Observation window '+world['name'],
         visible=True
     )
 
