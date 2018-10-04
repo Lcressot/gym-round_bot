@@ -262,7 +262,7 @@ class Theta2_Controller(Theta_Controller):
 ##################################################################################################################################
 class XZ_Controller(DiscreteController):
     """
-    This class controls the robot to move on (oXZ) plan, always looking in the same direction
+    This class controls the robot to move on (oXZ) plan, always looking in the same direction, with descrete moves
     """
     def __init__(self, model, speed, xzrange=[1,1], thetarange=2, int_actions=False, noise_ratio=0):
         super(XZ_Controller,self).__init__('XZ',model=model, int_actions=int_actions, xzrange=xzrange,
@@ -364,7 +364,7 @@ class XZca_Controller(ContinuousController):
         raise Exception('cannot modify speed for this controller, only accelerations')
 
 
-def make(name, speed=5, dtheta=7.0, xzrange=[1,1], speedrange=1, thetarange=1, int_actions=False, model=None, fixed_point=[0,0],noise_ratio=0.0):
+def make(name, speed=1, dtheta=7.0, xzrange=[1,1], speedrange=1, thetarange=1, int_actions=False, model=None, fixed_point=[0,0],noise_ratio=0.0):
     """
     Functions for making controller objects
     """

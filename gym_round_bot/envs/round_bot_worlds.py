@@ -174,7 +174,7 @@ def _build_square_default_world(model, texture_bricks_name, width=20, depth=20, 
 
 
 def build_square_world(model, texture, width=20, depth=20, hwalls=4, dwalls=1, wall_reward=-1, goal_reward=10, distractors=False,
-                    distractors_speed=0.5, sandboxes=False, trigger_button=False):
+                    distractors_speed=0.1, sandboxes=False, trigger_button=False):
     """
     Builds the square world
     """    

@@ -270,10 +270,12 @@ class RoundBotEnv(gym.Env):
         Builds the function performing updates
         """
         # update model and window
+        # Use dt = 1.0 for updating doesn't change computation speed
+        # Instead dt = 1.0 means that a speed of X will produce a X units displacement
         if not self._multiview:
-            return lambda : self._window.step(0.1) # update with 0.1 second intervall               
+            return lambda : self._window.step(1.0)
         else:
-            return lambda : self._window.update(0.1) # update with 0.1 second intervall
+            return lambda : self._window.update(1.0)
 
     def _build_observation_getter(self):
         """
@@ -347,7 +349,7 @@ class RoundBotEnv(gym.Env):
 def set_metadata(world={'name':'square','size':[20,20]},
                 world_spec=[20,20],
                 texture='minecraft',
-                controller=round_bot_controller.make(name='Theta',dtheta=20,speed=10,int_actions=False,xzrange=[2,2],thetarange=2),
+                controller=round_bot_controller.make(name='Theta',dtheta=20,speed=1,int_actions=False,xzrange=[2,2],thetarange=2),
                 obssize=[16,16],
                 winsize=None,
                 global_pov=None,
