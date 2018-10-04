@@ -25,14 +25,14 @@ from pyglet.window import key, mouse
     This file defines the environnement's window and renderer
 """
 ################################################################################################################################
-class PygletWindow(pyglet.window.Window):
+class RoundBotWindow(pyglet.window.Window):
 ################################################################################################################################
     """
         Abstract class for rendering in a window with pyglet
     """
 
     def __init__(self, model, global_pov=None, perspective=True, interactive=False, focal=65.0, *args, **kwargs):
-        super(PygletWindow, self).__init__(*args, **kwargs)
+        super(RoundBotWindow, self).__init__(*args, **kwargs)
         """
         Parameters
         ----------
@@ -46,7 +46,7 @@ class PygletWindow(pyglet.window.Window):
         - **kwargs : (dict) kwargs of parent Class pyglet.window.Window
         """
         # prevent user from instantiating directly this abstract class
-        if type(self) is PygletWindow:
+        if type(self) is RoundBotWindow:
             raise NotImplementedError('Cannot instantiate this abstract class')
 
         # Instance of the model that handles the world.
@@ -343,7 +343,7 @@ class PygletWindow(pyglet.window.Window):
 
 
 ################################################################################################################################
-class MainWindow(PygletWindow):
+class MainWindow(RoundBotWindow):
 ################################################################################################################################
     """
         Class of main windows:
@@ -353,7 +353,7 @@ class MainWindow(PygletWindow):
         """
         Parameters
         ----------
-        see parent Class PygletWindow __init__ parameters
+        see parent Class RoundBotWindow __init__ parameters
         """
         super(MainWindow, self).__init__(model, global_pov, perspective, interactive, focal, *args, **kwargs)
 
@@ -432,7 +432,7 @@ class MainWindow(PygletWindow):
         the game will ignore the mouse.
 
         """
-        super(PygletWindow, self).set_exclusive_mouse(exclusive)
+        super(RoundBotWindow, self).set_exclusive_mouse(exclusive)
         self.exclusive = exclusive 
 
 
@@ -541,7 +541,7 @@ class MainWindow(PygletWindow):
 
 
 ################################################################################################################################
-class SecondaryWindow(PygletWindow):
+class SecondaryWindow(RoundBotWindow):
 ################################################################################################################################
     """
         Class of secondary windows : used to observe model but don't interact with it

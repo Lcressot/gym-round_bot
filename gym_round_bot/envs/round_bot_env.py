@@ -12,7 +12,7 @@ from gym import error, spaces
 from gym import utils
 from gym.utils import seeding
 
-from gym_round_bot.envs import pygletWindow
+from gym_round_bot.envs import round_bot_window
 from gym_round_bot.envs import round_bot_model
 from gym_round_bot.envs import round_bot_controller
 
@@ -133,7 +133,7 @@ class RoundBotEnv(gym.Env):
             reward = reward/self._model.max_reward # normalize values in [-1,1] float range
         # no info
         info={}
-        return self._current_observation, reward, done, {}
+        return self._current_observation, reward, done, info
         
 
     def reset(self):
@@ -218,7 +218,7 @@ class RoundBotEnv(gym.Env):
 
 
         # build main window
-        self._window = pygletWindow.MainWindow(  self._model,
+        self._window = round_bot_window.MainWindow(  self._model,
                                                 global_pov=metadata['global_pov'],
                                                 perspective = metadata['perspective'],
                                                 interactive=False,
@@ -232,7 +232,7 @@ class RoundBotEnv(gym.Env):
 
         # build secondary observation window if asked
         if metadata['winsize']:
-            self._monitor_window = pygletWindow.SecondaryWindow(self._model,
+            self._monitor_window = round_bot_window.SecondaryWindow(self._model,
                                                     global_pov = True,
                                                     perspective = False,
                                                     width=metadata['winsize'][0],
@@ -316,7 +316,7 @@ class RoundBotEnv(gym.Env):
         if not (height > 0 and width > 0):
             raise ValueError('unvalid dimensions for monitor window')
         if not self._monitor_window:
-            self._monitor_window = pygletWindow.SecondaryWindow(
+            self._monitor_window = round_bot_window.SecondaryWindow(
                                         self._model,
                                         global_pov = True,
                                         perspective = False,

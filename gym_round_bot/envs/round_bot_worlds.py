@@ -197,14 +197,14 @@ def build_square_world(model, texture, width=20, depth=20, hwalls=4, dwalls=1, w
     wr = width/4.0 # wr width of reward area
    
     # set robot specifications
-    bot_diameter = 1
+    bot_radius = 1
     bot_height = 1
 
     # Build reward block in the corner
     rew = model.add_block( (nd-(wr/2+dwalls/2), bot_height/2.0, -nw+(wr/2+dwalls/2), wr, bot_height/3.0, wr, 0.0, 0.0, 0.0),
                      texture=REWARD, block_type='reward', collision_reward = goal_reward)
     # Build robot block, set initial height to bot_heigh/2 + small offset to avoid ground collision
-    model.add_block( (0, bot_height/2.0+0.1, 0, 2*bot_diameter, bot_height, 2*bot_diameter, 0.0, 0.0, 0.0),
+    model.add_block( (0, bot_height/2.0+0.1, 0, 2*bot_radius, bot_height, 2*bot_radius, 0.0, 0.0, 0.0),
                      texture=BOT, block_type='robot')
     # add starting areas (the height=0 of block does not matter here, only area of (hwalls-2*dwalls)^2)
     model.add_block( (0, bot_height/2.0+0.1, 0, 2*nd-2*dwalls, 0.1, 2*nw-2*dwalls, 0.0, 0.0, 0.0),
@@ -238,7 +238,7 @@ def build_square_1wall_world(model, texture, width=20, depth=20, hwalls=2, dwall
     wr = width/4.0 # wr width of reward area
  
     # set robot specifications
-    bot_diameter = 1
+    bot_radius = 1
     bot_height = 1
     
     # middle wall
@@ -248,7 +248,7 @@ def build_square_1wall_world(model, texture, width=20, depth=20, hwalls=2, dwall
     model.add_block( (n-(wr/2+dwalls/2), bot_height/2.0, -n+(wr/2+dwalls/2), wr, bot_height/3.0, wr, 0.0, 0.0, 0.0),
                      texture=REWARD, block_type='reward', collision_reward = 1)
     # Build robot block, set initial height to bot_heigh/2 + small offset to avoid ground collision
-    model.add_block( (0, bot_height/2.0+0.1, 0, 2*bot_diameter, bot_height, 2*bot_diameter, 0.0, 0.0, 0.0),
+    model.add_block( (0, bot_height/2.0+0.1, 0, 2*bot_radius, bot_height, 2*bot_radius, 0.0, 0.0, 0.0),
                      texture=BOT, block_type='robot')
     # add starting areas (the height=0 of block does not matter here, only area of (hwalls-2*dwalls)^2)
     model.add_block( (0, bot_height/2.0+0.1, (wwalls-2*dwalls)/4, wwalls-2*dwalls, 0.1, (wwalls-2*dwalls)/2, 0.0, 0.0, 0.0),

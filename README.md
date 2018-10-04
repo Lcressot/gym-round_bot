@@ -5,10 +5,10 @@ This repository gives a robotic simulation environment compatible with OpenAI gy
 ### Model :
 round_bot_model.py
 
-The 3D model of the simulation (no OpenGl) which loads the world's points and moves the robot, dealing with collisions. This module should not include rendering code (see MVC code structure) because visualization is done in the pygletWindow module.
+The 3D model of the simulation (no OpenGl) which loads the world's points and moves the robot, dealing with collisions. This module should not include rendering code (see MVC code structure) because visualization is done in the round_bot_window module.
 
 ### Window :
-pygletWindow.py
+round_bot_window.py
 
 + A class inherited from python Pyglet library for rendering 3D scenes (given by the model) with OpenGL. Interaction with the user is possible (to control the model's robot) if the window is set to visible and interactive. If the window is visible and interactive, control the robot for debugging your world or have fun with tab (to enter control mode), and ZSQD AE and mouse for direction and rotation.
 + Set the view to subjective with global_pov=None or set it to global with for instance global_pov=(0,40,0). Use global_pov=True for automatic global_pov computing.
@@ -117,7 +117,7 @@ while(True):
 
 ### BUGS
 + Cannot close window when it not interactive. It should be closable.
-+ The robot y rotation in free flying mode for debug is not correct (not very important) see function PygletWindow.on_mouse_motion
++ The robot y rotation in free flying mode for debug is not correct (not very important) see function RoundBotWindow.on_mouse_motion
 
 ## Code documentation
 Please use this documentation format to document the new functions (and change the old which are not conform):

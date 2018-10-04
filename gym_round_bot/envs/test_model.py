@@ -9,7 +9,7 @@
 """ 
 
 import round_bot_model
-import pygletWindow
+import round_bot_window
 
 
 if __name__ == '__main__':
@@ -21,7 +21,7 @@ if __name__ == '__main__':
     #model = round_bot_model.Model(world,'colours',distractors=True)
     #model = round_bot_model.Model(world,'graffiti', sandboxes=True)
     model = round_bot_model.Model(world,'graffiti')
-    window = pygletWindow.MainWindow(
+    window = round_bot_window.MainWindow(
     	model,
 		#global_pov=(0,20,0),
 		global_pov=None,
@@ -34,7 +34,7 @@ if __name__ == '__main__':
 		visible=True,
 	)
 
-    secwindow = pygletWindow.SecondaryWindow(
+    secwindow = round_bot_window.SecondaryWindow(
         model,
         global_pov=True,
         #global_pov=None,

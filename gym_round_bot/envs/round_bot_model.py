@@ -481,7 +481,7 @@ class Model(object):
         """
 
         Class for round bot model. This class should play the model role of MVC structure,
-        and should not deal with the rendering and the windowing (see class PygletWindow)
+        and should not deal with the rendering and the windowing (see class RoundBotWindow)
         or the controlling (see class RoundBotEnv)
 
         Parameters 
