@@ -42,7 +42,7 @@ def _texture_path(texture_bricks_name):
         raise ValueError('Unknown texture name '+ texture_bricks_name + ' in loading world')
 
 
-def _build_rb1_default_world(model, texture_bricks_name, width=20, depth=20, hwalls=4, dwalls=1,                    
+def _build_square_default_world(model, texture_bricks_name, width=20, depth=20, hwalls=4, dwalls=1,                    
                             texture_robot='/textures/robot.png',
                             texture_visualisation='/textures/visualisation.png',
                             texture_distractors='/textures/texture_distractors.png',
@@ -173,13 +173,13 @@ def _build_rb1_default_world(model, texture_bricks_name, width=20, depth=20, hwa
 
 
 
-def build_rb1_world(model, texture, width=20, depth=20, hwalls=4, dwalls=1, wall_reward=-1, goal_reward=10, distractors=False,
+def build_square_world(model, texture, width=20, depth=20, hwalls=4, dwalls=1, wall_reward=-1, goal_reward=10, distractors=False,
                     distractors_speed=0.5, sandboxes=False, trigger_button=False):
     """
-    Builds the rb1 world
+    Builds the square world
     """    
     ## first build default world
-    texture_paths, world_info = _build_rb1_default_world(model, texture, width=width, depth=depth,
+    texture_paths, world_info = _build_square_default_world(model, texture, width=width, depth=depth,
                                                         hwalls=hwalls, dwalls=dwalls,
                                                         wall_reward=wall_reward, distractors=distractors,
                                                         distractors_speed=distractors_speed,
@@ -214,13 +214,13 @@ def build_rb1_world(model, texture, width=20, depth=20, hwalls=4, dwalls=1, wall
 
 
 
-def build_rb1_1wall_world(model, texture, width=20, depth=20, hwalls=2, dwalls=2, wall_reward=-1, goal_reward=10, distractors=False,
+def build_square_1wall_world(model, texture, width=20, depth=20, hwalls=2, dwalls=2, wall_reward=-1, goal_reward=10, distractors=False,
                           distractors_speed=0.1, sandboxes=False, trigger_button=False):
     """
     Builds a simple rectangle planar world with walls around, and 1 wall in the middle
     """
     ## first build default world
-    texture_paths, world_info = _build_rb1_default_world(model, texture, width=width, depth=depth,
+    texture_paths, world_info = _build_square_default_world(model, texture, width=width, depth=depth,
                                                         hwalls=hwalls, dwalls=dwalls,
                                                         wall_reward=wall_reward, distractors=distractors,
                                                         distractors_speed=distractors_speed,

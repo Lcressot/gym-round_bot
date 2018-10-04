@@ -14,8 +14,8 @@ import pygletWindow
 
 if __name__ == '__main__':
 
-    world_name = 'rb1_1wall'
-    #world_name = 'rb1'
+    world_name = 'square_1wall'
+    #world_name = 'square'
     world = {'name':world_name,'size':[20,20]}
     winsize=[600,600]
     #model = round_bot_model.Model(world,'colours',distractors=True)

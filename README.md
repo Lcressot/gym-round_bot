@@ -1,6 +1,6 @@
 # gym-round_bot
 
-This repository gives a robotic simulation environment compatible with OpenAI gym. The simulation is a simple round bot driving in a simple maze-type world with walls. It is designed as follows :
+This repository gives a robotic simulation environment compatible with OpenAI gym. The simulation is a simple round bot driving in a simple maze-type world with walls. It is compatible with both Python 2 and 3 and is designed as follows :
 
 ### Model :
 round_bot_model.py
@@ -81,7 +81,7 @@ from gym_round_bot.envs import round_bot_env
 from gym_round_bot.envs import round_bot_controller as rbc
 
 # set variables 
-world = 'rb1' # the world to load
+world = 'square' # the world to load
 obssize=[16,16] # the size of observations (rendering window)
 winsize=[300,300] # the size of monitoring window (None if not wanted)
 controller = rbc.make('Theta2',speed=5,dtheta=15, xzrange=[1,1], thetarange=1) # the robot controller

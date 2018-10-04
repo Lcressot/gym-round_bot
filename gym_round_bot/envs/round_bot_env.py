@@ -76,8 +76,8 @@ class RoundBotEnv(gym.Env):
 
     @property
     def compatible_worlds(self):        
-        return {'rb1', # rectangle set, first person view, reward in top left corner
-                'rb1_1wall', # rectangle set, first person view, reward in top left corner, middle blocks
+        return {'square', # rectangle set, first person view, reward in top left corner
+                'square_1wall', # rectangle set, first person view, reward in top left corner, middle blocks
                 }
 
     @property
@@ -344,7 +344,7 @@ class RoundBotEnv(gym.Env):
             self._monitor_window = None
 
 
-def set_metadata(world={'name':'rb1','size':[20,20]},
+def set_metadata(world={'name':'square','size':[20,20]},
                 world_spec=[20,20],
                 texture='minecraft',
                 controller=round_bot_controller.make(name='Theta',dtheta=20,speed=10,int_actions=False,xzrange=[2,2],thetarange=2),

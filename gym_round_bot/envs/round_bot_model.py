@@ -477,7 +477,7 @@ class TriggerButtonBlock(BoundingBoxBlock):
 ##################################################################################################################################################
 class Model(object):
 
-    def __init__(self,world={'name':'rb1','size':[20,20]},texture='minecraft',random_start_pos=True,random_start_rot=False,distractors=False,sandboxes=False,trigger_button=False):
+    def __init__(self,world={'name':'square','size':[20,20]},texture='minecraft',random_start_pos=True,random_start_rot=False,distractors=False,sandboxes=False,trigger_button=False):
         """
 
         Class for round bot model. This class should play the model role of MVC structure,
@@ -850,20 +850,20 @@ class Model(object):
         """
         world_size = None
 
-        if world['name'] == 'rb1':            
+        if world['name'] == 'square':            
             try:
                 world_size = world['size']
             except KeyError:
                 world_size = [20,20]
-            texture_paths, world_info = round_bot_worlds.build_rb1_world(self, texture=texture, distractors=distractors,
+            texture_paths, world_info = round_bot_worlds.build_square_world(self, texture=texture, distractors=distractors,
                                                                          sandboxes=sandboxes, trigger_button=trigger_button,
                                                                          width=world_size[0], depth=world_size[1])
-        elif world['name'] == 'rb1_1wall':
+        elif world['name'] == 'square_1wall':
             try:
                 world_size = world['size']
             except KeyError:
                 world_size = [20,20]
-            texture_paths, world_info = round_bot_worlds.build_rb1_1wall_world(self, texture=texture, distractors=distractors,
+            texture_paths, world_info = round_bot_worlds.build_square_1wall_world(self, texture=texture, distractors=distractors,
                                                                          sandboxes=sandboxes, trigger_button=trigger_button,
                                                                          width=world_size[0], depth=world_size[1])
         else:
