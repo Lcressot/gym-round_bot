@@ -35,7 +35,7 @@ round_bot_env.set_metadata(
         observation_transformation = None,
         distractors=False,
         #trigger_button = True,
-        global_pov = (10,20,0)
+        global_pov = (0,20,0)
    )
 # create env 
 env = gym.make('RoundBot-v0')
