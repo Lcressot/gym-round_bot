@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" Cressot Loic & Merckling Astrid
+""" Cressot Loic
     ISIR - CNRS / Sorbonne Université
     02/2018
 """ 
@@ -55,7 +55,6 @@ class RoundBotEnv(gym.Env):
     def __del__(self):
         """
         Cleans the env object before env deletion        
-        trigger_button = self._trigger_button,
         """
         if self._monitor_window:
             self.delete_monitor_window()

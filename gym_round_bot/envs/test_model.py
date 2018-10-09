@@ -18,8 +18,6 @@ if __name__ == '__main__':
     #world_name = 'square'
     world = {'name':world_name,'size':[20,20]}
     winsize=[600,600]
-    #model = round_bot_model.Model(world,'colours',distractors=True)
-    #model = round_bot_model.Model(world,'graffiti', sandboxes=True)
     model = round_bot_model.Model(world,'graffiti')
     window = round_bot_window.MainWindow(
     	model,
@@ -36,8 +34,7 @@ if __name__ == '__main__':
 
     secwindow = round_bot_window.SecondaryWindow(
         model,
-        global_pov=True,
-        #global_pov=None,
+        global_pov=True,#None,
         perspective=False,        
         width=winsize[0],
         height=winsize[1],

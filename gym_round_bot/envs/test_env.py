@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" Cressot Loic & Merckling Astrid
+""" Cressot Loic
     ISIR - CNRS / Sorbonne Université
     02/2018
 
@@ -41,6 +41,5 @@ env.reset()
 # perform steps
 while(True):
     ob, reward, done, _ = env.step((tuple(controller.action_space.sample())))
-    # print(reward)
     # render to screen if needed
     env.render()

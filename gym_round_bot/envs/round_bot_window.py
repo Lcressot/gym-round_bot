@@ -319,16 +319,12 @@ class RoundBotWindow(pyglet.window.Window):
             glColor3d(1, 1, 1)
             self.batch.draw()            
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-            # if self.visible: # slows down rendering with a factor 10 !
-            #     self.dispatch_events()
-            #     self.flip()
+        
             rnd = self.get_image(reshape=True)
             # resize it (streching)
             rnd = scipy.misc.imresize(rnd, (self.height,w,3)) # warning imresize take x,y and not w,h !
             # insert it in multiview_rnd
             multiview_rnd[:,i*w:(i+1)*w,:] = rnd
-        # convert to uint8
-        #multiview_rnd = multiview_rnd.astype(np.uint8)
         return multiview_rnd if not as_line else np.reshape(multiview_rnd,[1,self.width*self.height*3])
 
     def switch_pov(self):
@@ -372,6 +368,10 @@ class MainWindow(RoundBotWindow):
         Starts window thread
         """
         self.threaded = True
+        if self.interactive and self.threaded:
+            # start window giving the user the ability to control the robot
+            self.model.flying = True
+            pyglet.clock.schedule_interval(self.update, 1.0 / self.model.ticks_per_sec)
         pyglet.app.run()
 
     def _update(self, dt, m=1):
@@ -446,8 +446,8 @@ class MainWindow(RoundBotWindow):
         """
         if not self.interactive or not self.threaded:
             return
-        else:
-            self.set_exclusive_mouse(True)
+        else:            
+            self.set_exclusive_mouse(not self.exclusive)
 
     def on_mouse_motion(self, x, y, dx, dy):
         """ Called when the player moves the mouse.
@@ -491,7 +491,7 @@ class MainWindow(RoundBotWindow):
             elif symbol == key.A:
                 self.model.change_robot_rotation(-10,0)
         
-        elif symbol == key.TAB:
+        if symbol == key.TAB:
             if not self.model.flying:
                 # This call schedules the `update()` method to be called
                 # TICKS_PER_SEC. This is the main game event loop.
@@ -499,7 +499,6 @@ class MainWindow(RoundBotWindow):
                 pyglet.clock.schedule_interval(self.update, 1.0 / self.model.ticks_per_sec)
             else:
                 pyglet.clock.unschedule(self.update)
-            
             self.model.flying = not self.model.flying
         
 
