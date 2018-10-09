@@ -369,11 +369,8 @@ class MainWindow(RoundBotWindow):
 
     def start(self):
         """
-        Starts window thread and set a callback on given function
+        Starts window thread
         """
-        # schedule calls on 
-        # if callback:
-        #     pyglet.clock.schedule_interval(callback, 1.0 / ticks_per_sec, 1)
         self.threaded = True
         pyglet.app.run()
 
@@ -393,6 +390,7 @@ class MainWindow(RoundBotWindow):
         # update following windows :
         for w in self.followers:
             w.step(dt)
+
 
     def _on_draw(self):
         """
@@ -534,8 +532,10 @@ class MainWindow(RoundBotWindow):
         When user closes window
         """
         for w in self.followers:
-            w.on_close()
-        super(MainWindow, self).on_close()
+            w.close()
+        self.close()
+        print('Warning : Main window closed, application ending')
+        exit()    
 
 
 
@@ -595,13 +595,13 @@ class SecondaryWindow(RoundBotWindow):
         """
         When user closes window
         """
-        # only close main window (and thus application) if it is not visible
-        if not self.main_window.visible:
-            # first, remove this window from main_window followers list to avoid recursion of on_close function
-            self.main_window.followers.remove(self)
+        # then close the window
+        self.close()
+        # also close main window (and thus application) only if is not visible
+        if not self.main_window.visible:            
             # then call on_close
             self.main_window.on_close()
-        super(SecondaryWindow, self).on_close()
+
 
     def _show_block(self, block):
         """

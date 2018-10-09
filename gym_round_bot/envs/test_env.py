@@ -19,7 +19,7 @@ world = {'name':'square','size':[20,20]} # the world to load
 obssize=[300,300] # the size of observations (rendering window)
 winsize=[600,600] # the size of monitoring window (None if not wanted)
 
-controller = rbc.make('XZ',speed=1,dtheta=17, speedrange=1, xzrange=[1,1], noise_ratio=0.0) # the robot controller                
+controller = rbc.make('XZ',speed=1, speedrange=1, xzrange=[1,1], noise_ratio=0.0) # the robot controller                
 # set env metadata
 round_bot_env.set_metadata(
         world=world,
