@@ -4,18 +4,9 @@ OpenAI gym environment for robotic simulation. The simulation is a simple round 
 
 # Table of contents
 1. [Modules](#modules)
-    1. [The model](#model)
-    2. [The window](#window)
-    3. [The worlds](#worlds)
-    4. [Testing the model](#testmodel)
-    5. [The controllers](#controller)
-    6. [The gym environment](#gymenv)
-    7. [Testing the gym environment](#testenv)
 2. [Installation](#installation)
 3. [Usage](#usage)
 4. [Contributing](#contributing)
-    1. [To do list](#todo)
-    2. [Code documentation intructions](#documentation)
 5. [Credits](#credits)
 6. [License](#license)
 
@@ -127,7 +118,7 @@ while(True):
 	env.render()
 ```
 
-## Use on a server :
+## Usage on a server :
 
 This environment uses OpenGL to render 3D objects and thus needs a graphic card to run.
 You may try to run it either way on a server: in this case please post your solution or report an issue.
@@ -135,7 +126,7 @@ You may try to run it either way on a server: in this case please post your solu
 # Contributing <a name="contributing"></a>
 
 ## TODO <a name="todo"></a>
-### DEV
+### Code
 + add other movable object that can be pushed by the robot, or doors that can open (see TriggerButton Blocks)
 + add pytest tests
 + correct the robot rotation in free flying mode with global point of view (debug mode) : it is not correct, the robot block needs to be rotated in all direction and not only around y axis (not very important issue). This correction may apply to any other rotating block. See methods round_bot_model.Block.update and round_bot_window.RoundBotWindow.set_3D.
@@ -198,6 +189,7 @@ Please also use this format to document new modules and classes.
 # Credits <a name="credits"></a>
 
 Main author : Loic Cressot
+
 Code started from : https://github.com/fogleman/Minecraft
 
 # License <a name="license"></a>
