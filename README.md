@@ -125,8 +125,7 @@ You may try to run it either way on a server: in this case please post your solu
 
 # Contributing <a name="contributing"></a>
 
-## TODO <a name="todo"></a>
-### Code
+## To do list <a name="todo"></a>
 + add other movable object that can be pushed by the robot, or doors that can open (see TriggerButton Blocks)
 + add pytest tests
 + correct the robot rotation in free flying mode with global point of view (debug mode) : it is not correct, the robot block needs to be rotated in all direction and not only around y axis (not very important issue). This correction may apply to any other rotating block. See methods round_bot_model.Block.update and round_bot_window.RoundBotWindow.set_3D.
