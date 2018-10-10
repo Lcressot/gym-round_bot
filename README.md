@@ -1,13 +1,33 @@
 # gym-round_bot
 
-This repository gives a robotic simulation environment compatible with OpenAI gym. The simulation is a simple round bot driving in a simple maze-type world with walls. It is compatible with both Python 2 and 3 and is designed as follows :
+OpenAI gym environment for robotic simulation. The simulation is a simple round bot driving in a 3D maze-type world with walls. It is compatible with both Python 2 and 3 and is designed as follows :
 
-### Model :
+# Table of contents
+1. [Modules](#modules)
+    1. [The model](#model)
+    2. [The window](#window)
+    3. [The worlds](#worlds)
+    4. [Testing the model](#testmodel)
+    5. [The controllers](#controller)
+    6. [The gym environment](#gymenv)
+    7. [Testing the gym environment](#testenv)
+2. [Installation](#installation)
+3. [Usage](#usage)
+4. [Contributing](#contributing)
+    1. [To do list](#todo)
+    2. [Code documentation intructions](#documentation)
+5. [Credits](#credits)
+6. [License](#license)
+
+
+# Modules <a name="modules"></a>
+
+### Model : <a name="model"></a>
 round_bot_model.py
 
 The 3D model of the simulation (no OpenGl) which loads the world's points and moves the robot, dealing with collisions. This module should not include rendering code (see MVC code structure) because visualization is done in the round_bot_window module.
 
-### Window :
+### Window : <a name="window"></a>
 round_bot_window.py
 
 + A class inherited from python Pyglet library for rendering 3D scenes (given by the model) with OpenGL. Interaction with the user is possible (to control the model's robot) if the window is set to visible and interactive. If the window is visible and interactive, control the robot for debugging your world or have fun with tab (to enter control mode), and ZSQD AE and mouse for direction and rotation.
@@ -15,35 +35,35 @@ round_bot_window.py
 + If you set global_pov, you can set perspective to False to render in orthogonal mode.
 + Use a MainWindow for rendering and optionally a SecondaryWindow object for monitoring the training/testing
 
-### Worlds :
+### Worlds : <a name="worlds"></a>
 round_bot_worlds.py
 
 This module defines functions for loading/building simulated worlds : each function loads/builds a different world. Later, this module could be replaced by a function for writing/reading worlds information in files.
 
-### Test model
+### Testing the model <a name="testmodel"></a>
 test_model.py
 
 This script shows how to run a simple simulation (without Open AI Gym) simply by constructing a model and a visible interactive window.
 
-### Controller :
+### Controller : <a name="controller"></a>
 round_bot_controller.py
 
 This module defines a class for controlling the robot of a model. Given an action, it can return its string meaning or perform the corresponding action in the model.
 Controllers are subclass of either ContinuousController or DiscreteController, which are subclasses of the Controller abstract class.
-Regarding the Discrete Theta controller, you can set the speed and teta rotation of the robot, but do no set a to high speed because you could go through walls !
+Regarding the Discrete Theta controller, you can set the speed and teta rotation of the robot, but do no set a to high speed because you could go through walls ! Note that a speed of X means a displacement of X units per step in the room, it does not concern the computation speed of the software.
 
-### Open AI gym environment :
+### OpenAI gym environment : <a name="gymenv"></a>
 round_bot_env.py
 
 This module defines the OpenAI gym compatible environment using a model and a window (in this case the window is only used for rendering and is non-interactive nor visible, and has not its main thread. You can set it to visible but it slows down computations by a factor 10)
 
-### Test env
+### Testing the Env : <a name="testenv"></a>
 test_env.py
 
-This script provides a simple code for running an round bot gym environment
+This script provides a simple code for running a round bot gym environment
 
 
-# Installation
+# Installation <a name="installation"></a>
 
 python 2:
 ```bash
@@ -67,7 +87,7 @@ export LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4"
 ```
 
 
-# Use
+# Usage <a name="usage"></a>
 
 Here is a simple code for using the environment (cf test_env.py ):
 ```Python
@@ -81,7 +101,7 @@ from gym_round_bot.envs import round_bot_env
 from gym_round_bot.envs import round_bot_controller as rbc
 
 # set variables 
-world = 'square' # the world to load
+world = {'name':'square','size':[20,20]} # the world to load
 obssize=[16,16] # the size of observations (rendering window)
 winsize=[300,300] # the size of monitoring window (None if not wanted)
 controller = rbc.make('Theta2',speed=1,dtheta=15, xzrange=[1,1], thetarange=1) # the robot controller
@@ -107,20 +127,21 @@ while(True):
 	env.render()
 ```
 
-# Development
+## Use on a server :
 
-## TODO
+This environment uses OpenGL to render 3D objects and thus needs a graphic card to run.
+You may try to run it either way on a server: in this case please post your solution or report an issue.
+
+# Contributing <a name="contributing"></a>
+
+## TODO <a name="todo"></a>
 ### DEV
-+ rectify strange rotation parameterization of robot_block in model (ry,rx) -> (rx,ry)
 + add other movable object that can be pushed by the robot, or doors that can open (see TriggerButton Blocks)
 + add pytest tests
++ correct the robot rotation in free flying mode with global point of view (debug mode) : it is not correct, the robot block needs to be rotated in all direction and not only around y axis (not very important issue). This correction may apply to any other rotating block. See methods round_bot_model.Block.update and round_bot_window.RoundBotWindow.set_3D.
 
-### BUGS
-+ Cannot close window when it not interactive. It should be closable.
-+ The robot y rotation in free flying mode for debug is not correct (not very important) see function RoundBotWindow.on_mouse_motion
-
-## Code documentation
-Please use this documentation format to document the new functions (and change the old which are not conform):
+## Code documentation <a name="documentation"></a>
+Please use this documentation format to document the new functions (and change the old which are not conform yet):
 ```Python
 
 def function(param_1, .. param_n):
@@ -128,7 +149,7 @@ def function(param_1, .. param_n):
     """
     function concise description
 
-    Parameters (if any)
+    Parameters: (if any)
     ----------
     - param_1 : (param_1_type) description of param_1
     
@@ -161,7 +182,7 @@ def fibonacci(n):
     """
     Computes fibonacci sequence
 
-    Parameters
+    Parameters:
     ----------
     - n : (int) size of fibonacci sequence to compute
 
@@ -172,3 +193,14 @@ def fibonacci(n):
     """
 ```
 Please also use this format to document new modules and classes.
+
+
+# Credits <a name="credits"></a>
+
+Main author : Loic Cressot
+Code started from : https://github.com/fogleman/Minecraft
+
+# License <a name="license"></a>
+
+This repo is under MIT license
+

@@ -9,7 +9,7 @@
     TODO : replace this file by a .json loader and code worlds in .json
 """ 
 
-# WARNING : don't (from round_bot_py import round_bot_model) here to avoid mutual imports !
+# WARNING : don't fo (from round_bot_py import round_bot_model) here to avoid mutual imports !
 
 import os
 
@@ -32,12 +32,8 @@ def _texture_path(texture_bricks_name):
         return '/textures/texture_minecraft.png'
     elif texture_bricks_name == 'graffiti':
         return '/textures/texture_graffiti.png'
-    elif texture_bricks_name == 'minecraft+':
-        return '/textures/texture_minecraft+.png'
     elif texture_bricks_name == 'colours':
         return '/textures/texture_colours.png'
-    elif texture_bricks_name == 'simple':
-        return '/textures/texture_simple.png'
     else :
         raise ValueError('Unknown texture name '+ texture_bricks_name + ' in loading world')
 

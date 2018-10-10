@@ -83,9 +83,7 @@ class RoundBotEnv(gym.Env):
     def compatible_textures(self):        
         return {'minecraft', # minecraft game-like textures
                 'colours', # uniform colors, perceptual aliasing !
-                'minecraft+', # minecraft game-like textures with other additional antialiasing elements
                 'graffiti', # graffitis
-                'simple',
                 }
 
     @property

@@ -244,7 +244,7 @@ class Cube(Block):
     """
     def __init__(self,position, rotation, size, texture, visible=True, crossable=False, collision_reward=0.0, movable=False):
         """
-        parameters:
+        Parameters:
         ----------
         - size (int)
         """
@@ -357,7 +357,7 @@ class DistractorBlock(Block):
     """
     def __init__(self, boundingBox, dimensions, rotation, texture, collision_reward=0.0, speed=1.0, change_dir_frequency=0.01):
         """
-        parameters:
+        Parameters:
         -----------
         - no position because it is initialized at the center of the boundingBox
         - boundingBox (BoundingBoxBlock) : bounding box inside which the 
@@ -451,7 +451,7 @@ class TriggerButtonBlock(BoundingBoxBlock):
         """
         Called when block is collided
 
-        parameter:
+        Parameter:
         ----------
         inCollision (bool) : True if block is collided, false if it is not
         """
@@ -784,9 +784,9 @@ class Model(object):
         self.collided = self.collide(motion_vec)
        
         # update robot's block
-        rx,ry = self.robot_rotation
+        x, y = self.robot_rotation
         # TODO : rectify this strange rotation parametrization
-        self.robot_block.translate_and_rotate_to(self.robot_position, np.array([-ry,-rx,0.0]) )
+        self.robot_block.translate_and_rotate_to(self.robot_position, np.array([0.0,-x,0.0]))
 
         #### update distractors
         for d in self.distractors:
@@ -873,9 +873,7 @@ class Model(object):
         self.texture_paths = texture_paths
         self.start_position = self.robot_block.position
         rx,ry,_ = self.robot_block.rotation
-        # Note: ry,rx -> x,y cause x is (Oxz) whereas rx is rotation around x, same for y and ry
-        # Note: ry,rx -> x,y cause x is (Oxz) whereas rx is rotation around x, same for y and ry
-        self.start_rotation = (ry,rx)
+        self.start_rotation = (rx,ry)
         self.start_strafe = [0.0,0.0] # start with a null strafe
             
     def position_observation(self):
@@ -884,11 +882,12 @@ class Model(object):
         -------
         np.array : array of arrays of every position and rotation of movable blocks ( no need to compute non movable )
         """
-        # arrays=[]
-        # for b in self.movable_blocks:
-        #     arrays.append(list(b.position)+list(b.rotation))
-        # return np.array(copy.deepcopy(arrays))
-        return copy.deepcopy(np.reshape(np.concatenate( [self.robot_position, self.robot_rotation] ),[1,-1]) )
+        arrays=[]
+        for b in self.movable_blocks:
+            arrays.append(list(b.position)+list(b.rotation))
+        return np.array(copy.deepcopy(arrays))
+        #only robot block
+        #return copy.deepcopy(np.reshape(np.concatenate( [self.robot_position, self.robot_rotation] ),[1,-1]) )
 
     def switch_pov(self):
         """

@@ -23,7 +23,7 @@ class Controller(object):
         """
         Abstract class for controllers : controllers are here mappings from actions to model's code execution
         
-        Parameters
+        Parameters:
         ----------
         - controllerType : (string) Describe the controller
         - xzrange : (int, int) x,z speed multiplication factors
@@ -99,8 +99,8 @@ class Controller(object):
 class DiscreteController(Controller):
     def __init__(self, controllerType, xzrange, thetarange, model=None, int_actions=False, noise_ratio=0):
         """
-        parameters:
-        ---------
+        Parameters:
+        -----------
         - int_actions : (Bool) Wether provided actions are of type int
         - *args, **kwargs : see Controller.__init__
         """

@@ -22,7 +22,7 @@ if __name__ == '__main__':
     window = round_bot_window.MainWindow(
     	model,
 		#global_pov=(0,20,0),
-		global_pov=None,
+		global_pov=True,
 		perspective=True,
 		interactive=True,
 		width=winsize[0],
