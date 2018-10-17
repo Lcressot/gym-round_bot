@@ -796,11 +796,12 @@ class Model(object):
         collided=False
 
         # compute the number of sub_motions to compute to check collisions and avoid wall crossing
-        sub_motions = np.max(np.ceil(np.abs(motion_vector)/self.robot_block.dimensions))
+        # don't know why need to put +1 but it works better
+        sub_motions = np.max(np.ceil(np.abs(motion_vector)/self.robot_block.dimensions))+1
         # perform sub_motions to avoid wall crossing when speed is high
         for m in range(1,int(sub_motions)+1):
             # compute sub motion vector
-            sub_motion_vector = (m/sub_motions)*motion_vector
+            sub_motion_vector = (m*1.0/sub_motions)*motion_vector
 
             for block in self.collision_blocks:
                 new_overlap = (block.dimensions+self.robot_block.dimensions)/2.0 - np.abs(self.robot_position+sub_motion_vector - block.position)

@@ -129,6 +129,8 @@ You may try to run it either way on a server: in this case please post your solu
 + add other movable object that can be pushed by the robot, or doors that can open (see TriggerButton Blocks)
 + add pytest tests
 + correct the robot rotation in free flying mode with global point of view (debug mode) : it is not correct, the robot block needs to be rotated in all direction and not only around y axis (not very important issue). This correction may apply to any other rotating block. See methods round_bot_model.Block.update and round_bot_window.RoundBotWindow.set_3D.
++ find why we need to put a +1 to the number of sub motions in round_bot_model.Model.collide to avoid wall crossing, and also find why this trick doesn't work for very high speeds
++ find a better way to modify aspect_ratio and focal in round_bot_window.Window.multi_view_render() to make render look good
 
 ## Code documentation <a name="documentation"></a>
 Please use this documentation format to document the new functions (and change the old which are not conform yet):

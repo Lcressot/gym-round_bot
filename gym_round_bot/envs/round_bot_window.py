@@ -51,41 +51,32 @@ class RoundBotWindow(pyglet.window.Window):
 
         # Instance of the model that handles the world.
         self.model = model
-
         # perspective or orthogonal projection
         self.perspective = perspective
-        self.focal = focal
-            
+        self.focal = self.current_focal = focal
+
         # Global point of view : if None, view is subjective. If True, automatic computing
         if global_pov==True:
             # compute global_pov automatically
             global_pov = self.automatic_global_pov()
-
         elif global_pov: # if not True but not None
             self.ortho_width = global_pov[1]*np.tan(np.radians(focal/2.0)) 
-
         else: # if None
             if not perspective:
                 print('Warning : no global_pov provided, setting perspective to True')
                 self.perspective = True
 
         self.global_pov = global_pov
-
         # Wheter or not the user can interact with the window
         self.interactive = interactive          
-
         # Wether or not the window has its own thread
         self.threaded = False
-
         # Whether or not the window exclusively captures the mouse.
         self.exclusive = False        
-
         # Mapping from shown blocks to textures
         self.shown = dict()
-
         # A Batch is a collection of vertex lists for batched rendering.
         self.batch = pyglet.graphics.Batch()
-
         # A TextureGroup manages an OpenGL texture.
         self.texture_groups = dict()
         self.texture_groups['brick'] = TextureGroup(image.load(self.model.texture_paths['brick']).get_texture())
@@ -94,15 +85,14 @@ class RoundBotWindow(pyglet.window.Window):
         self.texture_groups['sandbox'] = TextureGroup(image.load(self.model.texture_paths['brick']).get_texture())
         self.texture_groups['trigger_button'] = TextureGroup(image.load(self.model.texture_paths['brick']).get_texture())
 
+        # set persepctive rendering aspect ratio (usefull to change for multiview render)
+        self.aspect_ratio = self.width / float(self.height)
         # add this window pointer to model
         self.model.add_window(self)
-
         # call private initialisation method
         self._init()
-
         # show all blocks
         self.model.show_visible_blocks(self)
-
         # set up opengl
         self.setup_gl()
         # render first frame
@@ -209,7 +199,7 @@ class RoundBotWindow(pyglet.window.Window):
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         if self.perspective:
-            gluPerspective(self.focal, width / float(height), 0.1, 60.0)
+            gluPerspective(self.current_focal, self.aspect_ratio, 0.1, 60.0)
         else :
             # if not perspective, make orthogonal projection given the global_pov            
             glOrtho(self.ortho_width, -self.ortho_width, self.ortho_width, -self.ortho_width ,0.1, self.global_pov[1]+5)
@@ -311,6 +301,10 @@ class RoundBotWindow(pyglet.window.Window):
         nviews = len(xzangles)
         multiview_rnd = np.zeros([self.height, self.width, 3], dtype=np.uint8)
         w = int(self.width/nviews)
+        # also modify the focal (height direction) to capture smaller height
+        self.current_focal = self.focal / (2*nviews)
+        # divide self.aspect_ratio (width/height) by the number of views to account for the further squeezing in width direction
+        self.aspect_ratio*=2*nviews
 
         for i,xzangle in enumerate(xzangles):
             # render view with this xzangle as xz offset angle
@@ -325,6 +319,9 @@ class RoundBotWindow(pyglet.window.Window):
             rnd = scipy.misc.imresize(rnd, (self.height,w,3)) # warning imresize take x,y and not w,h !
             # insert it in multiview_rnd
             multiview_rnd[:,i*w:(i+1)*w,:] = rnd
+        # reset self.aspect_ratio and self.current_focal before returning multiview
+        self.aspect_ratio = self.width / float(self.height)        
+        self.current_focal = self.focal
         return multiview_rnd if not as_line else np.reshape(multiview_rnd,[1,self.width*self.height*3])
 
     def switch_pov(self):
