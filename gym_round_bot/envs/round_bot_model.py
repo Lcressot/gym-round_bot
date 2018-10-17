@@ -689,23 +689,6 @@ class Model(object):
             w.hide_block(block)
         
 
-    # def get_sight_vector(self):
-    #     """ Returns the current line of sight vector indicating the direction
-    #     the player is looking.
-    #     """
-    
-    #     x, y = self.robot_rotation
-    #     # y ranges from -90 to 90, or -pi/2 to pi/2, so m ranges from 0 to 1 and
-    #     # is 1 __en looking ahead parallel to the ground and 0 when looking
-    #     # straight up or down.
-    #     m = math.cos(math.radians(y))
-    #     # dy ranges from -1 to 1 and is -1 when looking straight down and 1 when
-    #     # looking straight up.
-    #     dy = math.sin(math.radians(y))
-    #     dx = math.cos(math.radians(x - 90)) * m
-    #     dz = math.sin(math.radians(x - 90)) * m
-    #     return (dx, dy, dz)
-
     def get_motion_vector(self):
         """
         Returns the current motion vector indicating the velocity of the player
@@ -780,8 +763,9 @@ class Model(object):
             ## Derive speed
             self.speed_continuous = self.speed_continuous + acceleration * dt
         
-        # compute new position and friction with collide
-        self.collided = self.collide(motion_vec)
+        # compute new position and friction with collide if motion_vec is not null
+        if any(motion_vec):
+            self.collided = self.collide(motion_vec)
        
         # update robot's block
         x, y = self.robot_rotation
@@ -810,38 +794,49 @@ class Model(object):
         self.current_reward=0.0
         self.current_friction = 1.0
         collided=False
-        for block in self.collision_blocks:            
-            new_overlap = (block.dimensions+self.robot_block.dimensions)/2.0 - np.abs(self.robot_position+motion_vector - block.position)
-            if all( new_overlap > 0):
-                try:
-                    block.collide(True) # signal to the block it has been collided
-                except NotImplementedError:
-                    pass
-                # get block collision reward to be used in RL envs
-                if block.collision_reward < 0:
-                    self.current_reward = min(self.current_reward, block.collision_reward) # if negative reward is min 
-                elif self.current_reward>=0 : # negative beats positive
-                    self.current_reward += block.collision_reward # if positive, reward sums up
-                # update current friction ratio
-                self.current_friction = min(self.current_friction, block.friction)
-                # react to collision only if block is not crossable
-                if not block.crossable:
-                    # old overlap is needed to know on which dimensions the problematic overlapping has been done in the last move
-                    old_overlap = (block.dimensions+self.robot_block.dimensions)/2.0 - np.abs(self.robot_position - block.position)
-                    #  update motion_vector to cancel this collision
-                    motion_vector -= new_overlap * (old_overlap<0) * np.sign(motion_vector) *1.1
-                    collided = True
-                    self.current_friction=0.0 # minimum friction if collision is detected
-                else:
-                    self.under_collision_blocks.add(block) # add this block to the set of block currently under collision
-            else:
-                try:
-                    self.under_collision_blocks.remove(block)
-                    block.collide(False) # signal to the block it is not collided anymore
-                except KeyError:
-                    pass
 
-        self.robot_position += motion_vector # update
+        # compute the number of sub_motions to compute to check collisions and avoid wall crossing
+        sub_motions = np.max(np.ceil(np.abs(motion_vector)/self.robot_block.dimensions))
+        # perform sub_motions to avoid wall crossing when speed is high
+        for m in range(1,int(sub_motions)+1):
+            # compute sub motion vector
+            sub_motion_vector = (m/sub_motions)*motion_vector
+
+            for block in self.collision_blocks:
+                new_overlap = (block.dimensions+self.robot_block.dimensions)/2.0 - np.abs(self.robot_position+sub_motion_vector - block.position)
+                if all( new_overlap > 0):
+                    try:
+                        block.collide(True) # signal to the block it has been collided
+                    except NotImplementedError:
+                        pass
+                    # get block collision reward to be used in RL envs
+                    if block.collision_reward < 0:
+                        self.current_reward = min(self.current_reward, block.collision_reward) # if negative reward is min 
+                    elif self.current_reward>=0 : # negative beats positive
+                        self.current_reward += block.collision_reward # if positive, reward sums up
+                    # update current friction ratio
+                    self.current_friction = min(self.current_friction, block.friction)
+                    # react to collision only if block is not crossable
+                    if not block.crossable:
+                        # old overlap is needed to know on which dimensions the problematic overlapping has been done in the last move
+                        old_overlap = (block.dimensions+self.robot_block.dimensions)/2.0 - np.abs(self.robot_position - block.position)
+                        #  update motion_vector to cancel this collision
+                        sub_motion_vector -= new_overlap * (old_overlap<0) * np.sign(motion_vector) *1.1
+                        collided = True
+                    else:
+                        self.under_collision_blocks.add(block) # add this block to the set of block currently under collision
+                else:
+                    try:
+                        self.under_collision_blocks.remove(block)
+                        block.collide(False) # signal to the block it is not collided anymore
+                    except KeyError:
+                        pass
+            # end sub motions if collided
+            if collided:
+                break
+
+        # update robot position with sub motion vector which is motion vector if there was no collision
+        self.robot_position += sub_motion_vector # update
         return collided
 
 
