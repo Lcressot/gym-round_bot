@@ -190,6 +190,7 @@ class RoundBotEnv(gym.Env):
         self._sandboxes = RoundBotEnv.metadata['sandboxes']
         self._trigger_button = RoundBotEnv.metadata['trigger_button']
         self._model = round_bot_model.Model(world=metadata['world'],
+                                            robot_diameter=metadata['robot_diameter'],
                                             random_start_pos=self.random_start,
                                             random_start_rot=random_start_rot,
                                             texture=metadata['texture'],
@@ -365,6 +366,7 @@ def set_metadata(world={'name':'square','size':[20,20]},
                 distractors = False,
                 sandboxes=False,
                 trigger_button=False,
+                robot_diameter=2
                 ):
     """ static module method for setting loading variables before call to gym.make
 
@@ -392,6 +394,7 @@ def set_metadata(world={'name':'square','size':[20,20]},
         - distractors (Bool) : whether to add visual distractors on walls or not
         - sandboxes (Bool): whether to add sandboxes on the ground or not (slowing down the robot when crossed)
         - trigger_button (Bool): whether to add a trigger button 
+        - robot_diameter (float): the radius of the robot block (half of diameter)
     """
     RoundBotEnv.metadata['world'] = world
     RoundBotEnv.metadata['texture'] = texture
@@ -414,6 +417,7 @@ def set_metadata(world={'name':'square','size':[20,20]},
     RoundBotEnv.metadata['distractors'] = distractors
     RoundBotEnv.metadata['sandboxes'] = sandboxes
     RoundBotEnv.metadata['trigger_button'] = trigger_button
+    RoundBotEnv.metadata['robot_diameter'] = robot_diameter
 
     
 

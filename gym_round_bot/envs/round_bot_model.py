@@ -477,7 +477,7 @@ class TriggerButtonBlock(BoundingBoxBlock):
 ##################################################################################################################################################
 class Model(object):
 
-    def __init__(self,world={'name':'square','size':[20,20]},texture='minecraft',random_start_pos=True,random_start_rot=False,distractors=False,sandboxes=False,trigger_button=False):
+    def __init__(self,world={'name':'square','size':[20,20]},texture='minecraft',robot_diameter=2,random_start_pos=True,random_start_rot=False,distractors=False,sandboxes=False,trigger_button=False):
         """
 
         Class for round bot model. This class should play the model role of MVC structure,
@@ -488,6 +488,7 @@ class Model(object):
         ----------
         - world : (dict) world to load with a least name entry. Worlds are defined in module round_bot_worlds
         - texture : (str) the name of the texture to be applied on blocks
+        - robot_diameter (float) : the diameter of the robot (height and width)
         - random_start_pos : (Bool) whether the robot position is randomly sampled inside world's starting areas at reset or not.
         - random_start_rot : (Bool) whether the robot rotation is randomly sampled at reset or not.
         - distractors : (Bool) whether to add visual distractors on walls or not
@@ -528,7 +529,7 @@ class Model(object):
         # maximum absolute possible reward in model, used for normalization
         self.max_reward=0.0
         # load world        
-        self.load_world(world, texture, distractors, sandboxes, trigger_button)
+        self.load_world(world, texture, robot_diameter, distractors, sandboxes, trigger_button)
         self.flying, self.collided, self.current_reward = None, None, None
         # reset first time
         self.reset()
@@ -841,7 +842,7 @@ class Model(object):
         return collided
 
 
-    def load_world(self, world, texture, distractors, sandboxes, trigger_button):
+    def load_world(self, world, texture, robot_diameter, distractors, sandboxes, trigger_button):
         """ Loads the world passed as string parameter
         """
         world_size = None
@@ -853,7 +854,8 @@ class Model(object):
                 world_size = [20,20]
             texture_paths, world_info = round_bot_worlds.build_square_world(self, texture=texture, distractors=distractors,
                                                                          sandboxes=sandboxes, trigger_button=trigger_button,
-                                                                         width=world_size[0], depth=world_size[1])
+                                                                         width=world_size[0], depth=world_size[1],
+                                                                         robot_diameter=robot_diameter)
         elif world['name'] == 'square_1wall':
             try:
                 world_size = world['size']
@@ -861,7 +863,8 @@ class Model(object):
                 world_size = [20,20]
             texture_paths, world_info = round_bot_worlds.build_square_1wall_world(self, texture=texture, distractors=distractors,
                                                                          sandboxes=sandboxes, trigger_button=trigger_button,
-                                                                         width=world_size[0], depth=world_size[1])
+                                                                         width=world_size[0], depth=world_size[1],
+                                                                         robot_diameter=robot_diameter)
         else:
             raise(Exception('Error: unknown world : ' + world['name']))
 
