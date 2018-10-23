@@ -803,6 +803,8 @@ class Model(object):
         for m in range(1,int(sub_motions)+1):
             # compute sub motion vector
             sub_motion_vector = (m*1.0/sub_motions)*motion_vector
+            # reset collision reward for each new sub motion
+            self.current_reward = 0
 
             for block in self.collision_blocks:
                 new_overlap = (block.dimensions+self.robot_block.dimensions)/2.0 - np.abs(self.robot_position+sub_motion_vector - block.position)
