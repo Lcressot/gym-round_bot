@@ -28,7 +28,7 @@ round_bot_env.set_metadata(
         winsize=winsize,
         controller=controller,
         normalize_rewards=False,
-        position_observations=False,
+        position_observations='no',
         normalize_observations=True,
         observation_transformation = None,
         distractors=False,

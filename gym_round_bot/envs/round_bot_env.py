@@ -243,17 +243,26 @@ class RoundBotEnv(gym.Env):
             self._window.add_follower(self._monitor_window)
 
         # observation are RGB images of rendered world (as line arrays)
-        if not self._position_observations:
+        if self._position_observations == 'no':
             if not self._normalize_observations:
                 self._observation_space = spaces.Box(low=0, high=255, shape=[1, metadata['obssize'][0]*metadata['obssize'][1]*3],dtype=np.uint8)
             else:
                 self._observation_space = spaces.Box(low=-1.0, high=1.0, shape=[1, metadata['obssize'][0]*metadata['obssize'][1]*3],dtype=np.float)
-        else:
+        elif self._position_observations == 'one':
             if not self._normalize_observations:
                 w=self._model.world_info['width']
                 self._observation_space = spaces.Box(low=-w, high=w, shape=[1, 6],dtype=np.float)
             else:
                 self._observation_space = spaces.Box(low=-1.0, high=1.0, shape=[1, 6],dtype=np.float)            
+        elif self._position_observations == 'all':
+            n_moving_blocks = len(self._model.movable_blocks)
+            if not self._normalize_observations:
+                w=self._model.world_info['width']
+                self._observation_space = spaces.Box(low=-w, high=w, shape=[n_moving_blocks, 6],dtype=np.float)
+            else:
+                self._observation_space = spaces.Box(low=-1.0, high=1.0, shape=[n_moving_blocks, 6],dtype=np.float)            
+        else:
+            raise ValueError('position_observations possible values : no, all, one')
 
         self._multiview = metadata['multiview'] # if not None, observations will be fusion of subjective view with given relative xOz angles
 
@@ -281,15 +290,17 @@ class RoundBotEnv(gym.Env):
             self._position_observations , self._normalize_observations, and self._position_observations
         This way of doing allows clarity and fast processing of step function by avoiding calls to if statements and lambda functions
         """
-        if self._position_observations :
-            to_eval = 'self._model.position_observation()' 
+        if self._position_observations == 'all':
+            to_eval = 'self._model.position_observation(True)'
+        elif self._position_observations == 'one':
+            to_eval = 'self._model.position_observation(False)' 
         elif self._multiview is not None:      
             to_eval = 'self._window.multiview_render(self._multiview)'
         else: # observations are arrays of positions of mobable blocks           
             to_eval = 'self._window.get_image()'
         
         if self._normalize_observations:
-            if self._position_observations:
+            if self._position_observations!='no':
                 w=self._model.world_info['width']
                 d=self._model.world_info['depth']
                 m = max(w,d)
@@ -362,7 +373,7 @@ def set_metadata(world={'name':'square','size':[20,20]},
                 normalize_observations=False,
                 normalize_rewards=False,
                 observation_transformation = None,
-                position_observations = False,
+                position_observations = 'no',
                 distractors = False,
                 sandboxes=False,
                 trigger_button=False,
@@ -389,8 +400,10 @@ def set_metadata(world={'name':'square','size':[20,20]},
         - normalize_observations : (Bool) Rescale observations from (int)[0:255] range to (float)[-1:1] with X -> X * 2.0/255 -1.0
         - normalize_rewards : (Bool) Rescale rewards to (float)[-1:1] range by dividing rewards by world's highest abs reward value
         - observation_transformation : (function) apply observation_transformation function to observations after normalization
-        - position_observations: (Bool) observations are not images (np.array([w,h,c])) but [X, Y, Z, rx, ry, rz] np.arrays of 
-            every moving blocks in the scene
+        - position_observations: (str) ['no','one','all'] 
+            no : disable option
+            all : observations are not images (np.array([w,h,c])) but [X, Y, Z, rx, ry, rz] np.arrays of every moving blocks in the scene
+            one : observations are not images (np.array([w,h,c])) but [X, Y, Z, rx, ry, rz] np.arrays of robot_block only
         - distractors (Bool) : whether to add visual distractors on walls or not
         - sandboxes (Bool): whether to add sandboxes on the ground or not (slowing down the robot when crossed)
         - trigger_button (Bool): whether to add a trigger button 

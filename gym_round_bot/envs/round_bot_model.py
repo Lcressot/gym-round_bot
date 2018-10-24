@@ -877,18 +877,24 @@ class Model(object):
         self.start_rotation = (rx,ry)
         self.start_strafe = [0.0,0.0] # start with a null strafe
             
-    def position_observation(self):
+    def position_observation(self, all_positions):
         """
+        parameters
+        ----------
+        all_positions (Bool) : whether to give all movable blocks' positions or only the robot's one
+        
         returns
         -------
         np.array : array of arrays of every position and rotation of movable blocks ( no need to compute non movable )
         """
-        arrays=[]
-        for b in self.movable_blocks:
-            arrays.append(list(b.position)+list(b.rotation))
-        return np.array(copy.deepcopy(arrays))
-        #only robot block
-        #return copy.deepcopy(np.reshape(np.concatenate( [self.robot_position, self.robot_rotation] ),[1,-1]) )
+        if all_positions:
+            arrays=[]
+            for b in self.movable_blocks:
+                arrays.append(list(b.position)+list(b.rotation))
+            return np.array(copy.deepcopy(arrays))
+        else:
+            #only robot block
+            return copy.deepcopy(np.reshape(np.concatenate( [self.robot_position, self.robot_rotation] ),[1,-1]) )
 
     def switch_pov(self):
         """
