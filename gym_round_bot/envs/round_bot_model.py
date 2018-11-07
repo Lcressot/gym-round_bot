@@ -530,7 +530,7 @@ class Model(object):
         self.max_reward=0.0
         # load world        
         self.load_world(world, texture, robot_diameter, distractors, sandboxes, trigger_button)
-        self.flying, self.collided, self.current_reward = None, None, None
+        self.flying, self.collided, self.current_reward = False, False, 0.0
         # reset first time
         self.reset()
 
