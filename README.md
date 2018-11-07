@@ -2,7 +2,7 @@
 
 OpenAI gym environment for robotic simulation. The simulation is a simple round bot driving in a 3D maze-type world with walls. It is compatible with both Python 2 and 3.
 
-<img src="https://github.com/Lcressot/gym-round_bot/blob/master/RoundBot.png" width="450" align="center">
+<img src="https://github.com/Lcressot/gym-round_bot/blob/master/RoundBot.png" width="450" class="center">
 
 ### Table of contents
 1. [Modules](#modules)
