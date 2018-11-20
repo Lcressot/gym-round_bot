@@ -56,9 +56,10 @@ class Block(object):
             TODO : improve update to take account of linked_block rotations too
         - friction : friction coefficient of block
         """
-        self.movable = True # needed for allowing initialization moves
+        self.movable = True # needed to True for allowing initialization in self._make_block, then it can be set to False
         self._make_block(np.array(position), np.array(dimensions), np.array(rotation)) # sets self._position, self._dimensions, self._rotation
-        self.movable = movable # now set self.movable to its value
+        self.movable = movable # now set self.movable to its value. Tells if the block is authorized to move or be moved
+
         self.texture = texture
         self.visible = visible
         self.crossable = crossable
@@ -237,6 +238,13 @@ class Block(object):
         """
         self.inCollision = inCollision
 
+    def _move(self, args):
+        """
+        Needs to be implemented in subclasses
+        Each subclass should have its own moving policy
+        """
+        raise NotImplementedError()
+
 ################################################################################################
 class Cube(Block):
     """
@@ -312,9 +320,9 @@ class BoundingBoxBlock(Block):
 class BrickBlock(Block):
     """ BrickBlock are visible, not crossable blocks
     """
-    def __init__(self, position, dimensions, rotation, texture, collision_reward=0.0):
+    def __init__(self, position, dimensions, rotation, texture, collision_reward=0.0, movable=False):
         super(BrickBlock,self).__init__(position, dimensions, rotation, texture,
-                                        visible=True, crossable=False, collision_reward=collision_reward, movable=True)
+                                        visible=True, crossable=False, collision_reward=collision_reward, movable=movable)
     def _init(self):
         self.block_type = 'brick'     
 
@@ -327,6 +335,39 @@ class RobotBlock(Block):
                                         visible, crossable, collision_reward=collision_reward, movable=True)
     def _init(self):
         self.block_type = 'robot'
+
+    def _move(self, model, dt):
+        ### compute the absolute displacement of the robot given its relative move
+        if not model.acceleration :
+            # ====Discrete actions====
+            #### update robot position
+            # walking
+            speed = model.rolling_speed
+            d = dt * speed * model.current_friction  # distance covered this tick.
+            motion_vec = model.get_motion_vector()
+            # New position in space, before accounting for gravity.
+            motion_vec *= d
+
+        else:
+            #====Continuous actions====
+            #### update robot position
+            ## Derive positions
+            acceleration = np.array(model.acceleration)
+            motion_vec = model.speed_continuous * dt
+            motion_vec = np.array([motion_vec[0], 0, motion_vec[1]])
+
+            ## Derive speed
+            model.speed_continuous = model.speed_continuous + acceleration * dt
+        
+        # compute new position and friction with collide if motion_vec is not null
+        if any(motion_vec):
+            model.collided = model.collide(motion_vec)
+       
+        # update robot's block
+        x, y = model.robot_rotation
+        # TODO : rectify this strange rotation parametrization
+        self.translate_and_rotate_to(model.robot_position, np.array([0.0,-x,0.0]))
+
 
 ################################################################################################
 class StartBlock(BoundingBoxBlock):
@@ -341,10 +382,10 @@ class StartBlock(BoundingBoxBlock):
 
 ################################################################################################
 class RewardBlock(BoundingBoxBlock):
-    """ RewardBlock are only visible in secondary windows and crossable blocks
+    """ RewardBlock are bounding box with special texture
     """
-    def __init__(self, position, dimensions, rotation, texture, collision_reward=0.0, movable=False):
-        super(RewardBlock,self).__init__(position, dimensions, rotation, collision_reward=collision_reward, movable=movable, visible=True)
+    def __init__(self, position, dimensions, rotation, texture, collision_reward=0.0, movable=False, visible=True,):
+        super(RewardBlock,self).__init__(position, dimensions, rotation, collision_reward=collision_reward, movable=movable, visible=visible)
         self.texture = texture
 
     def _init(self):
@@ -387,14 +428,14 @@ class DistractorBlock(Block):
         self._speed = np.random.random_sample((3,))*self._degrees_of_freedom.astype(float) # take a random direction of speed in constrained axis
         self._speed *= self._absolute_speed / np.sqrt(np.sum(self._speed**2)) # set speed vector length so absolute_speed value
 
-    def move_in_bounding_box(self):
+    def _move(self, dt):
         """ Tell the distractor to move within its bounding box of displacement
         """
         # check if change direction
         if np.random.random_sample() < self._change_direction_frequency:
             self.change_direction()
         # move and check collision (collision means out of bounding box on freedom axis)
-        new_position = self._position + self._speed
+        new_position = self._position + self._speed*dt
         collision = (np.abs(new_position - self._boundingBox.position) > (self._boundingBox.dimensions - self._dimensions)/2.0)*self._degrees_of_freedom
         if any( collision ):
            # collision detected, speed is inversed in the collision axis
@@ -507,6 +548,8 @@ class Model(object):
         self.movable_blocks = set()
         # set of starting areas:
         self.start_areas  = set()
+        # set of reward blocks:
+        self.reward_blocks  = set()
         # set of distractor blocks :
         self.distractors = set()
         # whether to start randomly in starting_areas or always at the same initial position
@@ -614,14 +657,15 @@ class Model(object):
             block = RobotBlock( position=position, dimensions=dimensions, rotation=rotation, texture=texture, collision_reward=collision_reward )
             self.robot_block = block
         elif block_type=='start':
-            block = StartBlock( position=position, dimensions=dimensions, rotation=rotation, texture=texture, collision_reward=collision_reward )
+            block = StartBlock( position=position, dimensions=dimensions, rotation=rotation, texture=texture, collision_reward=collision_reward)
             self.start_areas.add(block)
         elif block_type=='sandbox':
             block = SandBoxBlock( position=position, dimensions=dimensions, rotation=rotation, texture=texture, collision_reward=collision_reward )
             self.collision_blocks.add(block)
         elif block_type=='reward':
-            block = RewardBlock( position=position, dimensions=dimensions, rotation=rotation, texture=texture, collision_reward=collision_reward )
+            block = RewardBlock( position=position, dimensions=dimensions, rotation=rotation, texture=texture, collision_reward=collision_reward, visible=visible )
             self.collision_blocks.add( block )
+            self.reward_blocks.add( block )
         elif block_type == 'distractor':
             block = DistractorBlock( boundingBox=boundingBox, dimensions=dimensions, rotation=rotation,
                                       texture=texture, collision_reward=collision_reward, speed=speed) # warning no position for this block !
@@ -664,6 +708,7 @@ class Model(object):
         silent_try_func( self.movable_blocks.remove, block )
         silent_try_func( self.start_areas .remove, block )
         silent_try_func( self.distractors.remove, block )
+        silent_try_func( self.reward_blocks.remove, block )
         
         if block is self.robot_block:
             del self.robot_block
@@ -743,40 +788,14 @@ class Model(object):
         - dt (float): The change in time since the last call.
         """
 
-        if not self.acceleration :
-            # ====Discrete actions====
-            #### update robot position
-            # walking
-            speed = self.rolling_speed
-            d = dt * speed * self.current_friction  # distance covered this tick.
-            motion_vec = self.get_motion_vector()
-            # New position in space, before accounting for gravity.
-            motion_vec *= d
-
-        else:
-            #====Continuous actions====
-            #### update robot position
-            ## Derive positions
-            acceleration = np.array(self.acceleration)
-            motion_vec = self.speed_continuous * dt
-            motion_vec = np.array([motion_vec[0], 0, motion_vec[1]])
-
-            ## Derive speed
-            self.speed_continuous = self.speed_continuous + acceleration * dt
-        
-        # compute new position and friction with collide if motion_vec is not null
-        if any(motion_vec):
-            self.collided = self.collide(motion_vec)
+        ### perform the absolute displacement of all moving blocks
+        for b in self.movable_blocks :            
+            # each block has its own moving policy (controled by actions, deterministic, semi-deterministic or stochastic)
+            if b is self.robot_block:                
+                b._move(self, dt) # the robot blocks needs access to the model to know how to move
+            else :
+                b._move(dt)
        
-        # update robot's block
-        x, y = self.robot_rotation
-        # TODO : rectify this strange rotation parametrization
-        self.robot_block.translate_and_rotate_to(self.robot_position, np.array([0.0,-x,0.0]))
-
-        #### update distractors
-        for d in self.distractors:
-            d.move_in_bounding_box()
-
 
     def collide(self, motion_vector):
         """ Checks to see if the cylindric robot at the given new x,y,z position with given diameter and height

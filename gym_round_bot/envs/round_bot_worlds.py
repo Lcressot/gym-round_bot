@@ -170,7 +170,7 @@ def _build_square_default_world(model, texture_bricks_name, width=45, depth=45, 
 
 
 def build_square_world(model, texture, robot_diameter=2 ,width=45, depth=45, hwalls=4, dwalls=1, wall_reward=-1, goal_reward=10, distractors=False,
-                    distractors_speed=0.1, sandboxes=False, trigger_button=False):
+                    distractors_speed=0.1, sandboxes=False, trigger_button=False, visible_reward=False):
     """
     Builds the square world
     """    
@@ -198,7 +198,7 @@ def build_square_world(model, texture, robot_diameter=2 ,width=45, depth=45, hwa
 
     # Build reward block in the corner
     rew = model.add_block( (nd-(wr/2+dwalls/2), bot_height/2.0, -nw+(wr/2+dwalls/2), wr, bot_height/3.0, wr, 0.0, 0.0, 0.0),
-                     texture=REWARD, block_type='reward', collision_reward = goal_reward)
+                     texture=REWARD, block_type='reward', collision_reward = goal_reward, visible=visible_reward)
     # Build robot block, set initial height to bot_heigh/2 + small offset to avoid ground collision
     model.add_block( (0, bot_height/2.0+0.1, 0, 2*bot_radius, bot_height, 2*bot_radius, 0.0, 0.0, 0.0),
                      texture=BOT, block_type='robot')
@@ -211,7 +211,7 @@ def build_square_world(model, texture, robot_diameter=2 ,width=45, depth=45, hwa
 
 
 def build_square_1wall_world(model, texture, robot_diameter=2, width=45, depth=45, hwalls=2, dwalls=2, wall_reward=-1, goal_reward=10, distractors=False,
-                          distractors_speed=0.1, sandboxes=False, trigger_button=False):
+                          distractors_speed=0.1, sandboxes=False, trigger_button=False, visible_reward=False):
     """
     Builds a simple rectangle planar world with walls around, and 1 wall in the middle
     """
@@ -242,7 +242,7 @@ def build_square_1wall_world(model, texture, robot_diameter=2, width=45, depth=4
 
     # Build reward block in the corner
     model.add_block( (n-(wr/2+dwalls/2), bot_height/2.0, -n+(wr/2+dwalls/2), wr, bot_height/3.0, wr, 0.0, 0.0, 0.0),
-                     texture=REWARD, block_type='reward', collision_reward = 1)
+                     texture=REWARD, block_type='reward', collision_reward = 1, visible_reward=visible_reward)
     # Build robot block, set initial height to bot_heigh/2 + small offset to avoid ground collision
     model.add_block( (0, bot_height/2.0+0.1, 0, 2*bot_radius, bot_height, 2*bot_radius, 0.0, 0.0, 0.0),
                      texture=BOT, block_type='robot')

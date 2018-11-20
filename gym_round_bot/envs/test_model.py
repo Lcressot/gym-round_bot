@@ -14,15 +14,15 @@ import round_bot_window
 
 if __name__ == '__main__':
 
-    world_name = 'square_1wall'
-    #world_name = 'square'
-    world = {'name':world_name,'size':[20,20]}
+    #world_name = 'square_1wall'
+    world_name = 'square'
+    world = {'name':world_name,'size':[45,45]}
     winsize=[600,600]
-    model = round_bot_model.Model(world,'graffiti')
+    model = round_bot_model.Model(world=world,texture='colours',distractors=False)
     window = round_bot_window.MainWindow(
     	model,
 		#global_pov=(0,20,0),
-		global_pov=True,
+		global_pov=False,
 		perspective=True,
 		interactive=True,
 		width=winsize[0],

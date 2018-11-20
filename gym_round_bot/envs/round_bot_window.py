@@ -79,11 +79,18 @@ class RoundBotWindow(pyglet.window.Window):
         self.batch = pyglet.graphics.Batch()
         # A TextureGroup manages an OpenGL texture.
         self.texture_groups = dict()
+        # brick texture group
         self.texture_groups['brick'] = TextureGroup(image.load(self.model.texture_paths['brick']).get_texture())
-        self.texture_groups['robot'] = TextureGroup(image.load(self.model.texture_paths['robot']).get_texture())
-        self.texture_groups['distractor'] = TextureGroup(image.load(self.model.texture_paths['distractors']).get_texture())
         self.texture_groups['sandbox'] = TextureGroup(image.load(self.model.texture_paths['brick']).get_texture())
         self.texture_groups['trigger_button'] = TextureGroup(image.load(self.model.texture_paths['brick']).get_texture())
+
+        # visualisation texture group
+        self.texture_groups['start'] = TextureGroup(image.load(self.model.texture_paths['visualisation']).get_texture())
+        self.texture_groups['reward'] = TextureGroup(image.load(self.model.texture_paths['visualisation']).get_texture())
+
+        # other texture groups
+        self.texture_groups['distractor'] = TextureGroup(image.load(self.model.texture_paths['distractors']).get_texture())
+        self.texture_groups['robot'] = TextureGroup(image.load(self.model.texture_paths['robot']).get_texture())
 
         # set persepctive rendering aspect ratio (usefull to change for multiview render)
         self.aspect_ratio = self.width / float(self.height)
@@ -415,12 +422,9 @@ class MainWindow(RoundBotWindow):
         """
             Private Boolean function for deciding whether to show a block or not 
         """ 
-        # only show visible blocks except start and reward
-        # Note: robot block is too small to appear in the subjective view so showing it is not a problem
-        if block.block_type in ['start','reward']:
-            return False
-        else:
-            return block.visible 
+        # show visible blocks
+        # Note: robot block is too close to appear in the subjective view so showing it doesn't seem to be a problem
+        return block.visible 
 
     def set_exclusive_mouse(self, exclusive):
         """ If `exclusive` is True, the game will capture the mouse, if False
@@ -555,11 +559,11 @@ class SecondaryWindow(RoundBotWindow):
         Private (protected) initialiation of a SeondaryWindow object
         """
         self.main_window = None
-        self.texture_groups['start'] = TextureGroup(image.load(self.model.texture_paths['visualisation']).get_texture())
-        self.texture_groups['reward'] = self.texture_groups['start']  
-        # show start areas
-        for sa in self.model.start_areas:
-            self.show_block(sa)      
+        # setstart areas and rewards to be shown if they are not already visible in main window
+        for b in list(self.model.start_areas) + list(self.model.reward_blocks) :
+            if not b.visible :
+                self.show_block(b)
+
 
     def _update(self, dt):
         """
@@ -602,9 +606,9 @@ class SecondaryWindow(RoundBotWindow):
     def _show_block(self, block):
         """
             Private Boolean function for deciding whether to show a block or not 
-        """ 
-        # show visible blocks
-        return block.visible
+        """         
+        # Show visible blocks except for start and reward which are always shown        
+        return True if block.block_type in {'start','reward'} else block.visible
 
     def switch_pov(self):
         """
