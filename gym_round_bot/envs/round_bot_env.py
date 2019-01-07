@@ -225,7 +225,7 @@ class RoundBotEnv(gym.Env):
                                                 height=metadata['obssize'][1],
                                                 caption='Round bot in '+self._world['name']+' world',
                                                 resizable=False,
-                                                visible=metadata['visible']
+                                                is_visible=metadata['visible']
                                                 )
 
         # build secondary observation window if asked

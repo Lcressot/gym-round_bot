@@ -100,6 +100,9 @@ class RoundBotWindow(pyglet.window.Window):
         self._init()
         # show all blocks
         self.model.show_visible_blocks(self)
+
+        #self.set_visible(False)
+
         # set up opengl
         self.setup_gl()
         # render first frame
@@ -349,14 +352,14 @@ class MainWindow(RoundBotWindow):
         Class of main windows:
     """
 
-    def __init__(self, model, global_pov=None, perspective=True, interactive=False, focal=65.0, *args, **kwargs):
+    def __init__(self, model, global_pov=None, perspective=True, interactive=False, focal=65.0, is_visible=True, *args, **kwargs):
         """
         Parameters
         ----------
         see parent Class RoundBotWindow __init__ parameters
         """
         super(MainWindow, self).__init__(model, global_pov, perspective, interactive, focal, *args, **kwargs)
-
+        self.set_visible(is_visible)
         # set of windows following this one
         self.followers = set()
 
